@@ -10,11 +10,16 @@ export async function registerStanbyMessage(channel: TextChannel) {
 
 export function getNoticeMessage() {
     const embed = new EmbedBuilder()
-        .setTitle(':beginner:')
+        // .setTitle(':beginner:')
+        .setAuthor({
+            iconURL: 'https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png',
+            name: 'Github',
+            url: 'https://github.com/blackwaterbread/Shallot'
+        })
         .setDescription(
             '[Shallot](https://discordapp.com/users/1204864917329682442)은 서버 정보를 실시간으로 나타내 주는 봇입니다. ' +
             '현재 베타 서비스중으로 가끔 앙증맞은 찐빠가 있을 시 [@dayrain](https://discordapp.com/users/119027576692801536)에게 문의 해 주세요. ' +
-            '서버를 등록하시거나 삭제하시려면 아래의 버튼을 눌러 진행해 주세요.'
+            '서버를 등록하시거나 삭제하시려면 아래의 버튼을 눌러 진행해 주세요.' 
         )
         .setImage('https://files.hirua.me/images/width.png')
         .setFooter({ text: 
