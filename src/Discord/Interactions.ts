@@ -4,7 +4,7 @@ import { queryArma3 } from "Server/Arma3";
 import { AvailableGame } from "Types";
 import { registerStanbyMessage } from "./Message";
 import Config, { savePresetHtml, saveStorage } from "Config";
-import { registerArma3ServerEmbed, registerArmaResistanceServerEmbed } from "./Embed";
+import { registerArma3ServerEmbed, registerArmaResistanceServerEmbed, registerPlayersEmbed } from "./Embed";
 import { channelTrack, logError } from "Lib/Log";
 import { createRegisterModal } from "./Modal";
 import { queryArmaResistance } from "Server/ArmaResistance";
@@ -13,6 +13,8 @@ export async function handleInteractions(interaction: Interaction) {
     const storage = Config.storage.get(interaction.guildId!);
     if (!storage) return;
 
+    const guild = interaction.guild!;
+    const { user } = interaction;
     const interactChannel = interaction.channel as TextChannel;
     const serverChannel = await interaction.client.channels.fetch(storage.channels.servers.channelId) as TextChannel;
 
@@ -26,7 +28,7 @@ export async function handleInteractions(interaction: Interaction) {
                 break;
             }
             case 'delete': {
-                const instance = storage?.instances.normal.get(interaction.user.id);
+                const instance = storage.instances.get(user.id);
                 if (!instance) break;
                 const message = await serverChannel.messages.fetch(instance.messageId);
                 await message.delete();
@@ -35,8 +37,13 @@ export async function handleInteractions(interaction: Interaction) {
                     ephemeral: true
                 });
                 if (fs.existsSync(instance.presetPath)) fs.unlinkSync(instance.presetPath);
-                storage!.instances.normal.delete(interaction.user.id);
+                storage.instances.delete(user.id);
                 saveStorage();
+                break;
+            }
+            case 'checkPlayers': {
+                const targetId = buttonId[1];
+                await registerPlayersEmbed(interaction, guild.id, targetId);
                 break;
             }
             default: {
@@ -48,7 +55,7 @@ export async function handleInteractions(interaction: Interaction) {
 
     /* ModalSubmit Interaction */
     else if (interaction.isModalSubmit()) {
-        const { guild, customId, user } = interaction;
+        const { customId } = interaction;
         const serverAddress = interaction.fields.getTextInputValue('serverAddress').split(':'); // 127.0.0.1:8080
         const serverMemo = interaction.fields.getTextInputValue('serverMemo');
         const reply = await interaction.reply({
@@ -74,7 +81,7 @@ export async function handleInteractions(interaction: Interaction) {
                 await reply.edit({ content: ':rocket: 서버 연결 중입니다...' });
                 if (storage) {
                     /* 1 user 1 server */
-                    if (storage.instances.normal.get(interaction.user.id)) {
+                    if (storage.instances.get(interaction.user.id)) {
                         await reply.edit({ content: ':x: 1인당 하나의 서버만 등록할 수 있습니다.' });
                         return;
                     }
@@ -97,8 +104,10 @@ export async function handleInteractions(interaction: Interaction) {
                                     url: `https://discordapp.com/users/${user.id}`,
                                     avatarUrl: user.avatarURL() ?? ''
                                 }
-                                const embed = await registerArma3ServerEmbed(stanbyMessage, serverQueries, instanceUser, serverMemo);
-                                storage.instances.normal.set(interaction.user.id, {
+                                const embed = await registerArma3ServerEmbed(stanbyMessage, instanceUser, user.id, serverQueries, serverMemo);
+                                storage.instances.set(user.id, {
+                                    isPriority: false,
+                                    hostname: serverQueries.info.name,
                                     messageId: embed.message.id,
                                     game: 'arma3',
                                     registeredUser: instanceUser,
@@ -106,6 +115,11 @@ export async function handleInteractions(interaction: Interaction) {
                                         host: ipAddr,
                                         port: port,
                                     },
+                                    players: serverQueries.info.players.map((x: any) => ({
+                                        name: x.name, 
+                                        score: x.raw.score,
+                                        time: x.raw.time
+                                    })),
                                     memo: serverMemo,
                                     disconnectedFlag: 4,
                                     loadedContentHash: serverQueries.tags.loadedContentHash,
@@ -134,8 +148,10 @@ export async function handleInteractions(interaction: Interaction) {
                                     url: `https://discordapp.com/users/${user.id}`,
                                     avatarUrl: user.avatarURL() ?? ''
                                 }
-                                const embed = await registerArmaResistanceServerEmbed(stanbyMessage, serverQueries, instanceUser, serverMemo);
-                                storage.instances.normal.set(interaction.user.id, {
+                                const embed = await registerArmaResistanceServerEmbed(stanbyMessage, instanceUser, user.id, serverQueries, serverMemo);
+                                storage.instances.set(user.id, {
+                                    isPriority: false,
+                                    hostname: serverQueries.info.name,
                                     messageId: embed.message.id,
                                     game: 'armaresistance',
                                     registeredUser: instanceUser,
@@ -143,6 +159,9 @@ export async function handleInteractions(interaction: Interaction) {
                                         host: ipAddr,
                                         port: port,
                                     },
+                                    players: serverQueries.info.players.map((x: any) => ({
+                                        name: x.name
+                                    })),
                                     memo: serverMemo,
                                     disconnectedFlag: 4,
                                     loadedContentHash: '',
