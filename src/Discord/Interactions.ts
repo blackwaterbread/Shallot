@@ -71,10 +71,13 @@ export async function handleInteractions(interaction: Interaction) {
                     logError(`[App|Discord] ModalInteract: 등록된 서버가 아닙니다: ${channelTrack(interactChannel)}`);
                     return;
                 }
-                await reply.edit({
-                    content: ':rocket: 서버 연결 중입니다...'
-                });
+                await reply.edit({ content: ':rocket: 서버 연결 중입니다...' });
                 if (storage) {
+                    /* 1 user 1 server */
+                    if (storage.instances.normal.get(interaction.user.id)) {
+                        await reply.edit({ content: ':x: 1인당 하나의 서버만 등록할 수 있습니다.' });
+                        return;
+                    }
                     try {
                         const ipAddr = serverAddress[0];
                         switch (customId) {
@@ -107,9 +110,7 @@ export async function handleInteractions(interaction: Interaction) {
                                     loadedContentHash: serverQueries.tags.loadedContentHash,
                                     presetPath: presetPath
                                 });
-                                await reply.edit({
-                                    content: ':white_check_mark: 서버가 등록되었습니다.'
-                                });
+                                await reply.edit({ content: ':white_check_mark: 서버가 등록되었습니다.' });
                                 // Config.storage.set(guild!.id, storage);
                                 saveStorage();
                                 break;
@@ -122,9 +123,7 @@ export async function handleInteractions(interaction: Interaction) {
                             case 'modal_armaresistance': {
                                 const serverQueries = await queryArmaResistance({ host: ipAddr, port: port });
                                 if (!serverQueries) {
-                                    await reply.edit({
-                                        content: ':x: 서버에 연결할 수 없습니다.'
-                                    });
+                                    await reply.edit({ content: ':x: 서버에 연결할 수 없습니다.' });
                                     break;
                                 }
                                 const stanbyMessage = await registerStanbyMessage(serverChannel);
@@ -147,9 +146,7 @@ export async function handleInteractions(interaction: Interaction) {
                                     loadedContentHash: '',
                                     presetPath: ''
                                 });
-                                await reply.edit({
-                                    content: ':white_check_mark: 서버가 등록되었습니다.'
-                                });
+                                await reply.edit({ content: ':white_check_mark: 서버가 등록되었습니다.' });
                                 // Config.storage.set(guild!.id, storage);
                                 saveStorage();
                                 break;
