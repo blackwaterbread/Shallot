@@ -14,6 +14,7 @@ export interface AppConfigs {
 }
 
 export interface InstanceUser {
+    id: string;
     displayName: string;
     url: string;
     avatarUrl: string;
@@ -27,7 +28,7 @@ export interface InstanceConnection {
 export interface Instance {
     messageId: string;
     game: AvailableGame;
-    user: InstanceUser;
+    registeredUser: InstanceUser;
     connection: InstanceConnection,
     memo: string;
     disconnectedFlag: number;
