@@ -15,6 +15,7 @@ export interface AppConfigs {
 }
 
 export interface InstanceUser {
+    id: string;
     displayName: string;
     url: string;
     avatarUrl: string;
@@ -25,11 +26,20 @@ export interface InstanceConnection {
     port: number;
 }
 
+export type InstancePlayers = Array<{
+    name: string;
+    score?: number;
+    time?: number;
+}>
+
 export interface Instance {
+    isPriority: boolean,
     messageId: string;
     game: AvailableGame;
-    user: InstanceUser;
-    connection: InstanceConnection,
+    registeredUser: InstanceUser;
+    hostname: string;
+    connection: InstanceConnection;
+    players: InstancePlayers;
     memo: string;
     disconnectedFlag: number;
     loadedContentHash: string;
@@ -48,10 +58,7 @@ export interface InstanceStorage {
             channelId: string;
         }
     },
-    instances: {
-        normal: Map<string, Instance>; 
-        priority: Map<string, Instance>;
-    }
+    instances: Map<string, Instance>;
 }
 
 const IS_DEVELOPMENT = process.env.NODE_ENV === 'development';
@@ -63,8 +70,7 @@ const CONFIGS = JSON.parse(fs.readFileSync(CONFIGS_PATH).toString('utf8')) as Ap
 const STORAGE = new Map<string, InstanceStorage>(JSON.parse(fs.readFileSync(STORAGE_PATH).toString('utf8')));
 
 for (const [k, v] of STORAGE) {
-    v.instances.normal = new Map(v.instances.normal);
-    v.instances.priority = new Map(v.instances.priority);
+    v.instances = new Map(v.instances);
 }
 
 const { token, app_id, static_path } = CONFIGS;

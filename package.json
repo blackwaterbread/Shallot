@@ -1,12 +1,13 @@
 {
   "name": "shallot",
-  "version": "0.1.23",
+  "version": "0.2.0",
   "description": "",
   "main": "dist/shallot.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "cross-env NODE_ENV=development ts-node -r tsconfig-paths/register src/app.ts",
     "debug": "cross-env NODE_ENV=development ts-node -r tsconfig-paths/register src/Debug.ts",
+    "ops": "cross-env NODE_ENV=development ts-node -r tsconfig-paths/register src/Ops.ts",
     "build": "tsc && node build.js"
   },
   "keywords": [],

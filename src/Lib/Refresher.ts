@@ -1,5 +1,5 @@
 import { setInterval, setTimeout } from "timers";
-import { Client, TextChannel } from "discord.js";
+import { Client, Message, TextChannel } from "discord.js";
 import Config, { Instance, savePresetHtml, saveStorage } from "Config";
 import { channelTrack, instanceTrack, logError, logNormal } from "./Log";
 import { registerArma3ServerEmbed, registerArmaResistanceServerEmbed } from "Discord/Embed";
@@ -8,9 +8,21 @@ import { queryArmaResistance } from "Server/ArmaResistance";
 
 const INTERVAL = 15000;
 
-async function handleRefresh(listChannel: TextChannel, instance: Instance, instanceId: string, instanceStorage: Map<string, Instance>, isPriority: boolean) {
+async function handleRefresh(listChannel: TextChannel, instance: Instance, instanceId: string, instanceStorage: Map<string, Instance>) {
+    let message: Message<true> | undefined;
     const trackLog = `${channelTrack(listChannel)}${instanceTrack(instance)}`;
-    const message = await listChannel.messages.fetch(instance.messageId);
+
+    /* message exist check */
+    try {
+        message = await listChannel.messages.fetch(instance.messageId);
+    }
+    catch {
+        logNormal(`[Discord] 새로고침 실패: 메세지가 존재하지 않는 것 같음 ${trackLog}`);
+        instanceStorage.delete(instanceId);
+        saveStorage();
+        logNormal(`[Discord] 인스턴스 삭제: ${trackLog}`);
+    }
+
     if (message) {
         let queries;
         switch (instance.game) {
@@ -21,10 +33,10 @@ async function handleRefresh(listChannel: TextChannel, instance: Instance, insta
                     instance.loadedContentHash = queries.tags.loadedContentHash;
                     saveStorage();
                 }
-                else if (!isPriority) {
+                else if (!instance.isPriority) {
                     instance.disconnectedFlag -= 1;
                 }
-                await registerArma3ServerEmbed(message, queries, instance.user, instance.memo);
+                await registerArma3ServerEmbed(message, instance.registeredUser, instanceId, queries, instance.memo);
                 break;
             }
             case 'armareforger': {
@@ -32,8 +44,8 @@ async function handleRefresh(listChannel: TextChannel, instance: Instance, insta
             }
             case 'armaresistance': {
                 queries = await queryArmaResistance(instance.connection);
-                if (!queries) if (!isPriority) instance.disconnectedFlag -= 1;
-                await registerArmaResistanceServerEmbed(message, queries, instance.user, instance.memo);
+                if (!queries) if (!instance.isPriority) instance.disconnectedFlag -= 1;
+                await registerArmaResistanceServerEmbed(message, instance.registeredUser, instanceId, queries, instance.memo);
                 break;
             }
         }
@@ -43,11 +55,11 @@ async function handleRefresh(listChannel: TextChannel, instance: Instance, insta
         }
         else {
             logNormal(`[Discord] 새로고침 실패: ${trackLog}`);
-            if (!isPriority && instance.disconnectedFlag < 0) {
+            if (!instance.isPriority && instance.disconnectedFlag < 0) {
                 instanceStorage.delete(instanceId);
                 await message.delete();
                 saveStorage();
-                logNormal(`[Discord] 인스턴스 자동 삭제: ${trackLog}`);
+                logNormal(`[Discord] 인스턴스 삭제: ${trackLog}`);
             }
         }
     }
@@ -57,27 +69,32 @@ async function handleRefresh(listChannel: TextChannel, instance: Instance, insta
     }
 }
 
+async function tasksRefresh(client: Client<true>) {
+    const storageArray = Array.from(Config.storage);
+    return storageArray.map(async ([serverId, instanceStorage]) => {
+        const { channelId } = instanceStorage.channels.servers;
+        const { instances } = instanceStorage;
+        const listChannel = await client.channels.fetch(channelId) as TextChannel;
+        const p = Array.from(instances);
+        const tasks = p.map(([userId, instance]) => handleRefresh(listChannel, instance, userId, instances));
+        return Promise.all(tasks);
+    });
+}
+
 class Refresher {
     /* todo: request balancing */
-    private timeoutInit: NodeJS.Timeout;
+    // private timeoutInit: NodeJS.Timeout;
     private timeoutRefresh?: NodeJS.Timeout;
     constructor(client: Client<true>) {
-        this.timeoutInit = setTimeout(() => {
-            var self = this;
-            self.timeoutRefresh = setInterval(async () => {
-                await Promise.all(
-                    Array.from(Config.storage)
-                        .map(async ([serverId, instanceStorage]) => {
-                            const { channelId } = instanceStorage.channels.servers;
-                            const { priority, normal } = instanceStorage.instances;
-                            const listChannel = await client.channels.fetch(channelId) as TextChannel;
-                            await Promise.all(Array.from(priority).map(([userId, instance]) => handleRefresh(listChannel, instance, userId, priority, true)));
-                            await Promise.all(Array.from(normal).map(([userId, instance]) => handleRefresh(listChannel, instance, userId, normal, false)));
-                        }
-                    )
-                );
-            }, INTERVAL);
+        this.timeoutRefresh = setInterval(async () => {
+            await tasksRefresh(client);
         }, INTERVAL);
+        // this.timeoutInit = setTimeout(() => {
+        //     var self = this;
+        //     self.timeoutRefresh = setInterval(async () => {
+        //         await ppp(client);
+        //     }, INTERVAL);
+        // }, INTERVAL);
     }
 }
 
