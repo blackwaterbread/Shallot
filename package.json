@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "cross-env NODE_ENV=development ts-node -r tsconfig-paths/register src/app.ts",
-    "debug": "cross-env NODE_ENV=development ts-node -r tsconfig-paths/register src/Debug.ts"
+    "debug": "cross-env NODE_ENV=development ts-node -r tsconfig-paths/register src/Debug.ts",
+    "build": "tsc && node build.js"
   },
   "keywords": [],
   "author": "dayrain",
@@ -17,7 +18,9 @@
     "@types/lodash": "^4.14.202",
     "@types/luxon": "^3.4.2",
     "@types/node": "^20.11.16",
+    "@vercel/ncc": "^0.38.1",
     "cross-env": "^7.0.3",
+    "rimraf": "^5.0.5",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.3.3"
   },
