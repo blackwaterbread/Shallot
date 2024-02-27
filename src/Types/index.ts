@@ -4,9 +4,10 @@ export const GAMES = {
     armaresistance: 'Operation Flashpoint: Resistance'
 } as const;
 
-export const SEVER_STATUS_COLOR = {
+export const SERVER_STATUS_COLOR = {
     connected: 0x41F097,
-    disconnected: 0xFF0000
+    disconnected: 0xFF0000,
+    discord: 0x5865F2
 } as const;
 
 export interface Connection { 

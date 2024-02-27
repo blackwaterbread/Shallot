@@ -5,6 +5,7 @@ import { AvailableGame } from 'Types';
 import { logNormal } from 'Lib/Log';
 import { advStringify } from 'Lib/Utils';
 import nodePackage from '../package.json';
+import path from 'path';
 dotenv.config();
 
 export interface AppConfigs {
@@ -25,11 +26,20 @@ export interface InstanceConnection {
     port: number;
 }
 
+export type InstancePlayers = Array<{
+    name: string;
+    score?: number;
+    time?: number;
+}>
+
 export interface Instance {
+    isPriority: boolean,
     messageId: string;
     game: AvailableGame;
     registeredUser: InstanceUser;
-    connection: InstanceConnection,
+    hostname: string;
+    connection: InstanceConnection;
+    players: InstancePlayers;
     memo: string;
     disconnectedFlag: number;
     loadedContentHash: string;
@@ -48,36 +58,24 @@ export interface InstanceStorage {
             channelId: string;
         }
     },
-    instances: {
-        normal: Map<string, Instance>; 
-        priority: Map<string, Instance>;
-    }
+    instances: Map<string, Instance>;
 }
 
 const IS_DEVELOPMENT = process.env.NODE_ENV === 'development';
 
-const CONFIGS_PATH = IS_DEVELOPMENT ? './configs/configs.json' : `${__dirname}/configs/configs.json`;
-const STORAGE_PATH = IS_DEVELOPMENT ? './configs/instances.json' : `${__dirname}/configs/instances.json`;
+const CONFIGS_PATH = IS_DEVELOPMENT ? path.join(`${__dirname}`, '../configs/configs.json') : `${__dirname}/configs/configs.json`;
+const STORAGE_PATH = IS_DEVELOPMENT ? path.join(`${__dirname}`, '../configs/instances.json') : `${__dirname}/configs/instances.json`;
 
 const CONFIGS = JSON.parse(fs.readFileSync(CONFIGS_PATH).toString('utf8')) as AppConfigs;
 const STORAGE = new Map<string, InstanceStorage>(JSON.parse(fs.readFileSync(STORAGE_PATH).toString('utf8')));
 
 for (const [k, v] of STORAGE) {
-    v.instances.normal = new Map(v.instances.normal);
-    v.instances.priority = new Map(v.instances.priority);
+    v.instances = new Map(v.instances);
 }
 
-const { 
-    TOKEN: ENV_TOKEN, 
-    APP_ID: ENV_APP_ID, 
-    STATIC_PATH: ENV_STATIC_PATH 
-} = process.env;
+const { token, app_id, static_path } = CONFIGS;
 
-const TOKEN = IS_DEVELOPMENT ? ENV_TOKEN : CONFIGS.token;
-const APP_ID = IS_DEVELOPMENT ? ENV_APP_ID : CONFIGS.app_id;
-const STATIC_PATH = IS_DEVELOPMENT ? ENV_STATIC_PATH : CONFIGS.static_path
-
-if (!TOKEN || !APP_ID || !STATIC_PATH) {
+if (!token || !app_id || !static_path) {
     throw new Error("[App] Missing environment variables");
 }
 
@@ -89,7 +87,7 @@ export function saveStorage() {
 
 export function savePresetHtml(filename: string, preset: string) {
     try {
-        const path = `${STATIC_PATH}/presets/${filename}.html`;
+        const path = `${static_path}/presets/${filename}.html`;
         fs.writeFileSync(path, preset);
         logNormal(`[App] Arma 3 Preset Generated: ${path}`);
         return path;
@@ -103,9 +101,9 @@ export default {
     isDevelopment: IS_DEVELOPMENT,
     version: nodePackage.version,
     discord: {
-        token: TOKEN,
-        appid: APP_ID,
+        token: token,
+        appid: app_id,
     },
     storage: STORAGE,
-    staticPath: STATIC_PATH
+    staticPath: static_path
 };

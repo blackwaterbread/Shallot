@@ -25,24 +25,21 @@ export async function initRegisterInteractMessages(client: Client<true>) {
     for (const [guildId, guild] of guilds) {
         const storage = instances.get(guildId);
         if (storage) {
-            const interactionChannelId = storage.channels.interaction.channelId;
-            const noticeMessageId = storage.channels.interaction.noticeMessageId;
-            const regMessageId = storage.channels.interaction.registerMessageId;
-            const delMessageId = storage.channels.interaction.deleteMessageId;
-            const channel = await client.channels.fetch(interactionChannelId) as TextChannel;
+            const { channelId, noticeMessageId, registerMessageId, deleteMessageId } = storage.channels.interaction;
+            const channel = await client.channels.fetch(channelId) as TextChannel;
             if (_.isEmpty(noticeMessageId) || _.isUndefined(noticeMessageId)) {
                 const regForm = getNoticeMessage();
                 const message = await channel.send({ ...regForm });
                 storage.channels.interaction.noticeMessageId = message.id;
                 saveStorage();
             }
-            if (_.isEmpty(regMessageId) || _.isUndefined(regMessageId)) {
+            if (_.isEmpty(registerMessageId) || _.isUndefined(registerMessageId)) {
                 const regForm = getRegisterInteractionMessage();
                 const message = await channel.send({ ...regForm });
                 storage.channels.interaction.registerMessageId = message.id;
                 saveStorage();
             }
-            if (_.isEmpty(delMessageId) || _.isUndefined(delMessageId)) {
+            if (_.isEmpty(deleteMessageId) || _.isUndefined(deleteMessageId)) {
                 const delForm = getDeleteInteractionMessage();
                 const message = await channel.send({ ...delForm });
                 storage.channels.interaction.deleteMessageId = message.id;
@@ -65,7 +62,7 @@ export async function initPriorityInstances(client: Client<true>) {
         if (storage) {
             const listChannelId = storage.channels.servers.channelId;
             const channel = await client.channels.fetch(listChannelId) as TextChannel;
-            const { priority } = storage.instances;
+            const priority = Array.from(storage.instances).filter(([k, v]) => v.isPriority === true);
             if (_.isEmpty(priority)) {
                 return;
             }
@@ -78,8 +75,8 @@ export async function initPriorityInstances(client: Client<true>) {
                                 // if (!queries) break;
                                 const stanbyMessage = await registerStanbyMessage(channel);
                                 const presetPath = queries ? savePresetHtml(stanbyMessage.id, queries.preset) : '';
-                                const embed = await registerArma3ServerEmbed(stanbyMessage, queries);
-                                priority.set(index, {
+                                const embed = await registerArma3ServerEmbed(stanbyMessage, instance.registeredUser, index, queries);
+                                storage.instances.set(index, {
                                     ...instance,
                                     messageId: embed.message.id,
                                     presetPath: presetPath
@@ -93,8 +90,8 @@ export async function initPriorityInstances(client: Client<true>) {
                                 const queries = await queryArmaResistance(instance.connection);
                                 // if (!queries) break;
                                 const stanbyMessage = await registerStanbyMessage(channel);
-                                const embed = await registerArmaResistanceServerEmbed(stanbyMessage, queries);
-                                priority.set(index, {
+                                const embed = await registerArmaResistanceServerEmbed(stanbyMessage, instance.registeredUser, index, queries);
+                                storage.instances.set(index, {
                                     ...instance,
                                     messageId: embed.message.id,
                                     presetPath: ''

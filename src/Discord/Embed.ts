@@ -1,25 +1,53 @@
 import _ from "lodash";
 import { Arma3ServerQueries } from "Server/Arma3";
+import { SERVER_STATUS_COLOR } from "Types";
 import { ArmaResistanceServerQueries } from "Server/ArmaResistance";
-import { SEVER_STATUS_COLOR } from "Types";
-import { EmbedBuilder, Message, User } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, EmbedBuilder, Message } from "discord.js";
 import { DateTime } from "luxon";
-import { InstanceUser } from "Config";
+import Config, { InstanceUser } from "Config";
 
-export async function registerArma3ServerEmbed(message: Message<true>, queries?: Arma3ServerQueries, user?: InstanceUser, memo?: string) {
+export async function registerPlayersEmbed(interaction: ButtonInteraction, serverId: string, instanceId: string) {
+    const instance = Config.storage.get(serverId)!.instances.get(instanceId);
+    if (!instance) return;
+
+    const players = instance.players.map(x => x.name).join('\n');
+    const time = DateTime.now().toMillis();
+    const embed = new EmbedBuilder()
+        .setColor(SERVER_STATUS_COLOR['discord'])
+        .setTitle(':playground_slide: 플레이어 현황')
+        .setDescription(`${instance.hostname}\n\n\`\`\`\n${players}\n\`\`\``)
+        .setImage('https://files.hirua.me/images/width.png')
+        .setTimestamp(time)
+        .setFooter({ text: '(주의) 이 임베드는 실시간으로 갱신되지 않습니다.', iconURL: 'https://files.hirua.me/images/status/warning.png' });
+
+    await interaction.reply({ content: '', embeds: [embed], ephemeral: true });
+}
+
+export async function registerArma3ServerEmbed(message: Message<true>, user: InstanceUser, instanceId: string, queries?: Arma3ServerQueries, memo?: string) {
     const ping = queries ? queries.info.ping < 80 ? 'good.png' : queries.info.ping > 200 ? 'poor.png' : 'bad.png' : 'poor.png';
     const status = queries ? 'connected' : 'disconnected';
     const time = DateTime.now().toMillis();
+    const pp = SERVER_STATUS_COLOR[status];
+
+    const playersButton = new ButtonBuilder()
+        .setCustomId(`checkPlayers_${instanceId}`)
+        .setLabel('플레이어 확인')
+        .setStyle(ButtonStyle.Primary)
+        .setDisabled(!queries);
+
+    const row = new ActionRowBuilder()
+        .addComponents(playersButton);
+
     let embed;
     if (queries) {
         embed = new EmbedBuilder()
-            .setColor(SEVER_STATUS_COLOR[status])
+            .setColor(SERVER_STATUS_COLOR[status])
             .setTitle(queries.info.name)
             .setURL(`https://files.hirua.me/presets/${message.id}.html`)
             .setAuthor({ 
-                name: user ? user.displayName : '고정된 서버', 
-                url: user ? user.url : undefined,
-                iconURL: user ? user.avatarUrl : 'https://files.hirua.me/images/shallot.jpg'
+                name: user.displayName,
+                url: user.url,
+                iconURL: user.avatarUrl
             })
             .setDescription("Arma 3" + "\n```\n" + queries.info.connect +"\n```")
             .setThumbnail('https://files.hirua.me/images/games/arma3.png')
@@ -36,16 +64,17 @@ export async function registerArma3ServerEmbed(message: Message<true>, queries?:
             .setImage('https://files.hirua.me/images/announcement.png')
             .setTimestamp(time)
             .setFooter({ text: `Online - ${queries.info.ping}ms`, iconURL: `https://files.hirua.me/images/status/${ping}` });
+
     }
     else {
         embed = new EmbedBuilder()
-            .setColor(SEVER_STATUS_COLOR[status])
+            .setColor(SERVER_STATUS_COLOR[status])
             .setTitle('오프라인')
             .setURL(`https://files.hirua.me/presets/${message.id}.html`)
             .setAuthor({ 
-                name: user ? user.displayName : '고정된 서버', 
-                url: user ? user.url : undefined,
-                iconURL: user ? user.avatarUrl : 'https://files.hirua.me/images/shallot.jpg'
+                name: user.displayName,
+                url: user.url,
+                iconURL: user.avatarUrl
             })
             .setDescription("Arma 3" + "\n```\n" + "Offline" +"\n```")
             .setThumbnail('https://files.hirua.me/images/games/arma3_offline.png')
@@ -57,24 +86,35 @@ export async function registerArma3ServerEmbed(message: Message<true>, queries?:
             .setTimestamp(time)
             .setFooter({ text: 'Offline', iconURL: `https://files.hirua.me/images/status/${ping}` });
     }
-    await message.edit({ content: '', embeds: [embed] });
+
+    await message.edit({ content: '', embeds: [embed], components: [row as any] });
     return { message: message };
 }
 
-export async function registerArmaResistanceServerEmbed(message: Message<true>, queries?: ArmaResistanceServerQueries, user?: InstanceUser, memo?: string) {
+export async function registerArmaResistanceServerEmbed(message: Message<true>, user: InstanceUser, instanceId: string, queries?: ArmaResistanceServerQueries, memo?: string) {
     const ping = queries ? queries.info.ping < 80 ? 'good.png' : queries.info.ping > 200 ? 'poor.png' : 'bad.png' : 'poor.png';
     const status = queries ? 'connected' : 'disconnected';
     const time = DateTime.now().toMillis();
+
+    const playersButton = new ButtonBuilder()
+        .setCustomId(`checkPlayers_${instanceId}`)
+        .setLabel('플레이어 확인')
+        .setStyle(ButtonStyle.Primary)
+        .setDisabled(!queries);
+
+    const row = new ActionRowBuilder()
+        .addComponents(playersButton);
+
     let embed;
     if (queries) {
         embed = new EmbedBuilder()
-            .setColor(SEVER_STATUS_COLOR[status])
+            .setColor(SERVER_STATUS_COLOR[status])
             .setTitle(queries.info.name)
             .setURL('https://discord.gg/9HzjsbjDD9')
             .setAuthor({ 
-                name: user ? user.displayName : '고정된 서버', 
-                url: user ? user.url : undefined,
-                iconURL: user ? user.avatarUrl : 'https://files.hirua.me/images/shallot.jpg'
+                name: user.displayName,
+                url: user.url,
+                iconURL: user.avatarUrl
             })
             .setDescription("Operation FlashPoint: Resistance" + "\n```\n" + queries.info.connect +"\n```")
             .setThumbnail('https://files.hirua.me/images/games/armaresistance.png')
@@ -93,13 +133,13 @@ export async function registerArmaResistanceServerEmbed(message: Message<true>, 
     }
     else {
         embed = new EmbedBuilder()
-            .setColor(SEVER_STATUS_COLOR[status])
+            .setColor(SERVER_STATUS_COLOR[status])
             .setTitle('오프라인')
             .setURL('https://discord.gg/9HzjsbjDD9')
             .setAuthor({ 
-                name: user ? user.displayName : '고정된 서버', 
-                url: user ? user.url : undefined,
-                iconURL: user ? user.avatarUrl : 'https://files.hirua.me/images/shallot.jpg'
+                name: user.displayName,
+                url: user.url,
+                iconURL: user.avatarUrl
             })
             .setDescription("Operation FlashPoint: Resistance" + "\n```\n" + "Offline" +"\n```")
             .setThumbnail('https://files.hirua.me/images/games/armaresistance_offline.png')
@@ -111,6 +151,7 @@ export async function registerArmaResistanceServerEmbed(message: Message<true>, 
             .setTimestamp(time)
             .setFooter({ text: 'Offline', iconURL: `https://files.hirua.me/images/status/${ping}` });
     }
-    await message.edit({ content: '', embeds: [embed] });
+
+    await message.edit({ content: '', embeds: [embed], components: [row as any] });
     return { message: message };
 }
