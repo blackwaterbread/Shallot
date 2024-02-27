@@ -24,7 +24,7 @@ async function handleRefresh(listChannel: TextChannel, instance: Instance, insta
                 else if (!isPriority) {
                     instance.disconnectedFlag -= 1;
                 }
-                await registerArma3ServerEmbed(message, queries, instance.user, instance.memo);
+                await registerArma3ServerEmbed(message, queries, instance.registeredUser, instance.memo);
                 break;
             }
             case 'armareforger': {
@@ -33,7 +33,7 @@ async function handleRefresh(listChannel: TextChannel, instance: Instance, insta
             case 'armaresistance': {
                 queries = await queryArmaResistance(instance.connection);
                 if (!queries) if (!isPriority) instance.disconnectedFlag -= 1;
-                await registerArmaResistanceServerEmbed(message, queries, instance.user, instance.memo);
+                await registerArmaResistanceServerEmbed(message, queries, instance.registeredUser, instance.memo);
                 break;
             }
         }
