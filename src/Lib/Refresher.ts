@@ -37,6 +37,14 @@ async function handleRefresh(listChannel: TextChannel, instance: Instance, insta
                     instance.disconnectedFlag -= 1;
                 }
                 await registerArma3ServerEmbed(message, instance.registeredUser, instanceId, queries, instance.memo);
+                instanceStorage.set(instanceId, {
+                    ...instance,
+                    players: queries?.info.players.map((x: any) => ({
+                        name: x.name, 
+                        score: x.raw.score,
+                        time: x.raw.time
+                    })),
+                })
                 break;
             }
             case 'armareforger': {
@@ -46,6 +54,12 @@ async function handleRefresh(listChannel: TextChannel, instance: Instance, insta
                 queries = await queryArmaResistance(instance.connection);
                 if (!queries) if (!instance.isPriority) instance.disconnectedFlag -= 1;
                 await registerArmaResistanceServerEmbed(message, instance.registeredUser, instanceId, queries, instance.memo);
+                instanceStorage.set(instanceId, {
+                    ...instance,
+                    players: queries?.info.players.map((x: any) => ({
+                        name: x.name
+                    })) as any,
+                })
                 break;
             }
         }
