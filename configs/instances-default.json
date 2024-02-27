@@ -1,1 +1,22 @@
-[]
+[
+    [
+        "ServerID",
+        {
+            "channels": {
+                "interaction": {
+                    "channelId": "INTERACTION-CHANNEL-ID",
+                    "noticeMessageId": "",
+                    "registerMessageId": "",
+                    "deleteMessageId": ""
+                },
+                "servers": {
+                    "channelId": "SERVERLIST-CHANNEL-ID"
+                }
+            },
+            "instances": {
+                "normal": [],
+                "priority": []
+            }
+        }
+    ]
+]
