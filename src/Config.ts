@@ -53,8 +53,13 @@ export interface InstanceStorage {
     }
 }
 
-const CONFIGS = JSON.parse(fs.readFileSync('./configs/configs.json').toString('utf8')) as AppConfigs;
-const STORAGE = new Map<string, InstanceStorage>(JSON.parse(fs.readFileSync('./configs/instances.json').toString('utf8')));
+const IS_DEVELOPMENT = process.env.NODE_ENV === 'development';
+
+const CONFIGS_PATH = IS_DEVELOPMENT ? './configs/configs.json' : `${__dirname}/configs/configs.json`;
+const STORAGE_PATH = IS_DEVELOPMENT ? './configs/instances.json' : `${__dirname}/configs/instances.json`;
+
+const CONFIGS = JSON.parse(fs.readFileSync(CONFIGS_PATH).toString('utf8')) as AppConfigs;
+const STORAGE = new Map<string, InstanceStorage>(JSON.parse(fs.readFileSync(STORAGE_PATH).toString('utf8')));
 
 for (const [k, v] of STORAGE) {
     v.instances.normal = new Map(v.instances.normal);
@@ -67,7 +72,6 @@ const {
     STATIC_PATH: ENV_STATIC_PATH 
 } = process.env;
 
-const IS_DEVELOPMENT = process.env.NODE_ENV === 'development';
 const TOKEN = IS_DEVELOPMENT ? ENV_TOKEN : CONFIGS.token;
 const APP_ID = IS_DEVELOPMENT ? ENV_APP_ID : CONFIGS.app_id;
 const STATIC_PATH = IS_DEVELOPMENT ? ENV_STATIC_PATH : CONFIGS.static_path
