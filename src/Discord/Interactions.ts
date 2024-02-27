@@ -89,6 +89,7 @@ export async function handleInteractions(interaction: Interaction) {
                                 const stanbyMessage = await registerStanbyMessage(serverChannel);
                                 const presetPath = savePresetHtml(stanbyMessage.id, serverQueries.preset);
                                 const instanceUser = {
+                                    id: user.id,
                                     displayName: user.displayName,
                                     url: `https://discordapp.com/users/${user.id}`,
                                     avatarUrl: user.avatarURL() ?? ''
@@ -97,7 +98,7 @@ export async function handleInteractions(interaction: Interaction) {
                                 storage.instances.normal.set(interaction.user.id, {
                                     messageId: embed.message.id,
                                     game: 'arma3',
-                                    user: instanceUser,
+                                    registeredUser: instanceUser,
                                     connection: {
                                         host: ipAddr,
                                         port: port,
@@ -129,6 +130,7 @@ export async function handleInteractions(interaction: Interaction) {
                                 }
                                 const stanbyMessage = await registerStanbyMessage(serverChannel);
                                 const instanceUser = {
+                                    id: user.id,
                                     displayName: user.displayName,
                                     url: `https://discordapp.com/users/${user.id}`,
                                     avatarUrl: user.avatarURL() ?? ''
@@ -137,7 +139,7 @@ export async function handleInteractions(interaction: Interaction) {
                                 storage.instances.normal.set(interaction.user.id, {
                                     messageId: embed.message.id,
                                     game: 'armaresistance',
-                                    user: instanceUser,
+                                    registeredUser: instanceUser,
                                     connection: {
                                         host: ipAddr,
                                         port: port,
