@@ -83,6 +83,19 @@ const ARMA_3_DLCs = new Map([
     ['AOW',         0x1000]
 ]);
 
+const ARMA_3_CDLCS = new Map([
+    // Compatibility | https://steamcommunity.com/sharedfiles/filedetails/?id=1776428269
+    [1042220, 'Global Mobilization - Cold War Germany'],
+    // Compatibility | https://steamcommunity.com/sharedfiles/filedetails/?id=2477276806
+    [1227700, 'S.O.G. Prairie Fire'],
+    // Compatibility | https://steamcommunity.com/sharedfiles/filedetails/?id=2503886780
+    [1294440, 'CSLA Iron Curtain'],
+    // Compatibility | https://steamcommunity.com/sharedfiles/filedetails/?id=2991828484
+    [1175380, 'Spearhead 1944'],
+    // Compatibility | https://steamcommunity.com/sharedfiles/filedetails/?id=2636962953
+    [1681170, 'Western Sahara']
+])
+
 const RULES_ESCAPED = new Map([
     ['0101', '01'],
     ['0102', '00'],
@@ -398,16 +411,22 @@ export function parseArma3Rules(message: Buffer, startOffset: number = 0x00): Ar
     /* parse mods information */
     const modsBit = buf.readUInt8(offset++);
     const mods: any = {};
+
     for (let i = 0; i < modsBit; i++) {
         const modHash = buf.readUInt32LE(offset);
         offset += 0x04;
         const steamidBit = buf.readUInt8(offset++);
         const steamidLength = steamidBit & 0b1111;
-        let steamid;
+        let steamid: number;
         switch (steamidLength) {
             case 0x04:
                 steamid = buf.readUInt32LE(offset);
                 offset += 0x04;
+                break;
+            case 0x03:
+                // steamid = buf.readUInt24LE(offset);
+                steamid = parseInt(buf.subarray(offset, offset + 0x03).reverse().toString('hex'), 16);
+                offset += 0x03;
                 break;
             case 0x02:
                 steamid = buf.readUInt16LE(offset);
@@ -416,16 +435,24 @@ export function parseArma3Rules(message: Buffer, startOffset: number = 0x00): Ar
             case 0x01:
                 steamid = buf.readUint8(offset++);
                 break;
+            default:
+                steamid = 0x00;
+                break;
         }
-        // const steamid = buf.subarray(offset, offset += steamidLength);
+
         let isServerside = false;
         const isDLC = Boolean(steamidBit & 0b10000);
-
-        /* todo: identify server mods */
         if (steamidLength === 0) isServerside = true;
-
+        
+        let modName: string;
         const modNameLength = buf.readUInt8(offset++);
-        const modName = buf.subarray(offset, offset += modNameLength).toString('utf8');
+        if (isDLC) {
+            const cdlc = ARMA_3_CDLCS.get(steamid);
+            modName = cdlc ?? `Unknown CDLC[${modHash.toString()}]`;
+        }
+        else {
+            modName = buf.subarray(offset, offset += modNameLength).toString('utf8');
+        }
 
         mods[modName] = {
             hash: modHash,
@@ -440,7 +467,7 @@ export function parseArma3Rules(message: Buffer, startOffset: number = 0x00): Ar
     const signatures = [];
     for (let i = 0; i < signaturesBit; i++) {
         const signLength = buf.readUInt8(offset++);
-        const sign = buf.slice(offset, offset += signLength);
+        const sign = buf.subarray(offset, offset += signLength);
         signatures.push(sign);
     }
 
@@ -480,18 +507,18 @@ function createContainers(mods: Arma3ServerMod) {
                     <td>
                         <a href="${url}" data-type="Link">${url}</a>
                     </td>
-                </tr>\r\n`;
+                </tr>`;
             }
             else {
                 return;
             }
-        }).join('')}
+        }).join('\r\n')}
         </table>
     </div>`;
     
     let dlcContainers = '';
     if (_.findKey(mods, x => x.isDLC === true)) {
-        dlcContainers = `<div class="dlc-list">
+        dlcContainers = `\n<div class="dlc-list">
             <table>
                 ${modNames.map(name => {
                     const mod = mods[name];
@@ -502,12 +529,12 @@ function createContainers(mods: Arma3ServerMod) {
                             <td>
                                 <a href="${url}" data-type="Link">${url}</a>
                             </td>
-                        </tr>\r\n`
+                        </tr>`
                     }
                     else {
                         return;
                     }
-                }).join('')}
+                }).join('\r\n')}
             </table>
         </div>`;
     }
