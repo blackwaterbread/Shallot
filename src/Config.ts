@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import { AvailableGame } from 'Types';
 import { logNormal } from 'Lib/Log';
 import { advStringify } from 'Lib/Utils';
-import nodePackage from '../package.json';
+import appJson from 'root/package.json';
 import path from 'path';
 dotenv.config();
 
@@ -99,7 +99,7 @@ export function savePresetHtml(filename: string, preset: string) {
 
 export default {
     isDevelopment: IS_DEVELOPMENT,
-    version: nodePackage.version,
+    version: appJson.version,
     discord: {
         token: token,
         appid: app_id,
