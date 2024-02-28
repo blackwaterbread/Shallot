@@ -40,16 +40,25 @@ export async function registerArma3ServerEmbed(message: Message<true>, user: Ins
 
     let embed;
     if (queries) {
+        const CDLCs = Object.entries(queries.rules.mods)
+            .filter(([k, v]) => v.isDLC === true)
+            .map(([k, v]) => `[${k}](https://store.steampowered.com/app/${v.steamid})`);
+
         embed = new EmbedBuilder()
             .setColor(SERVER_STATUS_COLOR[status])
             .setTitle(queries.info.name)
             .setURL(`https://files.hirua.me/presets/${message.id}.html`)
-            .setAuthor({ 
+            .setAuthor({
                 name: user.displayName,
                 url: user.url,
                 iconURL: user.avatarUrl
             })
-            .setDescription("Arma 3" + "\n```\n" + queries.info.connect +"\n```")
+            .setDescription(
+                "Arma 3 | " +
+                `BattlEye ${queries.tags.battleEye ? 'On' : 'Off'}` +
+                "\n```\n" + queries.info.connect +
+                "\n```"
+            )
             .setThumbnail('https://files.hirua.me/images/games/arma3.png')
             .addFields(
                 { name: '모드', value: queries.info.raw.game, inline: false },
@@ -58,7 +67,8 @@ export async function registerArma3ServerEmbed(message: Message<true>, user: Ins
                 { name: '맵', value: queries.info.map, inline: true },
                 { name: '버전', value: queries.info.raw.version, inline: true },
                 { name: '플레이어', value: `${queries.info.numplayers} / ${queries.info.maxplayers}`, inline: true },
-                { name: '배틀아이', value: queries.tags.battleEye ? '적용' : '미적용', inline: true },
+                { name: 'CDLC', value: `${CDLCs.length < 1 ? '없음' : `${CDLCs.join('\n')}`}`, inline: false },
+                // { name: '배틀아이', value: queries.tags.battleEye ? '적용' : '미적용', inline: true },
                 { name: '메모', value: `> ${memo ? memo : '메모가 없습니다.'}`, inline: false },
             )
             .setImage('https://files.hirua.me/images/announcement.png')
@@ -71,12 +81,12 @@ export async function registerArma3ServerEmbed(message: Message<true>, user: Ins
             .setColor(SERVER_STATUS_COLOR[status])
             .setTitle('오프라인')
             .setURL(`https://files.hirua.me/presets/${message.id}.html`)
-            .setAuthor({ 
+            .setAuthor({
                 name: user.displayName,
                 url: user.url,
                 iconURL: user.avatarUrl
             })
-            .setDescription("Arma 3" + "\n```\n" + "Offline" +"\n```")
+            .setDescription("Arma 3" + "\n```\n" + "Offline" + "\n```")
             .setThumbnail('https://files.hirua.me/images/games/arma3_offline.png')
             .addFields(
                 { name: '상태', value: '오프라인', inline: false },
@@ -111,12 +121,12 @@ export async function registerArmaResistanceServerEmbed(message: Message<true>, 
             .setColor(SERVER_STATUS_COLOR[status])
             .setTitle(queries.info.name)
             .setURL('https://discord.gg/9HzjsbjDD9')
-            .setAuthor({ 
+            .setAuthor({
                 name: user.displayName,
                 url: user.url,
                 iconURL: user.avatarUrl
             })
-            .setDescription("Operation FlashPoint: Resistance" + "\n```\n" + queries.info.connect +"\n```")
+            .setDescription("Operation FlashPoint: Resistance" + "\n```\n" + queries.info.connect + "\n```")
             .setThumbnail('https://files.hirua.me/images/games/armaresistance.png')
             .addFields(
                 { name: '모드', value: _.isEmpty(queries.info.raw.mod) ? '--' : queries.info.raw.mod, inline: false },
@@ -136,12 +146,12 @@ export async function registerArmaResistanceServerEmbed(message: Message<true>, 
             .setColor(SERVER_STATUS_COLOR[status])
             .setTitle('오프라인')
             .setURL('https://discord.gg/9HzjsbjDD9')
-            .setAuthor({ 
+            .setAuthor({
                 name: user.displayName,
                 url: user.url,
                 iconURL: user.avatarUrl
             })
-            .setDescription("Operation FlashPoint: Resistance" + "\n```\n" + "Offline" +"\n```")
+            .setDescription("Operation FlashPoint: Resistance" + "\n```\n" + "Offline" + "\n```")
             .setThumbnail('https://files.hirua.me/images/games/armaresistance_offline.png')
             .addFields(
                 { name: '상태', value: '오프라인', inline: false },
