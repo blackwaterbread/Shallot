@@ -2,8 +2,17 @@
 # Shallot
 Server information display bot for Bohemia Interactive's games
 
-## Disclaimer
-* [Shallot](https://namu.wiki/w/%EC%83%AC%EB%A1%AF(%ED%8C%A5%EC%A5%90%20%EC%8B%9C%EB%A6%AC%EC%A6%88)) is the character of Korean YouTuber named [potg](https://www.youtube.com/channel/UCw4MwGSaNYbG0cKV02Kq6tw).
+## Features
+* Display server information on Discord channel
+* Display players name
+* Any users can add their own server
+* Automatically delete disconnected servers from the list
+* Allows specify a priority server
+    - Priority server: privilege that exemption automatic delete from list
+
+## Plan
+* English Translation
+* More games support
 
 ## Supported
 * [Arma 3](https://store.steampowered.com/app/107410/Arma_3/)
@@ -57,7 +66,7 @@ Initialize
 ]
 ```
 
-Add priority server
+Adding priority server (* Not required)
 ```
 ...,
 "instances": {
@@ -66,18 +75,22 @@ Add priority server
         [
             "Any ID",
             {
+                "isPriority": true,
+                "hostname": "",
                 "messageId": "",
-                "game": "arma3 or armaresistance",
-                "user": {
-                    "displayName": "Static Server",
-                    "url": "https://discordapp.com/users/BotID",
-                    "avatarUrl": "AvatarURL"
+                "game": "Your-Game-Name", 
+                "registeredUser": {
+                    "id": "0",
+                    "displayName": "Priority",
+                    "url": "https://discordapp.com/users/{Your-Bot-ID}",
+                    "avatarUrl": "Your-Bot-AvatarUrl"
                 },
                 "connection": {
-                    "host": "127.0.0.1",
-                    "port": "2302"
+                    "host": "Your-Server-IP",
+                    "port": Your-Server-Port
                 },
-                "memo": "",
+                "players": [],
+                "memo": "Some-Memo",
                 "disconnectedFlag": 4,
                 "loadedContentHash": "",
                 "presetPath": ""
@@ -91,8 +104,17 @@ Add priority server
 ```
 yarn install
 yarn build
-node dist/shallot.js
+node dist/shallot.js or pm2 start dist/shallot.js
 ```
+
+---
+
+# Contact
+* [@dayrain](https://discord.com/users/119027576692801536)
 
 # Thanks to
 * [Ryan Grupp](https://code.clearbackblast.com/Theowningone) / [Voss](https://code.clearbackblast.com/Theowningone/voss)
+
+# Disclaimer
+* [Shallot](https://namu.wiki/w/%EC%83%AC%EB%A1%AF(%ED%8C%A5%EC%A5%90%20%EC%8B%9C%EB%A6%AC%EC%A6%88)) is the character of Korean YouTuber named [potg](https://www.youtube.com/channel/UCw4MwGSaNYbG0cKV02Kq6tw)
+* This project does not have any rights over this character.
