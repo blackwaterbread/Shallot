@@ -7,6 +7,7 @@ import format from 'html-format';
 import { Connection } from 'Types';
 import { GameDig } from 'gamedig';
 import { logError } from 'Lib/Log';
+import appJson from 'root/package.json';
 
 const ARMA_3_SERVER_STATE = new Map([
     ['0', "NONE"],                /* no server */
@@ -252,10 +253,10 @@ const ARMA_3_HTML_TARGET_TD = 'DisplayName';
 const ARMA_3_HTML_TARGET_ATTR = 'data-type';
 const ARMA_3_HTML_TARGET_A_ATTR = 'href';
 const ARMA_3_HTML_KEYS = {
-    TARGET_DLC_LIST: 'dlc-list',
-    TARGET_DLC_CONTAINER: 'DlcContainer',
     TARGET_MOD_LIST: 'mod-list',
-    TARGET_MOD_CONTAINER: 'ModContainer'
+    TARGET_MOD_CONTAINER: 'ModContainer',
+    TARGET_DLC_LIST: 'dlc-list',
+    TARGET_DLC_CONTAINER: 'DlcContainer'
 } as const;
 
 export interface Arma3ServerQueries {
@@ -545,11 +546,11 @@ function createContainers(mods: Arma3ServerMod) {
 export function buildArma3PresetHtml(presetName: string, address: string, mods: Arma3ServerMod) {
     return `<?xml version="1.0" encoding="utf-8"?>
     <html>
-        <!--Created by Shallot Bot: https://github.com/blackwaterbread-->
+        <!--Created by ${appJson.displayName} Bot: https://github.com/blackwaterbread-->
         <head>
             <meta name="arma:Type" content="preset" />
             <meta name="arma:PresetName" content="${presetName}" />
-            <meta name="generator" content="Shallot Discord Bot" />
+            <meta name="generator" content="${appJson.displayName} Discord Bot" />
             <title>Arma 3</title>
             <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet" type="text/css" />
             <style>
@@ -626,11 +627,11 @@ export function buildArma3PresetHtml(presetName: string, address: string, mods: 
         <body>
             <h1><strong>${presetName}</strong></h1>
             <p class="before-list">
-                <em>${address} <br>오른쪽 클릭 - 다른 이름으로 저장 | 아르마 3 런쳐에 드래그해서 로드</em>
+                <em>오른쪽 클릭 - 다른 이름으로 저장 | 아르마 3 런쳐에 드래그해서 로드</em>
             </p>
             ${createContainers(mods)}
             <div class="footer">
-                <span>Shallot Discord 봇에 의해서 생성되었습니다. <br>아르마 갤러리 디스코드 | https://discord.gg/5Qz4ZxFJCs</span>
+                <span>${appJson.displayName} Discord 봇에 의해서 생성되었습니다. 아르마 갤러리 디스코드 | https://discord.gg/5Qz4ZxFJCs</span>
             </div>
         </body>
     </html>`;
