@@ -5,6 +5,7 @@ import { channelTrack, instanceTrack, logError, logNormal } from "./Log";
 import { registerArma3ServerEmbed, registerArmaResistanceServerEmbed } from "Discord/Embed";
 import { queryArma3 } from "Server/Arma3";
 import { queryArmaResistance } from "Server/ArmaResistance";
+import _ from "lodash";
 
 const INTERVAL = 15000;
 
@@ -14,7 +15,11 @@ async function handleRefresh(listChannel: TextChannel, instance: Instance, insta
 
     /* message exist check */
     try {
+        if (_.isEmpty(instance.messageId)) {
+            throw new Error();
+        }
         message = await listChannel.messages.fetch(instance.messageId);
+        if (!message) throw new Error();
     }
     catch {
         logNormal(`[Discord] 새로고침 실패: 메세지가 존재하지 않는 것 같음 ${trackLog}`);
@@ -97,18 +102,11 @@ async function tasksRefresh(client: Client<true>) {
 
 class Refresher {
     /* todo: request balancing */
-    // private timeoutInit: NodeJS.Timeout;
     private timeoutRefresh?: NodeJS.Timeout;
     constructor(client: Client<true>) {
         this.timeoutRefresh = setInterval(async () => {
             await tasksRefresh(client);
         }, INTERVAL);
-        // this.timeoutInit = setTimeout(() => {
-        //     var self = this;
-        //     self.timeoutRefresh = setInterval(async () => {
-        //         await ppp(client);
-        //     }, INTERVAL);
-        // }, INTERVAL);
     }
 }
 
