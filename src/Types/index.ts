@@ -10,16 +10,17 @@ export const SERVER_STATUS_COLOR = {
     discord: 0x5865F2
 } as const;
 
-export interface Connection { 
+export interface ConnectString { 
     host: string; 
     port: number;
 }
 
 export interface ServerQueries {
-    info: any,
-    tags: any,
-    rules: any,
-    preset: any
+    connect: ConnectString;
+    info: any;
+    tags: any;
+    rules: any;
+    preset: any;
 }
 
 export type AvailableGame = keyof typeof GAMES;

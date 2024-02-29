@@ -27,7 +27,7 @@ export function logWarning(msg: string) {
 }
 
 export function instanceTrack(instance: Instance) {
-    return `[${instance.game}|${instance.messageId}|${instance.connection.host}:${instance.connection.port}]`;
+    return `[${instance.game}|${instance.messageId}|${instance.connect.host}:${instance.connect.port}]`;
 }
 
 export function channelTrack(channel: TextChannel) {

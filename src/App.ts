@@ -1,6 +1,6 @@
 import { Client, Events, GatewayIntentBits } from "discord.js";
 import { logError, logNormal, logWarning } from "Lib/Log";
-import { checkUnregisteredServer, initBotPresence, initPriorityInstances, initRegisterInteractMessages } from "Discord/Initalize";
+import { checkUnregisteredServer, initBotPresence, initRegisterInteractMessages } from "Discord/Initalize";
 import { handleInteractions } from "Discord/Interactions";
 import Refresher from "Lib/Refresher";
 import Config from 'Config';
@@ -22,7 +22,7 @@ async function app() {
         logNormal(`[Discord] Discord 로그인 성공 [${readyClient.user.id}, ${readyClient.user.tag}]`);
         await initBotPresence(readyClient);
         await initRegisterInteractMessages(readyClient);
-        await initPriorityInstances(readyClient);
+        // await initPriorityInstances(readyClient);
         refresher = new Refresher(readyClient);
     });
 

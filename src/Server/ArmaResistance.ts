@@ -1,5 +1,5 @@
 import { logError } from "Lib/Log";
-import { Connection, ServerQueries } from "Types";
+import { ConnectString, ServerQueries } from "Types";
 import { GameDig } from "gamedig";
 
 export interface ArmaResistanceServerQueries extends ServerQueries {
@@ -41,15 +41,16 @@ export interface ArmaResistanceServerQueries extends ServerQueries {
     },
 }
 
-export async function queryArmaResistance(connection: Connection): Promise<ArmaResistanceServerQueries | undefined> {
+export async function queryArmaResistance(connection: ConnectString): Promise<ArmaResistanceServerQueries | undefined> {
     const { host, port } = connection;
     try {
         const state: any = await GameDig.query({
+            // this for 2.01, 1.99 : 'acwa'
             type: 'armaresistance',
             host: host,
             port: port
         });
-        return { info: state, tags: undefined, rules: undefined, preset: undefined };
+        return { connect: state.connect, info: state, tags: undefined, rules: undefined, preset: undefined };
     }
     catch (e) {
         logError(`[App] Failed query ArmaResistance Server: ${e}`);
