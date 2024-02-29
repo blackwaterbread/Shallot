@@ -24,10 +24,10 @@ async function handleRefresh(listChannel: TextChannel, instance: Instance, insta
         if (!message) throw new Error();
     }
     catch {
-        logNormal(`[Discord] 새로고침 실패: 메세지가 존재하지 않는 것 같음 ${trackLog}`);
         instanceStorage.delete(instanceId);
         saveStorage();
-        logNormal(`[Discord] 인스턴스 삭제: ${trackLog}`);
+        logNormal(`[Discord] 새로고침 실패: 메세지가 존재하지 않는 것 같음, 인스턴스 삭제: ${trackLog}`);
+        return;
     }
 
     if (message) {
@@ -70,7 +70,6 @@ async function handleRefresh(listChannel: TextChannel, instance: Instance, insta
             if (!isPriority && instance.disconnectedFlag < 0) {
                 instanceStorage.delete(instanceId);
                 await message.delete();
-                saveStorage();
                 logNormal(`[Discord] 인스턴스 삭제: ${trackLog}`);
             }
         }
@@ -79,6 +78,7 @@ async function handleRefresh(listChannel: TextChannel, instance: Instance, insta
         instanceStorage.delete(instanceId);
         logError(`[Discord] 새로고침할 메세지 ID가 없습니다, 인스턴스를 삭제합니다: ${trackLog}`);
     }
+    saveStorage();
 }
 
 async function tasksRefresh(client: Client<true>) {
