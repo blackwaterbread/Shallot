@@ -6,10 +6,11 @@ import { queryArma3 } from "Server/Arma3";
 import { getDeleteInteractionMessage, getNoticeMessage, getRegisterInteractionMessage, registerStanbyMessage } from "./Message";
 import { registerArma3ServerEmbed, registerArmaResistanceServerEmbed } from "./Embed";
 import { queryArmaResistance } from "Server/ArmaResistance";
+import appJson from 'root/package.json';
 
 export async function initBotPresence(client: Client<true>) {
     client.user.setPresence({
-        activities: [{ name: 'Arma 4', type: ActivityType.Playing }],
+        activities: [{ name: `${appJson.name}/${Config.version}-beta`, type: ActivityType.Playing }],
         status: 'online',
     });
     logNormal('[Discord] 봇 상태 설정 완료');
