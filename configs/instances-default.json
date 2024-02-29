@@ -13,38 +13,7 @@
                     "channelId": "SERVERLIST-CHANNEL-ID"
                 }
             },
-            "instances": [
-                [
-                    "Key",
-                    {
-                        "isPriority": false,
-                        "hostname": "",
-                        "messageId": "",
-                        "game": "",
-                        "registeredUser": {
-                            "id": "",
-                            "displayName": "",
-                            "url": "",
-                            "avatarUrl": ""
-                        },
-                        "connection": {
-                            "host": "",
-                            "port": 0
-                        },
-                        "players": [
-                            {
-                                "name": "",
-                                "score": 0,
-                                "time": 0
-                            }
-                        ],
-                        "memo": "",
-                        "disconnectedFlag": 4,
-                        "loadedContentHash": "",
-                        "presetPath": ""
-                    }
-                ]
-            ]
+            "instances": []
         }
     ]
 ]
