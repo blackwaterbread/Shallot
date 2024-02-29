@@ -6,7 +6,7 @@ import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, EmbedB
 import { DateTime } from "luxon";
 import Config, { InstanceUser } from "Config";
 
-export async function registerPlayersEmbed(interaction: ButtonInteraction, serverId: string, instanceId: string) {
+export function getPlayersEmbed(serverId: string, instanceId: string) {
     const instance = Config.storage.get(serverId)!.instances.get(instanceId);
     if (!instance) return;
 
@@ -20,10 +20,11 @@ export async function registerPlayersEmbed(interaction: ButtonInteraction, serve
         .setTimestamp(time)
         .setFooter({ text: '(주의) 이 임베드는 실시간으로 갱신되지 않습니다.', iconURL: 'https://files.hirua.me/images/status/warning.png' });
 
-    await interaction.reply({ content: '', embeds: [embed], ephemeral: true });
+    // await interaction.reply({ content: '', embeds: [embed], ephemeral: true });
+    return { content: '', embeds: [embed], ephemeral: true };
 }
 
-export async function registerArma3ServerEmbed(message: Message<true>, user: InstanceUser, instanceId: string, queries?: Arma3ServerQueries, memo?: string) {
+export function getArma3ServerEmbed(user: InstanceUser, instanceId: string, queries?: Arma3ServerQueries, memo?: string) {
     const ping = queries ? queries.info.ping < 80 ? 'good.png' : queries.info.ping > 200 ? 'poor.png' : 'bad.png' : 'poor.png';
     const status = queries ? 'connected' : 'disconnected';
     const time = DateTime.now().toMillis();
@@ -47,7 +48,7 @@ export async function registerArma3ServerEmbed(message: Message<true>, user: Ins
         embed = new EmbedBuilder()
             .setColor(SERVER_STATUS_COLOR[status])
             .setTitle(queries.info.name)
-            .setURL(`https://files.hirua.me/presets/${message.id}.html`)
+            .setURL(`https://files.hirua.me/presets/${queries.connect}.html`)
             .setAuthor({
                 name: user.displayName,
                 url: user.url,
@@ -65,7 +66,7 @@ export async function registerArma3ServerEmbed(message: Message<true>, user: Ins
                 // { name: '\u200B', value: '\u200B' },
                 { name: '상태', value: queries.tags.serverState, inline: false },
                 { name: '맵', value: queries.info.map, inline: true },
-                { name: '버전', value: queries.info.raw.version, inline: true },
+                { name: '버전', value: queries.info.version, inline: true },
                 { name: '플레이어', value: `${queries.info.numplayers} / ${queries.info.maxplayers}`, inline: true },
                 { name: 'CDLC', value: `${CDLCs.length < 1 ? '없음' : `${CDLCs.join('\n')}`}`, inline: false },
                 // { name: '배틀아이', value: queries.tags.battleEye ? '적용' : '미적용', inline: true },
@@ -80,7 +81,7 @@ export async function registerArma3ServerEmbed(message: Message<true>, user: Ins
         embed = new EmbedBuilder()
             .setColor(SERVER_STATUS_COLOR[status])
             .setTitle('오프라인')
-            .setURL(`https://files.hirua.me/presets/${message.id}.html`)
+            // .setURL(`https://files.hirua.me/presets/${message.id}.html`)
             .setAuthor({
                 name: user.displayName,
                 url: user.url,
@@ -92,16 +93,16 @@ export async function registerArma3ServerEmbed(message: Message<true>, user: Ins
                 { name: '상태', value: '오프라인', inline: false },
                 { name: '메모', value: `> ${memo ? memo : '메모가 없습니다.'}`, inline: false },
             )
-            .setImage('https://files.hirua.me/images/announcement.png')
+            .setImage('https://files.hirua.me/images/offline.png')
             .setTimestamp(time)
             .setFooter({ text: 'Offline', iconURL: `https://files.hirua.me/images/status/${ping}` });
     }
 
-    await message.edit({ content: '', embeds: [embed], components: [row as any] });
-    return { message: message };
+    // await message.edit({ content: '', embeds: [embed], components: [row as any] });
+    return { content: '', embeds: [embed], components: [row as any] };
 }
 
-export async function registerArmaResistanceServerEmbed(message: Message<true>, user: InstanceUser, instanceId: string, queries?: ArmaResistanceServerQueries, memo?: string) {
+export function getArmaResistanceServerEmbed(user: InstanceUser, instanceId: string, queries?: ArmaResistanceServerQueries, memo?: string) {
     const ping = queries ? queries.info.ping < 80 ? 'good.png' : queries.info.ping > 200 ? 'poor.png' : 'bad.png' : 'poor.png';
     const status = queries ? 'connected' : 'disconnected';
     const time = DateTime.now().toMillis();
@@ -157,11 +158,11 @@ export async function registerArmaResistanceServerEmbed(message: Message<true>, 
                 { name: '상태', value: '오프라인', inline: false },
                 { name: '메모', value: `> ${memo ? memo : '메모가 없습니다.'}`, inline: false },
             )
-            .setImage('https://files.hirua.me/images/banner.png')
+            .setImage('https://files.hirua.me/images/offline.png')
             .setTimestamp(time)
             .setFooter({ text: 'Offline', iconURL: `https://files.hirua.me/images/status/${ping}` });
     }
 
-    await message.edit({ content: '', embeds: [embed], components: [row as any] });
-    return { message: message };
+    // await message.edit({ content: '', embeds: [embed], components: [row as any] });
+    return { content: '', embeds: [embed], components: [row as any] };
 }

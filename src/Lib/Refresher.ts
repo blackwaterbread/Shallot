@@ -1,24 +1,26 @@
-import { setInterval, setTimeout } from "timers";
+import _ from "lodash";
+import { setInterval } from "timers";
 import { Client, Message, TextChannel } from "discord.js";
 import Config, { Instance, savePresetHtml, saveStorage } from "Config";
 import { channelTrack, instanceTrack, logError, logNormal } from "./Log";
-import { registerArma3ServerEmbed, registerArmaResistanceServerEmbed } from "Discord/Embed";
+import { getArma3ServerEmbed, getArmaResistanceServerEmbed } from "Discord/Embed";
 import { queryArma3 } from "Server/Arma3";
 import { queryArmaResistance } from "Server/ArmaResistance";
-import _ from "lodash";
 
 const INTERVAL = 15000;
 
 async function handleRefresh(listChannel: TextChannel, instance: Instance, instanceId: string, instanceStorage: Map<string, Instance>) {
-    let message: Message<true> | undefined;
     const trackLog = `${channelTrack(listChannel)}${instanceTrack(instance)}`;
+    const { isPriority, registeredUser, messageId, game, connect, loadedContentHash } = instance;
+    let message: Message<true> | undefined;
+    let queries, embed;
 
     /* message exist check */
     try {
-        if (_.isEmpty(instance.messageId)) {
+        if (_.isEmpty(messageId)) {
             throw new Error();
         }
-        message = await listChannel.messages.fetch(instance.messageId);
+        message = await listChannel.messages.fetch(messageId);
         if (!message) throw new Error();
     }
     catch {
@@ -29,52 +31,43 @@ async function handleRefresh(listChannel: TextChannel, instance: Instance, insta
     }
 
     if (message) {
-        let queries;
-        switch (instance.game) {
+        switch (game) {
             case 'arma3': {
-                queries = await queryArma3(instance.connection);
-                if (queries && instance.loadedContentHash !== queries.tags.loadedContentHash) {
-                    savePresetHtml(instance.messageId, queries.preset);
+                queries = await queryArma3(connect);
+                if (queries && loadedContentHash !== queries.tags.loadedContentHash) {
+                    savePresetHtml(messageId, queries.preset);
                     instance.loadedContentHash = queries.tags.loadedContentHash;
                     saveStorage();
                 }
-                else if (!instance.isPriority) {
-                    instance.disconnectedFlag -= 1;
-                }
-                await registerArma3ServerEmbed(message, instance.registeredUser, instanceId, queries, instance.memo);
-                instanceStorage.set(instanceId, {
-                    ...instance,
-                    players: queries?.info.players.map((x: any) => ({
-                        name: x.name, 
-                        score: x.raw.score,
-                        time: x.raw.time
-                    })),
-                })
+                embed = getArma3ServerEmbed(registeredUser, instanceId, queries, instance.memo);
                 break;
             }
             case 'armareforger': {
                 break;
             }
             case 'armaresistance': {
-                queries = await queryArmaResistance(instance.connection);
-                if (!queries) if (!instance.isPriority) instance.disconnectedFlag -= 1;
-                await registerArmaResistanceServerEmbed(message, instance.registeredUser, instanceId, queries, instance.memo);
-                instanceStorage.set(instanceId, {
-                    ...instance,
-                    players: queries?.info.players.map((x: any) => ({
-                        name: x.name
-                    })) as any,
-                })
+                queries = await queryArmaResistance(connect);
+                embed = getArmaResistanceServerEmbed(registeredUser, instanceId, queries, instance.memo);
                 break;
             }
         }
 
         if (queries) {
+            instance.disconnectedFlag = 4;
+            instanceStorage.set(instanceId, {
+                ...instance,
+                players: queries?.info.players.map((x: any) => ({
+                    name: x.name
+                })),
+            });
+            await message.edit(embed as any);
             logNormal(`[Discord] 새로고침 완료: ${trackLog}`);
         }
         else {
+            if (!isPriority) instance.disconnectedFlag -= 1;
             logNormal(`[Discord] 새로고침 실패: ${trackLog}`);
-            if (!instance.isPriority && instance.disconnectedFlag < 0) {
+            await message.edit(embed as any);
+            if (!isPriority && instance.disconnectedFlag < 0) {
                 instanceStorage.delete(instanceId);
                 await message.delete();
                 saveStorage();

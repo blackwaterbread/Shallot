@@ -1,10 +1,9 @@
 import _ from 'lodash';
 import { BufferList } from 'bl';
-// import { ServerInfo } from "Ref/Protocol";
 import { getBoolean, insertChar } from 'Lib/Utils';
 import { HTMLElement, parse } from 'node-html-parser';
 import format from 'html-format';
-import { Connection, ServerQueries } from 'Types';
+import { ConnectString, ServerQueries } from 'Types';
 import { GameDig } from 'gamedig';
 import { logError } from 'Lib/Log';
 import appJson from 'root/package.json';
@@ -332,7 +331,7 @@ export type Arma3ServerPlayers = Array<{
 
 type Arma3HtmlAddonsList = Array<{ name?: string, url: string }>;
 
-export async function queryArma3(connection: Connection): Promise<Arma3ServerQueries | undefined> {
+export async function queryArma3(connection: ConnectString): Promise<Arma3ServerQueries | undefined> {
     const { host, port } = connection;
     try {
         const state: any = await GameDig.query({
@@ -352,7 +351,7 @@ export async function queryArma3(connection: Connection): Promise<Arma3ServerQue
         });
         const rules = parseArma3Rules(state.raw!.rulesBytes);
         const preset = format(buildArma3PresetHtml(state.name, `${host}:${port}`, rules.mods), " ".repeat(4), 200);
-        return { info: info, tags: tags as Arma3ServerGametag, rules: rules, preset: preset };
+        return { connect: info.connect, info: info, tags: tags as Arma3ServerGametag, rules: rules, preset: preset };
     }
     catch (e) {
         logError(`[App] Failed query Arma3 Server: ${e}`);

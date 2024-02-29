@@ -38,7 +38,7 @@ export interface Instance {
     game: AvailableGame;
     registeredUser: InstanceUser;
     hostname: string;
-    connection: InstanceConnection;
+    connect: InstanceConnection;
     players: InstancePlayers;
     memo: string;
     disconnectedFlag: number;
@@ -58,7 +58,7 @@ export interface InstanceStorage {
             channelId: string;
         }
     },
-    instances: Map<string, Instance>;
+    instances: Map<string, Instance>; // connectionString, Instance
 }
 
 const IS_DEVELOPMENT = process.env.NODE_ENV === 'development';
@@ -85,15 +85,20 @@ export function saveStorage() {
     fs.writeFileSync('./Configs/instances.json', p);
 }
 
-export function savePresetHtml(filename: string, preset: string) {
-    try {
-        const path = `${static_path}/presets/${filename}.html`;
-        fs.writeFileSync(path, preset);
-        logNormal(`[App] Arma 3 Preset Generated: ${path}`);
-        return path;
+export function savePresetHtml(filename: string, preset?: string) {
+    if (preset) {
+        try {
+            const path = `${static_path}/presets/${filename}.html`;
+            fs.writeFileSync(path, preset);
+            logNormal(`[App] Arma 3 Preset Generated: ${path}`);
+            return path;
+        }
+        catch (e) {
+            throw new Error(`[App] savePresetHtml Error: ${e}`);
+        }
     }
-    catch (e) {
-        throw new Error(`[App] savePresetHtml Error: ${e}`);
+    else {
+        return '';
     }
 }
 

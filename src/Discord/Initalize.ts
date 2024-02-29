@@ -4,7 +4,7 @@ import { logNormal, logWarning } from "Lib/Log";
 import Config, { savePresetHtml, saveStorage } from "Config";
 import { queryArma3 } from "Server/Arma3";
 import { getDeleteInteractionMessage, getNoticeMessage, getRegisterInteractionMessage, registerStanbyMessage } from "./Message";
-import { registerArma3ServerEmbed, registerArmaResistanceServerEmbed } from "./Embed";
+import { getArma3ServerEmbed, getArmaResistanceServerEmbed } from "./Embed";
 import { queryArmaResistance } from "Server/ArmaResistance";
 import appJson from 'root/package.json';
 
@@ -29,20 +29,20 @@ export async function initRegisterInteractMessages(client: Client<true>) {
             const { channelId, noticeMessageId, registerMessageId, deleteMessageId } = storage.channels.interaction;
             const channel = await client.channels.fetch(channelId) as TextChannel;
             if (_.isEmpty(noticeMessageId) || _.isUndefined(noticeMessageId)) {
-                const regForm = getNoticeMessage();
-                const message = await channel.send({ ...regForm });
+                const form = getNoticeMessage();
+                const message = await channel.send(form);
                 storage.channels.interaction.noticeMessageId = message.id;
                 saveStorage();
             }
             if (_.isEmpty(registerMessageId) || _.isUndefined(registerMessageId)) {
-                const regForm = getRegisterInteractionMessage();
-                const message = await channel.send({ ...regForm });
+                const form = getRegisterInteractionMessage();
+                const message = await channel.send(form);
                 storage.channels.interaction.registerMessageId = message.id;
                 saveStorage();
             }
             if (_.isEmpty(deleteMessageId) || _.isUndefined(deleteMessageId)) {
-                const delForm = getDeleteInteractionMessage();
-                const message = await channel.send({ ...delForm });
+                const form = getDeleteInteractionMessage();
+                const message = await channel.send(form);
                 storage.channels.interaction.deleteMessageId = message.id;
                 saveStorage();
             }
@@ -70,37 +70,33 @@ export async function initPriorityInstances(client: Client<true>) {
             else {
                 for (const [index, instance] of priority) {
                     if (_.isEmpty(instance.messageId) || _.isUndefined(instance.messageId)) {
+                        let queries, embed;
                         switch (instance.game) {
                             case 'arma3': {
-                                const queries = await queryArma3(instance.connection);
-                                // if (!queries) break;
-                                const stanbyMessage = await registerStanbyMessage(channel);
-                                const presetPath = queries ? savePresetHtml(stanbyMessage.id, queries.preset) : '';
-                                const embed = await registerArma3ServerEmbed(stanbyMessage, instance.registeredUser, index, queries);
-                                storage.instances.set(index, {
-                                    ...instance,
-                                    messageId: embed.message.id,
-                                    presetPath: presetPath
-                                });
+                                queries = await queryArma3(instance.connect);
+                                embed = getArma3ServerEmbed(instance.registeredUser, index, queries);
                                 break;
                             }
                             case 'armareforger': {
                                 break;
                             }
                             case 'armaresistance': {
-                                const queries = await queryArmaResistance(instance.connection);
-                                // if (!queries) break;
-                                const stanbyMessage = await registerStanbyMessage(channel);
-                                const embed = await registerArmaResistanceServerEmbed(stanbyMessage, instance.registeredUser, index, queries);
-                                storage.instances.set(index, {
-                                    ...instance,
-                                    messageId: embed.message.id,
-                                    presetPath: ''
-                                });
+                                queries = await queryArmaResistance(instance.connect);
+                                embed = getArmaResistanceServerEmbed(instance.registeredUser, index, queries);
                                 break;
-                                //
                             }
                         }
+                        const stanbyMessage = await registerStanbyMessage(channel);
+                        const presetPath = savePresetHtml(stanbyMessage.id, queries?.preset);
+                        await stanbyMessage.edit({
+                            content: '',
+                            embeds: [embed as any]
+                        });
+                        storage.instances.set(index, {
+                            ...instance,
+                            messageId: stanbyMessage.id,
+                            presetPath: presetPath
+                        });
                         saveStorage();
                     }
                     else {
