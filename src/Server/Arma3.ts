@@ -4,7 +4,7 @@ import { BufferList } from 'bl';
 import { getBoolean, insertChar } from 'Lib/Utils';
 import { HTMLElement, parse } from 'node-html-parser';
 import format from 'html-format';
-import { Connection } from 'Types';
+import { Connection, ServerQueries } from 'Types';
 import { GameDig } from 'gamedig';
 import { logError } from 'Lib/Log';
 import appJson from 'root/package.json';
@@ -259,7 +259,7 @@ const ARMA_3_HTML_KEYS = {
     TARGET_DLC_CONTAINER: 'DlcContainer'
 } as const;
 
-export interface Arma3ServerQueries {
+export interface Arma3ServerQueries extends ServerQueries {
     info: any;
     tags: Arma3ServerGametag;
     rules: Arma3ServerRules;
@@ -327,10 +327,7 @@ export interface Arma3ServerRules {
 }
 
 export type Arma3ServerPlayers = Array<{
-    index: number; // looks like always 0x00
     name: string;
-    score: number;
-    duration: number;
 }>
 
 type Arma3HtmlAddonsList = Array<{ name?: string, url: string }>;

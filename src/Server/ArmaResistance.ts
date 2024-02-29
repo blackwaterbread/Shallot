@@ -1,8 +1,8 @@
 import { logError } from "Lib/Log";
-import { Connection } from "Types";
+import { Connection, ServerQueries } from "Types";
 import { GameDig } from "gamedig";
 
-export interface ArmaResistanceServerQueries {
+export interface ArmaResistanceServerQueries extends ServerQueries {
     info: {
         name: string,
         map: string,
@@ -38,7 +38,7 @@ export interface ArmaResistanceServerQueries {
         queryPort: number,
         connect: string,
         ping: number
-    }
+    },
 }
 
 export async function queryArmaResistance(connection: Connection): Promise<ArmaResistanceServerQueries | undefined> {
@@ -49,7 +49,7 @@ export async function queryArmaResistance(connection: Connection): Promise<ArmaR
             host: host,
             port: port
         });
-        return { info: state };
+        return { info: state, tags: undefined, rules: undefined, preset: undefined };
     }
     catch (e) {
         logError(`[App] Failed query ArmaResistance Server: ${e}`);
