@@ -15,4 +15,11 @@ export interface Connection {
     port: number;
 }
 
+export interface ServerQueries {
+    info: any,
+    tags: any,
+    rules: any,
+    preset: any
+}
+
 export type AvailableGame = keyof typeof GAMES;
