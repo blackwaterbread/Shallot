@@ -82,7 +82,7 @@ if (!token || !app_id || !static_path) {
 export function saveStorage() {
     /* it will be problem if server processing many instances */
     const p = advStringify(Array.from(_.cloneDeep(STORAGE).entries()));
-    fs.writeFileSync('./Configs/instances.json', p);
+    fs.writeFileSync(STORAGE_PATH, p);
 }
 
 export function savePresetHtml(filename: string, preset?: string) {
