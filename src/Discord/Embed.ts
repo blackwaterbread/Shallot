@@ -24,7 +24,7 @@ export function getPlayersEmbed(serverId: string, instanceId: string) {
     return { content: '', embeds: [embed], ephemeral: true };
 }
 
-export function getArma3ServerEmbed(user: InstanceUser, instanceId: string, queries?: Arma3ServerQueries, memo?: string) {
+export function getArma3ServerEmbed(messageId: string, user: InstanceUser, instanceId: string, queries?: Arma3ServerQueries, memo?: string) {
     const ping = queries ? queries.info.ping < 80 ? 'good.png' : queries.info.ping > 200 ? 'poor.png' : 'bad.png' : 'poor.png';
     const status = queries ? 'connected' : 'disconnected';
     const time = DateTime.now().toMillis();
@@ -48,7 +48,7 @@ export function getArma3ServerEmbed(user: InstanceUser, instanceId: string, quer
         embed = new EmbedBuilder()
             .setColor(SERVER_STATUS_COLOR[status])
             .setTitle(queries.info.name)
-            .setURL(`https://files.hirua.me/presets/${queries.connect}.html`)
+            .setURL(`https://files.hirua.me/presets/${messageId}.html`)
             .setAuthor({
                 name: user.displayName,
                 url: user.url,

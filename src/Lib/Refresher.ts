@@ -39,7 +39,7 @@ async function handleRefresh(listChannel: TextChannel, instance: Instance, insta
                     instance.loadedContentHash = queries.tags.loadedContentHash;
                     saveStorage();
                 }
-                embed = getArma3ServerEmbed(registeredUser, instanceId, queries, instance.memo);
+                embed = getArma3ServerEmbed(message.id, registeredUser, instanceId, queries, instance.memo);
                 break;
             }
             case 'armareforger': {

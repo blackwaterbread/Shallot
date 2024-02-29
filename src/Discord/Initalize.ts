@@ -74,7 +74,7 @@ export async function initPriorityInstances(client: Client<true>) {
                         switch (instance.game) {
                             case 'arma3': {
                                 queries = await queryArma3(instance.connect);
-                                embed = getArma3ServerEmbed(instance.registeredUser, index, queries);
+                                embed = getArma3ServerEmbed(instance.messageId, instance.registeredUser, index, queries);
                                 break;
                             }
                             case 'armareforger': {
