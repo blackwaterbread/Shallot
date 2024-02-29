@@ -118,11 +118,12 @@ export async function handleInteractions(interaction: Interaction) {
 
                     /* quering server */
                     try {
+                        const stanbyMessage = await registerStanbyMessage(serverChannel);
                         switch (customId) {
                             case 'modal_arma3': {
                                 game = 'arma3';
                                 serverQueries = await queryArma3({ host: ipAddr, port: port }) as Arma3ServerQueries | undefined;
-                                embed = getArma3ServerEmbed(instanceUser, user.id, serverQueries, serverMemo);
+                                embed = getArma3ServerEmbed(stanbyMessage.id, instanceUser, user.id, serverQueries, serverMemo);
                                 break;
                             }
                             /*
@@ -143,7 +144,6 @@ export async function handleInteractions(interaction: Interaction) {
                             return;
                         }
                         else {
-                            const stanbyMessage = await registerStanbyMessage(serverChannel);
                             presetPath = savePresetHtml(stanbyMessage.id, serverQueries.preset);
                             storage.instances.set(instanceKey, {
                                 isPriority: isAdmin,
