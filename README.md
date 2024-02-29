@@ -66,40 +66,6 @@ Initialize
 ]
 ```
 
-Adding priority server (* Not required)
-```
-...,
-"instances": {
-    ...,
-    "priority": [
-        [
-            "Any ID",
-            {
-                "isPriority": true,
-                "hostname": "",
-                "messageId": "",
-                "game": "Your-Game-Name", 
-                "registeredUser": {
-                    "id": "0",
-                    "displayName": "Priority",
-                    "url": "https://discordapp.com/users/{Your-Bot-ID}",
-                    "avatarUrl": "Your-Bot-AvatarUrl"
-                },
-                "connection": {
-                    "host": "Your-Server-IP",
-                    "port": Your-Server-Port
-                },
-                "players": [],
-                "memo": "Some-Memo",
-                "disconnectedFlag": 4,
-                "loadedContentHash": "",
-                "presetPath": ""
-            }
-        ]
-    ]
-}
-```
-
 ## Start
 ```
 yarn install
