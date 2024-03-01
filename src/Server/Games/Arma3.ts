@@ -1,12 +1,12 @@
 import _ from 'lodash';
+import { GameDig } from 'gamedig';
 import { BufferList } from 'bl';
-import { getBoolean, insertChar } from 'Lib/Utils';
 import { HTMLElement, parse } from 'node-html-parser';
 import format from 'html-format';
-import { ConnectString, ServerQueries } from 'Types';
-import { GameDig } from 'gamedig';
+import { getBoolean, insertChar } from 'Lib/Utils';
+import { ConnectInfo } from 'Types';
 import { logError } from 'Lib/Log';
-import appJson from 'root/package.json';
+import appJson from 'Root/package.json';
 
 const ARMA_3_SERVER_STATE = new Map([
     ['0', "NONE"],                /* no server */
@@ -22,26 +22,26 @@ const ARMA_3_SERVER_STATE = new Map([
 ]);
 
 const ARMA_3_GAME_TYPE = new Map([
-    ['apex',    "Campaign - Apex Protocol"],
-    ['coop',    "Cooperative Mission"],
-    ['ctf',     "Capture The Flag"],
-    ['cti',     "Capture The Island"],
-    ['dm',      "Deathmatch"],
+    ['apex', "Campaign - Apex Protocol"],
+    ['coop', "Cooperative Mission"],
+    ['ctf', "Capture The Flag"],
+    ['cti', "Capture The Island"],
+    ['dm', "Deathmatch"],
     ['endgame', "End Game"],
-    ['escape',  "Escape"],
-    ['koth',    "King Of The Hill"],
+    ['escape', "Escape"],
+    ['koth', "King Of The Hill"],
     ['lastman', "Last Man Standing"],
-    ['patrol',  "Combat Patrol"],
-    ['rpg',     "Role-Playing Game"],
+    ['patrol', "Combat Patrol"],
+    ['rpg', "Role-Playing Game"],
     ['sandbox', "Sandbox"],
-    ['sc',      "Sector Control"],
+    ['sc', "Sector Control"],
     ['support', "Support"],
     ['survive', "Survival"],
-    ['tdm',     "Team Deathmatch"],
+    ['tdm', "Team Deathmatch"],
     ['unknown', "Undefined Game Mode"],
     ['vanguar', "Vanguard"],
     ['warlord', "Warlords"],
-    ['zeus',    "Zeus"]
+    ['zeus', "Zeus"]
 ]);
 
 const ARMA_3_SERVER_TYPE = new Map([
@@ -68,19 +68,19 @@ const ARMA_3_SERVER_VAC = new Map([
 ]);
 
 const ARMA_3_DLCs = new Map([
-    ['Kart',        0x1],
-    ['Marksmen',    0x2],
-    ['Heli',        0x4],
-    ['Curator',     0x8],
-    ['Expansion',   0x10],
-    ['Jets',        0x20],
-    ['Orange',      0x40],
-    ['Argo',        0x80],
-    ['TacOps',      0x100],
-    ['Tanks',       0x200],
-    ['Contact',     0x400],
-    ['Enoch',       0x800],
-    ['AOW',         0x1000]
+    ['Kart', 0x1],
+    ['Marksmen', 0x2],
+    ['Heli', 0x4],
+    ['Curator', 0x8],
+    ['Expansion', 0x10],
+    ['Jets', 0x20],
+    ['Orange', 0x40],
+    ['Argo', 0x80],
+    ['TacOps', 0x100],
+    ['Tanks', 0x200],
+    ['Contact', 0x400],
+    ['Enoch', 0x800],
+    ['AOW', 0x1000]
 ]);
 
 const ARMA_3_CDLCS = new Map([
@@ -102,9 +102,9 @@ const RULES_ESCAPED = new Map([
     ['0103', 'FF'],
 ]);
 
-const ARMA_3_GAMETAG_MAP = new Map<string, { 
-    name: keyof Arma3ServerGametag; 
-    getter: (value: string) => any; 
+const ARMA_3_GAMETAG_MAP = new Map<string, {
+    name: keyof Arma3ServerGametag;
+    getter: (value: string) => any;
 }>([
     [
         'b', // 0x62, BattleEye, boolean
@@ -258,13 +258,6 @@ const ARMA_3_HTML_KEYS = {
     TARGET_DLC_CONTAINER: 'DlcContainer'
 } as const;
 
-export interface Arma3ServerQueries extends ServerQueries {
-    info: any;
-    tags: Arma3ServerGametag;
-    rules: Arma3ServerRules;
-    preset: string;
-}
-
 export interface Arma3ServerInfo {
     protocol: number;
     hostname: string;
@@ -325,13 +318,37 @@ export interface Arma3ServerRules {
     signatures: Buffer[]
 }
 
+export interface Arma3ServerQueries {
+    game: 'arma3',
+    connect: ConnectInfo,
+    online?: {
+        info: {
+            name: string,
+            map: string,
+            password: boolean,
+            version: string,
+            raw: any,
+            maxplayers: number,
+            numplayers: number,
+            players: any[],
+            bots: any[],
+            queryPort: number,
+            connect: string,
+            ping: number,
+        };
+        tags: Arma3ServerGametag;
+        rules: Arma3ServerRules;
+        preset: string;
+    }
+}
+
 export type Arma3ServerPlayers = Array<{
     name: string;
 }>
 
 type Arma3HtmlAddonsList = Array<{ name?: string, url: string }>;
 
-export async function queryArma3(connection: ConnectString): Promise<Arma3ServerQueries | undefined> {
+export async function queryArma3(connection: ConnectInfo): Promise<Arma3ServerQueries> {
     const { host, port } = connection;
     try {
         const state: any = await GameDig.query({
@@ -351,10 +368,20 @@ export async function queryArma3(connection: ConnectString): Promise<Arma3Server
         });
         const rules = parseArma3Rules(state.raw!.rulesBytes);
         const preset = format(buildArma3PresetHtml(state.name, `${host}:${port}`, rules.mods), " ".repeat(4), 200);
-        return { connect: info.connect, info: info, tags: tags as Arma3ServerGametag, rules: rules, preset: preset };
+        return {
+            game: 'arma3',
+            connect: connection,
+            online: {
+                info: info, tags: tags as Arma3ServerGametag, rules: rules, preset: preset
+            }
+        }
     }
     catch (e) {
         logError(`[App] Failed query Arma3 Server: ${e}`);
+        return { 
+            game: 'arma3',
+            connect: connection
+        }
     }
 }
 
@@ -440,7 +467,7 @@ export function parseArma3Rules(message: Buffer, startOffset: number = 0x00): Ar
         let isServerside = false;
         const isDLC = Boolean(steamidBit & 0b10000);
         if (steamidLength === 0) isServerside = true;
-        
+
         let modName: string;
         const modNameLength = buf.readUInt8(offset++);
         if (isDLC) {
@@ -493,10 +520,10 @@ function createContainers(mods: Arma3ServerMod) {
     const addonContainers = `<div class="${ARMA_3_HTML_KEYS.TARGET_MOD_LIST}">
         <table>
         ${modNames.map(name => {
-            const mod = mods[name];
-            if (!mod.isDLC && !mod.isServerside) {
-                const url = `https://steamcommunity.com/sharedfiles/filedetails/?id=${mod.steamid}`;
-                return `<tr data-type="${ARMA_3_HTML_KEYS.TARGET_MOD_CONTAINER}">
+        const mod = mods[name];
+        if (!mod.isDLC && !mod.isServerside) {
+            const url = `https://steamcommunity.com/sharedfiles/filedetails/?id=${mod.steamid}`;
+            return `<tr data-type="${ARMA_3_HTML_KEYS.TARGET_MOD_CONTAINER}">
                     <td data-type="DisplayName">${name}</td>
                     <td>
                         <span class="from-steam">Steam</span>
@@ -505,33 +532,33 @@ function createContainers(mods: Arma3ServerMod) {
                         <a href="${url}" data-type="Link">${url}</a>
                     </td>
                 </tr>`;
-            }
-            else {
-                return;
-            }
-        }).join('\r\n')}
+        }
+        else {
+            return;
+        }
+    }).join('\r\n')}
         </table>
     </div>`;
-    
+
     let dlcContainers = '';
     if (_.findKey(mods, x => x.isDLC === true)) {
         dlcContainers = `\n<div class="dlc-list">
             <table>
                 ${modNames.map(name => {
-                    const mod = mods[name];
-                    if (mod.isDLC) {
-                        const url = `https://store.steampowered.com/app/${mod.steamid}`;
-                        return `<tr data-type="${ARMA_3_HTML_KEYS.TARGET_DLC_CONTAINER}">
+            const mod = mods[name];
+            if (mod.isDLC) {
+                const url = `https://store.steampowered.com/app/${mod.steamid}`;
+                return `<tr data-type="${ARMA_3_HTML_KEYS.TARGET_DLC_CONTAINER}">
                         <td data-type="DisplayName">${name}</td>
                             <td>
                                 <a href="${url}" data-type="Link">${url}</a>
                             </td>
                         </tr>`
-                    }
-                    else {
-                        return;
-                    }
-                }).join('\r\n')}
+            }
+            else {
+                return;
+            }
+        }).join('\r\n')}
             </table>
         </div>`;
     }
@@ -623,11 +650,11 @@ export function buildArma3PresetHtml(presetName: string, address: string, mods: 
         <body>
             <h1><strong>${presetName}</strong></h1>
             <p class="before-list">
-                <em>오른쪽 클릭 - 다른 이름으로 저장 | 아르마 3 런쳐에 드래그해서 로드</em>
+                <em>${appJson.displayName} Discord 봇에 의해서 생성되었습니다. 아르마 3 런쳐에 드래그하여 프리셋 적용</em>
             </p>
             ${createContainers(mods)}
             <div class="footer">
-                <span>${appJson.displayName} Discord 봇에 의해서 생성되었습니다. 아르마 갤러리 디스코드 | https://discord.gg/5Qz4ZxFJCs</span>
+                <span>Shallot - https://github.com/blackwaterbread/Shallot</span>
             </div>
         </body>
     </html>`;

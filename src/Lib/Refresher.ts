@@ -3,9 +3,10 @@ import { setInterval } from "timers";
 import { Client, Message, TextChannel } from "discord.js";
 import Config, { Instance, savePresetHtml, saveStorage } from "Config";
 import { channelTrack, instanceTrack, logError, logNormal } from "./Log";
-import { getArma3ServerEmbed, getArmaResistanceServerEmbed } from "Discord/Embed";
-import { queryArma3 } from "Server/Arma3";
-import { queryArmaResistance } from "Server/ArmaResistance";
+import { getServerEmbed } from "Discord/Embed";
+import { queryArma3 } from "Server/Games/Arma3";
+import { queryArmaResistance } from "Server/Games/ArmaResistance";
+import { ServerQueries } from "Server";
 
 const INTERVAL = 15000;
 
@@ -13,7 +14,8 @@ async function handleRefresh(listChannel: TextChannel, instance: Instance, insta
     const trackLog = `${channelTrack(listChannel)}${instanceTrack(instance)}`;
     const { isPriority, registeredUser, messageId, game, connect, loadedContentHash } = instance;
     let message: Message<true> | undefined;
-    let queries, embed;
+    let queries: ServerQueries;
+    let embed;
 
     /* message exist check */
     try {
@@ -34,29 +36,36 @@ async function handleRefresh(listChannel: TextChannel, instance: Instance, insta
         switch (game) {
             case 'arma3': {
                 queries = await queryArma3(connect);
-                if (queries && loadedContentHash !== queries.tags.loadedContentHash) {
-                    savePresetHtml(messageId, queries.preset);
-                    instance.loadedContentHash = queries.tags.loadedContentHash;
+                if (queries && loadedContentHash !== queries.online?.tags.loadedContentHash) {
+                    savePresetHtml(messageId, queries.online?.preset);
+                    instance.loadedContentHash = queries.online?.tags.loadedContentHash ?? '';
                     saveStorage();
                 }
-                embed = getArma3ServerEmbed(message.id, registeredUser, instanceId, queries, instance.memo);
                 break;
             }
+            /*
             case 'armareforger': {
                 break;
             }
+            */
             case 'armaresistance': {
                 queries = await queryArmaResistance(connect);
-                embed = getArmaResistanceServerEmbed(registeredUser, instanceId, queries, instance.memo);
                 break;
+            }
+            default: {
+                instanceStorage.delete(instanceId);
+                saveStorage();
+                logNormal(`[Discord] 새로고침 실패: 지원하지 않는 게임, 인스턴스 삭제: ${trackLog}`);
+                return;
             }
         }
 
-        if (queries) {
+        embed = getServerEmbed(queries, message.id, registeredUser, instance.memo);
+        if (queries && queries.online) {
             instance.disconnectedFlag = 4;
             instanceStorage.set(instanceId, {
                 ...instance,
-                players: queries?.info.players.map((x: any) => ({
+                players: queries.online.info.players.map((x: any) => ({
                     name: x.name
                 })),
             });

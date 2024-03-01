@@ -1,10 +1,12 @@
 import _ from "lodash";
-import { Arma3ServerQueries } from "Server/Arma3";
-import { SERVER_STATUS_COLOR } from "Types";
-import { ArmaResistanceServerQueries } from "Server/ArmaResistance";
-import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, EmbedBuilder, Message } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from "discord.js";
 import { DateTime } from "luxon";
+import { ServerQueries } from "Server";
 import Config, { InstanceUser } from "Config";
+import { judgePing } from "Lib/Utils";
+import { SERVER_STATUS_COLOR } from "Types";
+import { Arma3ServerQueries } from "Server/Games/Arma3";
+import { ArmaResistanceServerQueries } from "Server/Games/ArmaResistance";
 
 export function getPlayersEmbed(serverId: string, instanceId: string) {
     const instance = Config.storage.get(serverId)!.instances.get(instanceId);
@@ -24,14 +26,14 @@ export function getPlayersEmbed(serverId: string, instanceId: string) {
     return { content: '', embeds: [embed], ephemeral: true };
 }
 
-export function getArma3ServerEmbed(messageId: string, user: InstanceUser, instanceId: string, queries?: Arma3ServerQueries, memo?: string) {
-    const ping = queries ? queries.info.ping < 80 ? 'good.png' : queries.info.ping > 200 ? 'poor.png' : 'bad.png' : 'poor.png';
+export function getServerEmbed(queries: ServerQueries, messageId: string, user: InstanceUser, memo?: string) {
+    const ping = judgePing(queries.online?.info.ping);
     const status = queries ? 'connected' : 'disconnected';
     const time = DateTime.now().toMillis();
-    const pp = SERVER_STATUS_COLOR[status];
+    const key = `${queries.connect.host}:${queries.connect.port}`;
 
     const playersButton = new ButtonBuilder()
-        .setCustomId(`checkPlayers_${instanceId}`)
+        .setCustomId(`checkPlayers_${key}`)
         .setLabel('플레이어 확인')
         .setStyle(ButtonStyle.Primary)
         .setDisabled(!queries);
@@ -40,43 +42,89 @@ export function getArma3ServerEmbed(messageId: string, user: InstanceUser, insta
         .addComponents(playersButton);
 
     let embed;
-    if (queries) {
-        const CDLCs = Object.entries(queries.rules.mods)
-            .filter(([k, v]) => v.isDLC === true)
-            .map(([k, v]) => `[${k}](https://store.steampowered.com/app/${v.steamid})`);
+    const thumbnail = queries.online ? 
+        `https://files.hirua.me/images/thumbnail/${queries.game}_online.png` : 
+        `https://files.hirua.me/images/thumbnail/${queries.game}_offline.png`;
 
-        embed = new EmbedBuilder()
-            .setColor(SERVER_STATUS_COLOR[status])
-            .setTitle(queries.info.name)
-            .setURL(`https://files.hirua.me/presets/${messageId}.html`)
-            .setAuthor({
-                name: user.displayName,
-                url: user.url,
-                iconURL: user.avatarUrl
-            })
-            .setDescription(
-                "Arma 3 | " +
-                `BattlEye ${queries.tags.battleEye ? 'On' : 'Off'}` +
-                "\n```\n" + queries.info.connect +
-                "\n```"
-            )
-            .setThumbnail('https://files.hirua.me/images/games/arma3.png')
-            .addFields(
-                { name: '모드', value: queries.info.raw.game, inline: false },
-                // { name: '\u200B', value: '\u200B' },
-                { name: '상태', value: queries.tags.serverState, inline: false },
-                { name: '맵', value: queries.info.map, inline: true },
-                { name: '버전', value: queries.info.version, inline: true },
-                { name: '플레이어', value: `${queries.info.numplayers} / ${queries.info.maxplayers}`, inline: true },
-                { name: 'CDLC', value: `${CDLCs.length < 1 ? '없음' : `${CDLCs.join('\n')}`}`, inline: false },
-                // { name: '배틀아이', value: queries.tags.battleEye ? '적용' : '미적용', inline: true },
-                { name: '메모', value: `> ${memo ? memo : '메모가 없습니다.'}`, inline: false },
-            )
-            .setImage('https://files.hirua.me/images/announcement.png')
-            .setTimestamp(time)
-            .setFooter({ text: `Online - ${queries.info.ping}ms`, iconURL: `https://files.hirua.me/images/status/${ping}` });
+    if (queries.online) {
+        switch (queries.game) {
+            case 'arma3': {
+                queries as Arma3ServerQueries;
+                const { info, tags, rules } = queries.online;
+                const CDLCs = Object.entries(rules.mods)
+                    .filter(([k, v]) => v.isDLC === true)
+                    .map(([k, v]) => `[${k}](https://store.steampowered.com/app/${v.steamid})`);
 
+                embed = new EmbedBuilder()
+                    .setColor(SERVER_STATUS_COLOR[status])
+                    .setTitle(info.name)
+                    .setURL(`https://files.hirua.me/presets/${messageId}.html`)
+                    .setAuthor({
+                        name: user.displayName,
+                        url: user.url,
+                        iconURL: user.avatarUrl
+                    })
+                    .setDescription(
+                        "Arma 3 | " +
+                        `BattlEye ${tags.battleEye ? 'On' : 'Off'}` +
+                        "\n```\n" + info.connect +
+                        "\n```"
+                    )
+                    .setThumbnail(thumbnail)
+                    .addFields(
+                        { name: '모드', value: info.raw.game, inline: false },
+                        // { name: '\u200B', value: '\u200B' },
+                        { name: '상태', value: tags.serverState, inline: false },
+                        { name: '맵', value: info.map, inline: true },
+                        { name: '버전', value: info.version, inline: true },
+                        { name: '플레이어', value: `${info.numplayers} / ${info.maxplayers}`, inline: true },
+                        { name: 'CDLC', value: `${CDLCs.length < 1 ? '없음' : `${CDLCs.join('\n')}`}`, inline: false },
+                        // { name: '배틀아이', value: queries.tags.battleEye ? '적용' : '미적용', inline: true },
+                        { name: '메모', value: `> ${memo ? memo : '메모가 없습니다.'}`, inline: false },
+                    )
+                    .setImage('https://files.hirua.me/images/announcement.png')
+                    .setTimestamp(time)
+                    .setFooter({ text: `Online - ${info.ping}ms`, iconURL: `https://files.hirua.me/images/status/${ping}` });
+
+                break;
+            }
+            /*
+            case 'armareforger': {
+                break;
+            }
+            */
+            case 'armaresistance': {
+                queries as ArmaResistanceServerQueries;
+                const { info } = queries.online;
+                embed = new EmbedBuilder()
+                    .setColor(SERVER_STATUS_COLOR[status])
+                    .setTitle(queries.online.info.name)
+                    .setURL('https://discord.gg/9HzjsbjDD9')
+                    .setAuthor({
+                        name: user.displayName,
+                        url: user.url,
+                        iconURL: user.avatarUrl
+                    })
+                    .setDescription("Operation FlashPoint: Resistance" + "\n```\n" + info.connect + "\n```")
+                    .setThumbnail(thumbnail)
+                    .addFields(
+                        { name: '모드', value: _.isEmpty(info.raw.mod) ? '--' : info.raw.mod, inline: false },
+                        // { name: '\u200B', value: '\u200B' },
+                        { name: '상태', value: info.raw.gamemode, inline: false },
+                        { name: '맵', value: _.isEmpty(info.map) ? '없음' : info.map, inline: true },
+                        { name: '버전', value: info.raw.gamever.toString(), inline: true },
+                        { name: '플레이어', value: `${info.numplayers} / ${info.maxplayers}`, inline: true },
+                        { name: '메모', value: `> ${memo ? memo : '메모가 없습니다.'}`, inline: false },
+                    )
+                    .setImage('https://files.hirua.me/images/banner.png')
+                    .setTimestamp(time)
+                    .setFooter({ text: `Online - ${info.ping}ms`, iconURL: `https://files.hirua.me/images/status/${ping}` });
+
+                break;
+            }
+        }
     }
+
     else {
         embed = new EmbedBuilder()
             .setColor(SERVER_STATUS_COLOR[status])
@@ -87,73 +135,8 @@ export function getArma3ServerEmbed(messageId: string, user: InstanceUser, insta
                 url: user.url,
                 iconURL: user.avatarUrl
             })
-            .setDescription("Arma 3" + "\n```\n" + "Offline" + "\n```")
-            .setThumbnail('https://files.hirua.me/images/games/arma3_offline.png')
-            .addFields(
-                { name: '상태', value: '오프라인', inline: false },
-                { name: '메모', value: `> ${memo ? memo : '메모가 없습니다.'}`, inline: false },
-            )
-            .setImage('https://files.hirua.me/images/offline.png')
-            .setTimestamp(time)
-            .setFooter({ text: 'Offline', iconURL: `https://files.hirua.me/images/status/${ping}` });
-    }
-
-    // await message.edit({ content: '', embeds: [embed], components: [row as any] });
-    return { content: '', embeds: [embed], components: [row as any] };
-}
-
-export function getArmaResistanceServerEmbed(user: InstanceUser, instanceId: string, queries?: ArmaResistanceServerQueries, memo?: string) {
-    const ping = queries ? queries.info.ping < 80 ? 'good.png' : queries.info.ping > 200 ? 'poor.png' : 'bad.png' : 'poor.png';
-    const status = queries ? 'connected' : 'disconnected';
-    const time = DateTime.now().toMillis();
-
-    const playersButton = new ButtonBuilder()
-        .setCustomId(`checkPlayers_${instanceId}`)
-        .setLabel('플레이어 확인')
-        .setStyle(ButtonStyle.Primary)
-        .setDisabled(!queries);
-
-    const row = new ActionRowBuilder()
-        .addComponents(playersButton);
-
-    let embed;
-    if (queries) {
-        embed = new EmbedBuilder()
-            .setColor(SERVER_STATUS_COLOR[status])
-            .setTitle(queries.info.name)
-            .setURL('https://discord.gg/9HzjsbjDD9')
-            .setAuthor({
-                name: user.displayName,
-                url: user.url,
-                iconURL: user.avatarUrl
-            })
-            .setDescription("Operation FlashPoint: Resistance" + "\n```\n" + queries.info.connect + "\n```")
-            .setThumbnail('https://files.hirua.me/images/games/armaresistance.png')
-            .addFields(
-                { name: '모드', value: _.isEmpty(queries.info.raw.mod) ? '--' : queries.info.raw.mod, inline: false },
-                // { name: '\u200B', value: '\u200B' },
-                { name: '상태', value: queries.info.raw.gamemode, inline: false },
-                { name: '맵', value: _.isEmpty(queries.info.map) ? '없음' : queries.info.map, inline: true },
-                { name: '버전', value: queries.info.raw.gamever.toString(), inline: true },
-                { name: '플레이어', value: `${queries.info.numplayers} / ${queries.info.maxplayers}`, inline: true },
-                { name: '메모', value: `> ${memo ? memo : '메모가 없습니다.'}`, inline: false },
-            )
-            .setImage('https://files.hirua.me/images/banner.png')
-            .setTimestamp(time)
-            .setFooter({ text: `Online - ${queries.info.ping}ms`, iconURL: `https://files.hirua.me/images/status/${ping}` });
-    }
-    else {
-        embed = new EmbedBuilder()
-            .setColor(SERVER_STATUS_COLOR[status])
-            .setTitle('오프라인')
-            .setURL('https://discord.gg/9HzjsbjDD9')
-            .setAuthor({
-                name: user.displayName,
-                url: user.url,
-                iconURL: user.avatarUrl
-            })
-            .setDescription("Operation FlashPoint: Resistance" + "\n```\n" + "Offline" + "\n```")
-            .setThumbnail('https://files.hirua.me/images/games/armaresistance_offline.png')
+            .setDescription("Arma 3" + "\n```\n" + `${queries.connect}` + "\n```")
+            .setThumbnail(thumbnail)
             .addFields(
                 { name: '상태', value: '오프라인', inline: false },
                 { name: '메모', value: `> ${memo ? memo : '메모가 없습니다.'}`, inline: false },

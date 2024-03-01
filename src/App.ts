@@ -22,7 +22,6 @@ async function app() {
         logNormal(`[Discord] Discord 로그인 성공 [${readyClient.user.id}, ${readyClient.user.tag}]`);
         await initBotPresence(readyClient);
         await initRegisterInteractMessages(readyClient);
-        // await initPriorityInstances(readyClient);
         refresher = new Refresher(readyClient);
     });
 

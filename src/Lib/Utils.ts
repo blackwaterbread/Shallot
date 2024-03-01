@@ -32,3 +32,7 @@ export function advStringify(object: any) {
     }
     return JSON.stringify(object, null, 4);
 };
+
+export function judgePing(ping?: number) {
+    return ping ? ping < 80 ? 'good.png' : ping > 200 ? 'poor.png' : 'bad.png' : 'poor.png';
+}
