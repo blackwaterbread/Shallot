@@ -1,14 +1,15 @@
-import { Interaction, PermissionsBitField, TextChannel } from "discord.js";
+import _ from "lodash";
 import fs from 'fs';
-import { Arma3ServerQueries, queryArma3 } from "Server/Arma3";
+import { Interaction, PermissionsBitField, TextChannel } from "discord.js";
 import { AvailableGame } from "Types";
 import { registerStanbyMessage } from "./Message";
 import Config, { savePresetHtml, saveStorage } from "Config";
-import { getArma3ServerEmbed, getArmaResistanceServerEmbed as getArmaResistanceServerEmbed, getPlayersEmbed } from "./Embed";
+import { getServerEmbed, getPlayersEmbed } from "./Embed";
 import { channelTrack, logError } from "Lib/Log";
 import { createRegisterModal } from "./Modal";
-import { ArmaResistanceServerQueries, queryArmaResistance } from "Server/ArmaResistance";
-import _ from "lodash";
+import { ServerQueries } from "Server";
+import { queryArma3 } from "Server/Games/Arma3";
+import { queryArmaResistance } from "Server/Games/ArmaResistance";
 
 export async function handleInteractions(interaction: Interaction) {
     const storage = Config.storage.get(interaction.guildId!);
@@ -105,9 +106,7 @@ export async function handleInteractions(interaction: Interaction) {
                         return;
                     }
 
-                    let stanbyMessage;
-                    let game: AvailableGame | undefined;
-                    let serverQueries: Arma3ServerQueries | ArmaResistanceServerQueries | undefined;
+                    let serverQueries: ServerQueries;
                     let presetPath: string;
                     let embed;
                     const instanceUser = {
@@ -119,12 +118,10 @@ export async function handleInteractions(interaction: Interaction) {
 
                     /* quering server */
                     try {
-                        stanbyMessage = await registerStanbyMessage(serverChannel);
+                        const stanbyMessage = await registerStanbyMessage(serverChannel);
                         switch (customId) {
                             case 'modal_arma3': {
-                                game = 'arma3';
-                                serverQueries = await queryArma3({ host: ipAddr, port: port }) as Arma3ServerQueries | undefined;
-                                embed = getArma3ServerEmbed(stanbyMessage.id, instanceUser, instanceKey, serverQueries, serverMemo);
+                                serverQueries = await queryArma3({ host: ipAddr, port: port });
                                 break;
                             }
                             /*
@@ -134,37 +131,40 @@ export async function handleInteractions(interaction: Interaction) {
                             }
                             */
                             case 'modal_armaresistance': {
-                                game = 'armaresistance';
-                                serverQueries = await queryArmaResistance({ host: ipAddr, port: port }) as ArmaResistanceServerQueries | undefined;
-                                embed = getArmaResistanceServerEmbed(instanceUser, instanceKey, serverQueries, serverMemo);
+                                serverQueries = await queryArmaResistance({ host: ipAddr, port: port });
                                 break;
                             }
+                            default: {
+                                await ephemeralReplyMessage.edit({ content: ':x: 잘못된 customId입니다.' });
+                                return;
+                            }
                         }
-                        if (!serverQueries) {
-                            await stanbyMessage.delete();
+                        if (!serverQueries.online) {
                             await ephemeralReplyMessage.edit({ content: ':x: 서버에 연결할 수 없습니다.' });
                             return;
                         }
                         else {
-                            presetPath = savePresetHtml(stanbyMessage.id, serverQueries.preset);
+                            const { info, tags, rules, preset } = serverQueries.online;
+                            embed = getServerEmbed(serverQueries, stanbyMessage.id, instanceUser, serverMemo);
+                            presetPath = savePresetHtml(stanbyMessage.id, preset);
                             storage.instances.set(instanceKey, {
                                 isPriority: isAdmin,
-                                hostname: serverQueries.info.name,
+                                hostname: info.name,
                                 messageId: stanbyMessage.id,
-                                game: game!,
+                                game: serverQueries.game,
                                 registeredUser: instanceUser,
                                 connect: {
                                     host: ipAddr,
                                     port: port,
                                 },
-                                players: serverQueries.info.players.map((x: any) => ({
+                                players: info.players.map((x: any) => ({
                                     name: x.name, 
                                     // score: x.raw.score,
                                     // time: x.raw.time
                                 })),
                                 memo: serverMemo,
                                 disconnectedFlag: 4,
-                                loadedContentHash: serverQueries.tags?.loadedContentHash ?? '',
+                                loadedContentHash: tags?.loadedContentHash ?? '',
                                 presetPath: presetPath
                             });
                             saveStorage();
@@ -174,9 +174,8 @@ export async function handleInteractions(interaction: Interaction) {
                         }
                     }
                     catch (e) {
-                        await stanbyMessage?.delete();
                         logError(`[App|Discord] Error while registering server: ${e}`);
-                        await ephemeralReplyMessage.edit({ content: ':x: 서버에 연결할 수 없습니다.' });
+                        await ephemeralReplyMessage.edit({ content: ':x: Shallot 오류로 인해 서버에 연결할 수 없습니다.' });
                         return;
                     }
                 }

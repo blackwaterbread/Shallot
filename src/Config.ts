@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import { AvailableGame } from 'Types';
 import { logNormal } from 'Lib/Log';
 import { advStringify } from 'Lib/Utils';
-import appJson from 'root/package.json';
+import appJson from 'Root/package.json';
 import path from 'path';
 dotenv.config();
 
