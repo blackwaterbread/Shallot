@@ -88,7 +88,7 @@ async function tasksRefresh(client: Client<true>) {
         const { instances } = instanceStorage;
         const listChannel = await client.channels.fetch(channelId) as TextChannel;
         const p = Array.from(instances);
-        const tasks = p.map(([userId, instance]) => handleRefresh(listChannel, instance, userId, instances));
+        const tasks = p.map(([key, instance]) => handleRefresh(listChannel, instance, key, instances));
         return Promise.all(tasks);
     });
 }

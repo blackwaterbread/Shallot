@@ -105,6 +105,7 @@ export async function handleInteractions(interaction: Interaction) {
                         return;
                     }
 
+                    let stanbyMessage;
                     let game: AvailableGame | undefined;
                     let serverQueries: Arma3ServerQueries | ArmaResistanceServerQueries | undefined;
                     let presetPath: string;
@@ -118,12 +119,12 @@ export async function handleInteractions(interaction: Interaction) {
 
                     /* quering server */
                     try {
-                        const stanbyMessage = await registerStanbyMessage(serverChannel);
+                        stanbyMessage = await registerStanbyMessage(serverChannel);
                         switch (customId) {
                             case 'modal_arma3': {
                                 game = 'arma3';
                                 serverQueries = await queryArma3({ host: ipAddr, port: port }) as Arma3ServerQueries | undefined;
-                                embed = getArma3ServerEmbed(stanbyMessage.id, instanceUser, user.id, serverQueries, serverMemo);
+                                embed = getArma3ServerEmbed(stanbyMessage.id, instanceUser, instanceKey, serverQueries, serverMemo);
                                 break;
                             }
                             /*
@@ -135,11 +136,12 @@ export async function handleInteractions(interaction: Interaction) {
                             case 'modal_armaresistance': {
                                 game = 'armaresistance';
                                 serverQueries = await queryArmaResistance({ host: ipAddr, port: port }) as ArmaResistanceServerQueries | undefined;
-                                embed = getArmaResistanceServerEmbed(instanceUser, user.id, serverQueries, serverMemo);
+                                embed = getArmaResistanceServerEmbed(instanceUser, instanceKey, serverQueries, serverMemo);
                                 break;
                             }
                         }
                         if (!serverQueries) {
+                            await stanbyMessage.delete();
                             await ephemeralReplyMessage.edit({ content: ':x: 서버에 연결할 수 없습니다.' });
                             return;
                         }
@@ -172,6 +174,7 @@ export async function handleInteractions(interaction: Interaction) {
                         }
                     }
                     catch (e) {
+                        await stanbyMessage?.delete();
                         logError(`[App|Discord] Error while registering server: ${e}`);
                         await ephemeralReplyMessage.edit({ content: ':x: 서버에 연결할 수 없습니다.' });
                         return;
