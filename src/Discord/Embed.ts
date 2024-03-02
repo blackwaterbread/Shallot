@@ -135,7 +135,7 @@ export function getServerEmbed(queries: ServerQueries, messageId: string, user: 
                 url: user.url,
                 iconURL: user.avatarUrl
             })
-            .setDescription("Arma 3" + "\n```\n" + `${queries.connect}` + "\n```")
+            .setDescription("Arma 3" + "\n```\n" + `${queries.connect.host}:${queries.connect.port}` + "\n```")
             .setThumbnail(thumbnail)
             .addFields(
                 { name: '상태', value: '오프라인', inline: false },
