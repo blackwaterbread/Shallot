@@ -106,6 +106,7 @@ export async function handleInteractions(interaction: Interaction) {
                         return;
                     }
 
+                    let stanbyMessage;
                     let serverQueries: ServerQueries;
                     let presetPath: string;
                     let embed;
@@ -118,7 +119,7 @@ export async function handleInteractions(interaction: Interaction) {
 
                     /* quering server */
                     try {
-                        const stanbyMessage = await registerStanbyMessage(serverChannel);
+                        stanbyMessage = await registerStanbyMessage(serverChannel);
                         switch (customId) {
                             case 'modal_arma3': {
                                 serverQueries = await queryArma3({ host: ipAddr, port: port });
@@ -140,6 +141,7 @@ export async function handleInteractions(interaction: Interaction) {
                             }
                         }
                         if (!serverQueries.online) {
+                            await stanbyMessage.delete();
                             await ephemeralReplyMessage.edit({ content: ':x: 서버에 연결할 수 없습니다.' });
                             return;
                         }
@@ -174,6 +176,7 @@ export async function handleInteractions(interaction: Interaction) {
                         }
                     }
                     catch (e) {
+                        await stanbyMessage?.delete();
                         logError(`[App|Discord] Error while registering server: ${e}`);
                         await ephemeralReplyMessage.edit({ content: ':x: Shallot 오류로 인해 서버에 연결할 수 없습니다.' });
                         return;
