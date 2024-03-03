@@ -28,7 +28,7 @@ export function getPlayersEmbed(serverId: string, instanceId: string) {
 
 export function getServerEmbed(queries: ServerQueries, messageId: string, user: InstanceUser, memo?: string) {
     const ping = judgePing(queries.online?.info.ping);
-    const status = queries ? 'connected' : 'disconnected';
+    const status = queries.online ? 'connected' : 'disconnected';
     const time = DateTime.now().toMillis();
     const key = `${queries.connect.host}:${queries.connect.port}`;
 
