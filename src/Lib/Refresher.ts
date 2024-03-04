@@ -61,7 +61,7 @@ async function handleRefresh(listChannel: TextChannel, instance: Instance, insta
         }
 
         embed = getServerEmbed(queries, message.id, registeredUser, instance.memo);
-        if (queries && queries.online) {
+        if (queries.online) {
             instance.disconnectedFlag = 4;
             instanceStorage.set(instanceId, {
                 ...instance,
@@ -73,14 +73,16 @@ async function handleRefresh(listChannel: TextChannel, instance: Instance, insta
             logNormal(`[Discord] 새로고침 완료: ${trackLog}`);
         }
         else {
-            if (!isPriority) instance.disconnectedFlag -= 1;
             logNormal(`[Discord] 새로고침 실패: ${trackLog}`);
-            await message.edit(embed as any);
-            if (!isPriority && instance.disconnectedFlag < 0) {
+            if (!isPriority && instance.disconnectedFlag === 0) {
                 instanceStorage.delete(instanceId);
                 await message.delete();
                 logNormal(`[Discord] 인스턴스 삭제: ${trackLog}`);
+                saveStorage();
+                return;
             }
+            if (instance.disconnectedFlag > 0) instance.disconnectedFlag -= 1;
+            await message.edit(embed as any);
         }
     }
     else {
