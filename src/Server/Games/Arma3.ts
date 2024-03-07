@@ -84,17 +84,13 @@ const ARMA_3_DLCs = new Map([
 ]);
 
 const ARMA_3_CDLCS = new Map([
-    // Compatibility | https://steamcommunity.com/sharedfiles/filedetails/?id=1776428269
     [1042220, 'Global Mobilization - Cold War Germany'],
-    // Compatibility | https://steamcommunity.com/sharedfiles/filedetails/?id=2477276806
     [1227700, 'S.O.G. Prairie Fire'],
-    // Compatibility | https://steamcommunity.com/sharedfiles/filedetails/?id=2503886780
     [1294440, 'CSLA Iron Curtain'],
-    // Compatibility | https://steamcommunity.com/sharedfiles/filedetails/?id=2991828484
     [1175380, 'Spearhead 1944'],
-    // Compatibility | https://steamcommunity.com/sharedfiles/filedetails/?id=2636962953
-    [1681170, 'Western Sahara']
-])
+    [1681170, 'Western Sahara'],
+    [2647760, 'Reaction Forces']
+]);
 
 const RULES_ESCAPED = new Map([
     ['0101', '01'],
