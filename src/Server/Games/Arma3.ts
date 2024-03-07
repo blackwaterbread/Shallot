@@ -359,11 +359,16 @@ export async function queryArma3(connection: ConnectInfo): Promise<Arma3ServerQu
         });
         const info = state;
         const tags: { [k: keyof Arma3ServerGametag]: any } = {};
-        state.raw.tags.forEach((x: string) => {
+        Object.entries(info).forEach(([k, v]) => {
+            if (_.isEmpty(v) && typeof v === 'string') info[k] = 'None';
+        });
+        state.raw.tags.forEach((x: string, i: number) => {
             if (_.isEmpty(x)) return;
             const p = ARMA_3_GAMETAG_MAP.get(x[0]);
             if (p) {
-                tags[p.name] = p.getter(x.slice(1));
+                let value = p.getter(x.slice(1));
+                if (_.isEmpty(value) && typeof value === 'string') value = 'None';
+                tags[p.name] = value;
             }
         });
         const rules = parseArma3Rules(state.raw!.rulesBytes);
@@ -377,7 +382,7 @@ export async function queryArma3(connection: ConnectInfo): Promise<Arma3ServerQu
         }
     }
     catch (e) {
-        logError(`[App] Failed query Arma3 Server: ${e}`);
+        logError(`[App] Failed query Arma3 Server: ${e}: [${host}:${port}]`);
         return { 
             game: 'arma3',
             connect: connection

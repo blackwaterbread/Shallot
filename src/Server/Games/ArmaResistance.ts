@@ -1,5 +1,6 @@
 import { GameDig } from "gamedig";
 import { logError } from "Lib/Log";
+import _ from "lodash";
 import { ConnectInfo } from "Types";
 
 export interface ArmaResistanceServerQueries {
@@ -57,6 +58,9 @@ export async function queryArmaResistance(connection: ConnectInfo): Promise<Arma
             host: host,
             port: port
         });
+        Object.entries(state.raw).forEach(([k, v]) => {
+            if (_.isEmpty(v) && typeof v === 'string') state.raw[k] = 'None';
+        });
         return {
             game: 'armaresistance',
             connect: connection, 
@@ -64,7 +68,7 @@ export async function queryArmaResistance(connection: ConnectInfo): Promise<Arma
         };
     }
     catch (e) {
-        logError(`[App] Failed query ArmaResistance Server: ${e}`);
+        logError(`[App] Failed query ArmaResistance Server: ${e}: [${host}:${port}]`);
         return {
             game: 'armaresistance',
             connect: connection
