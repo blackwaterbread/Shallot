@@ -3,7 +3,7 @@ import fs from 'fs';
 import { Interaction, PermissionsBitField, TextChannel } from "discord.js";
 import { AvailableGame } from "Types";
 import { registerStanbyMessage } from "./Message";
-import Config, { savePresetHtml, saveStorage } from "Config";
+import Config, { getStorage, savePresetHtml, saveStorage } from "Config";
 import { getServerEmbed, getPlayersEmbed } from "./Embed";
 import { channelTrack, logError } from "Lib/Log";
 import { createRegisterModal } from "./Modal";
@@ -12,13 +12,14 @@ import { queryArma3 } from "Server/Games/Arma3";
 import { queryArmaResistance } from "Server/Games/ArmaResistance";
 
 export async function handleInteractions(interaction: Interaction) {
-    const storage = Config.storage.get(interaction.guildId!);
-    if (!storage) return;
+    const storage = getStorage();
+    const server = storage.get(interaction.guildId!);
+    if (!server) return;
 
     const guild = interaction.guild!;
     const { user } = interaction;
     const interactChannel = interaction.channel as TextChannel;
-    const serverChannel = await interaction.client.channels.fetch(storage.channels.servers.channelId) as TextChannel;
+    const serverChannel = await interaction.client.channels.fetch(server.channels.servers.channelId) as TextChannel;
 
     if (!serverChannel) {
         logError(`[App|Discord] ModalSubmitInteract: 등록된 서버가 아닙니다: ${channelTrack(interactChannel)}`);
@@ -35,10 +36,10 @@ export async function handleInteractions(interaction: Interaction) {
                 break;
             }
             case 'delete': {
-                const target = Array.from(storage.instances).find(([k, v]) => v.registeredUser.id === user.id);
+                const target = Array.from(server.instances).find(([k, v]) => v.registeredUser.id === user.id);
                 if (target) {
                     const key = target[0];
-                    const instance = storage.instances.get(key)!;
+                    const instance = server.instances.get(key)!;
                     const message = await serverChannel.messages.fetch(instance.messageId);
                     await message.delete();
                     await interaction.reply({
@@ -46,7 +47,7 @@ export async function handleInteractions(interaction: Interaction) {
                         ephemeral: true
                     });
                     if (fs.existsSync(instance.presetPath)) fs.unlinkSync(instance.presetPath);
-                    storage.instances.delete(key);
+                    server.instances.delete(key);
                     saveStorage();
                 }
                 break;
@@ -90,10 +91,10 @@ export async function handleInteractions(interaction: Interaction) {
                 const ipAddr = serverAddress[0];
                 await ephemeralReplyMessage.edit({ content: ':rocket: 서버 연결 중입니다...' });
 
-                if (storage) {
+                if (server) {
                     const instanceKey = `${ipAddr}:${port}`;
-                    const isAlreadyExist = storage.instances.has(instanceKey);
-                    const isUserAlreadyRegistered = Array.from(storage.instances).find(([k, v]) => v.registeredUser.id === user.id);
+                    const isAlreadyExist = server.instances.has(instanceKey);
+                    const isUserAlreadyRegistered = Array.from(server.instances).find(([k, v]) => v.registeredUser.id === user.id);
                     const isAdmin = permissions.has(PermissionsBitField.Flags.Administrator);
 
                     if (isAlreadyExist) {
@@ -149,7 +150,7 @@ export async function handleInteractions(interaction: Interaction) {
                             const { info, tags, rules, preset } = serverQueries.online;
                             embed = getServerEmbed(serverQueries, stanbyMessage.id, instanceUser, serverMemo);
                             presetPath = savePresetHtml(stanbyMessage.id, preset);
-                            storage.instances.set(instanceKey, {
+                            server.instances.set(instanceKey, {
                                 isPriority: isAdmin,
                                 hostname: info.name,
                                 messageId: stanbyMessage.id,

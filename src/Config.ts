@@ -109,6 +109,10 @@ export default {
         token: token,
         appid: app_id,
     },
-    storage: STORAGE,
+    // storage: STORAGE,
     staticPath: static_path
 };
+
+export function getStorage() {
+    return STORAGE;
+}

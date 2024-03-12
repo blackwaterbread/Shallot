@@ -1,13 +1,13 @@
 import { Client, Events, GatewayIntentBits } from "discord.js";
-import { logError, logNormal, logWarning } from "Lib/Log";
+import { ToadScheduler, SimpleIntervalJob, AsyncTask } from 'toad-scheduler';
+import { logError, logNormal } from "Lib/Log";
 import { checkUnregisteredServer, initBotPresence, initRegisterInteractMessages } from "Discord/Initalize";
 import { handleInteractions } from "Discord/Interactions";
-import Refresher from "Lib/Refresher";
+import { taskRefresh } from "Lib/Refresher";
 import Config from 'Config';
 
 /* permissions=76800 */
 async function app() {
-    let refresher;
     const client = new Client({
         intents: [
             GatewayIntentBits.Guilds,
@@ -16,13 +16,15 @@ async function app() {
             GatewayIntentBits.MessageContent
         ]
     });
-    logNormal('[App] Discord Instance 생성');
 
     client.once(Events.ClientReady, async readyClient => {
         logNormal(`[Discord] Discord 로그인 성공 [${readyClient.user.id}, ${readyClient.user.tag}]`);
         await initBotPresence(readyClient);
         await initRegisterInteractMessages(readyClient);
-        refresher = new Refresher(readyClient);
+        const scheduler = new ToadScheduler();
+        const task = new AsyncTask('serverRefresh', async () => taskRefresh(readyClient));
+        const job = new SimpleIntervalJob({ seconds: 30, runImmediately: true }, task, { preventOverrun: true });
+        scheduler.addSimpleIntervalJob(job);
     });
 
     client.on(Events.GuildAvailable, async (guild) => {
@@ -32,7 +34,7 @@ async function app() {
     client.on(Events.InteractionCreate, async interaction => {
         await handleInteractions(interaction);
     });
-
+    
     client.login(Config.discord.token);
 }
 
