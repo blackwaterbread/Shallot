@@ -2,7 +2,7 @@ import _ from "lodash";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from "discord.js";
 import { DateTime } from "luxon";
 import { ServerQueries } from "Server";
-import Config, { InstanceUser, getStorage } from "Config";
+import Config, { Instance, InstanceUser, getStorage } from "Config";
 import { judgePing } from "Lib/Utils";
 import { SERVER_STATUS_COLOR } from "Types";
 import { Arma3ServerQueries } from "Server/Games/Arma3";
@@ -27,9 +27,9 @@ export function getPlayersEmbed(serverId: string, instanceId: string) {
     return { content: '', embeds: [embed], ephemeral: true };
 }
 
-export function getServerEmbed(queries: ServerQueries, messageId: string, user: InstanceUser, memo?: string) {
+export function getServerEmbed(messageId: string, queries: ServerQueries, instance: Instance, memo?: string) {
+    const user = instance.registeredUser;
     const ping = judgePing(queries.online?.info.ping);
-    const status = queries.online ? 'connected' : 'disconnected';
     const time = DateTime.now().toMillis();
     const key = `${queries.connect.host}:${queries.connect.port}`;
 
@@ -57,7 +57,7 @@ export function getServerEmbed(queries: ServerQueries, messageId: string, user: 
                     .map(([k, v]) => `[${k}](https://store.steampowered.com/app/${v.steamid})`);
 
                 embed = new EmbedBuilder()
-                    .setColor(SERVER_STATUS_COLOR[status])
+                    .setColor(SERVER_STATUS_COLOR['connected'])
                     .setTitle(info.name)
                     .setURL(`https://files.hirua.me/presets/${messageId}.html`)
                     .setAuthor({
@@ -85,7 +85,7 @@ export function getServerEmbed(queries: ServerQueries, messageId: string, user: 
                     )
                     .setImage('https://files.hirua.me/images/announcement.png')
                     .setTimestamp(time)
-                    .setFooter({ text: `Online - ${info.ping}ms`, iconURL: `https://files.hirua.me/images/status/${ping}` });
+                    .setFooter({ text: `Online - ${info.ping}ms` });
 
                 break;
             }
@@ -98,7 +98,7 @@ export function getServerEmbed(queries: ServerQueries, messageId: string, user: 
                 queries as ArmaResistanceServerQueries;
                 const { info } = queries.online;
                 embed = new EmbedBuilder()
-                    .setColor(SERVER_STATUS_COLOR[status])
+                    .setColor(SERVER_STATUS_COLOR['connected'])
                     .setTitle(queries.online.info.name)
                     .setURL('https://discord.gg/9HzjsbjDD9')
                     .setAuthor({
@@ -119,7 +119,7 @@ export function getServerEmbed(queries: ServerQueries, messageId: string, user: 
                     )
                     .setImage('https://files.hirua.me/images/banner.png')
                     .setTimestamp(time)
-                    .setFooter({ text: `Online - ${info.ping}ms`, iconURL: `https://files.hirua.me/images/status/${ping}` });
+                    .setFooter({ text: `Online - ${info.ping}ms` });
 
                 break;
             }
@@ -127,6 +127,7 @@ export function getServerEmbed(queries: ServerQueries, messageId: string, user: 
     }
 
     else {
+        const status = instance.disconnectedFlag > 0 ? 'losing' : 'disconnected';
         embed = new EmbedBuilder()
             .setColor(SERVER_STATUS_COLOR[status])
             .setTitle('오프라인')
@@ -139,12 +140,12 @@ export function getServerEmbed(queries: ServerQueries, messageId: string, user: 
             .setDescription("Arma 3" + "\n```\n" + `${queries.connect.host}:${queries.connect.port}` + "\n```")
             .setThumbnail(thumbnail)
             .addFields(
-                { name: '상태', value: '오프라인', inline: false },
+                { name: '상태', value: 'None', inline: false },
                 { name: '메모', value: `> ${memo ? memo : '메모가 없습니다.'}`, inline: false },
             )
             .setImage('https://files.hirua.me/images/offline.png')
             .setTimestamp(time)
-            .setFooter({ text: 'Offline', iconURL: `https://files.hirua.me/images/status/${ping}` });
+            .setFooter({ text: 'Offline' });
     }
 
     // await message.edit({ content: '', embeds: [embed], components: [row as any] });

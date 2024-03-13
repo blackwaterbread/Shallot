@@ -8,6 +8,7 @@ export const GAMES = {
 export const SERVER_STATUS_COLOR = {
     connected: 0x41F097,
     disconnected: 0xFF0000,
+    losing: 0xFFCC00,
     discord: 0x5865F2
 } as const;
 

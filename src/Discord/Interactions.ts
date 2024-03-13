@@ -148,9 +148,8 @@ export async function handleInteractions(interaction: Interaction) {
                         }
                         else {
                             const { info, tags, rules, preset } = serverQueries.online;
-                            embed = getServerEmbed(serverQueries, stanbyMessage.id, instanceUser, serverMemo);
                             presetPath = savePresetHtml(stanbyMessage.id, preset);
-                            server.instances.set(instanceKey, {
+                            const instance = {
                                 isPriority: isAdmin,
                                 hostname: info.name,
                                 messageId: stanbyMessage.id,
@@ -169,7 +168,9 @@ export async function handleInteractions(interaction: Interaction) {
                                 disconnectedFlag: 4,
                                 loadedContentHash: tags?.loadedContentHash ?? '',
                                 presetPath: presetPath
-                            });
+                            };
+                            embed = getServerEmbed(stanbyMessage.id, serverQueries, instance, serverMemo);
+                            server.instances.set(instanceKey, instance);
                             saveStorage();
 
                             await stanbyMessage.edit(embed as any);

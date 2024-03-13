@@ -21,7 +21,7 @@ export function taskRefresh(client: Client<true>) {
             const textChannel = channel as TextChannel;
             return Array.from(instances).map(async ([instanceId, instance]) => {
                 const trackLog = `${channelTrack(textChannel)}${instanceTrack(instance)}`;
-                const { isPriority, registeredUser, messageId, game, connect, loadedContentHash } = instance;
+                const { isPriority, messageId, game, connect, loadedContentHash } = instance;
                 let message: Message<true> | undefined;
                 let queries: ServerQueries;
                 let embed;
@@ -69,7 +69,7 @@ export function taskRefresh(client: Client<true>) {
                         }
                     }
             
-                    embed = getServerEmbed(queries, message.id, registeredUser, instance.memo);
+                    embed = getServerEmbed(message.id, queries, instance, instance.memo);
                     if (queries.online) {
                         instance.disconnectedFlag = 4;
                         instances.set(instanceId, {
