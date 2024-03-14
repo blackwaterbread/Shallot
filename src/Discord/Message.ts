@@ -1,4 +1,3 @@
-import Config from "Config";
 import { logNormal } from "Lib/Log";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, TextChannel } from "discord.js";
 
@@ -30,9 +29,9 @@ export function getRegisterInteractionMessage() {
         .setDescription('서버 리스트에 등록할 게임을 선택해주세요.')
         .setImage('https://files.hirua.me/images/width.png')
         .setFooter({ text: 
-            '* 짧은 시간에 너무 많은 요청 시 잠시 이용이 제한될 수 있습니다.\n' +
             '* 1인당 하나만 등록할 수 있습니다.\n' +
-            '* 고정된 서버를 제외하고 1분간 응답이 없을 시 자동으로 삭제됩니다.'
+            '* 고정된 서버를 제외하고 1분간 응답이 없을 시 자동으로 삭제됩니다.\n' +
+            '* 짧은 시간에 너무 많은 요청 시 잠시 이용이 제한될 수 있습니다.'
         });
 
     const arma3 = new ButtonBuilder()
