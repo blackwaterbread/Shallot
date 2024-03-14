@@ -14,7 +14,7 @@ export async function initBotPresence(client: Client<true>) {
 }
 
 export async function initRegisterInteractMessages(client: Client<true>) {
-    const guilds = client.guilds.cache;
+    const guilds = await client.guilds.fetch();
     const configs = getConfigs();
     const instances = getInstances();
     if (_.isEmpty(instances)) {
@@ -32,15 +32,13 @@ export async function initRegisterInteractMessages(client: Client<true>) {
                     channel.messages.fetch(registerMessageId),
                     channel.messages.fetch(deleteMessageId)
                 ]);
-                await noticeMessage.edit(getNoticeMessage());
-                await registerMessage.edit(getRegisterInteractionMessage());
-                await deleteMessage.edit(getDeleteInteractionMessage());
-                server.channels.interaction.noticeMessageId = noticeMessage.id;
-                server.channels.interaction.registerMessageId = registerMessage.id;
-                server.channels.interaction.deleteMessageId = deleteMessage.id;
-                configs.updated = false;
-                saveConfigs();
-                saveInstances();
+                await Promise.all(
+                    [
+                        noticeMessage.edit({ ...getNoticeMessage() }),
+                        registerMessage.edit({ ...getRegisterInteractionMessage() }),
+                        deleteMessage.edit({ ...getDeleteInteractionMessage() })
+                    ]
+                );
                 continue;
             }
             if (_.isEmpty(noticeMessageId) || _.isUndefined(noticeMessageId)) {
@@ -63,6 +61,8 @@ export async function initRegisterInteractMessages(client: Client<true>) {
             }
         }
     }
+    configs.updated = false;
+    saveConfigs();
     logNormal('[Discord] Interaction 메세지 등록 완료');
 }
 
