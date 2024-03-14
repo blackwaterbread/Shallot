@@ -1,6 +1,6 @@
+import _ from "lodash";
 import { GameDig } from "gamedig";
 import { logError } from "Lib/Log";
-import _ from "lodash";
 import { ConnectInfo } from "Types";
 
 export interface ArmaResistanceServerQueries {

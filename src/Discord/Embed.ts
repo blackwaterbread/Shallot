@@ -2,14 +2,14 @@ import _ from "lodash";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from "discord.js";
 import { DateTime } from "luxon";
 import { ServerQueries } from "Server";
-import Config, { Instance, InstanceUser, getStorage } from "Config";
+import { Instance, getInstances } from "Config";
 import { judgePing } from "Lib/Utils";
 import { SERVER_STATUS_COLOR } from "Types";
 import { Arma3ServerQueries } from "Server/Games/Arma3";
 import { ArmaResistanceServerQueries } from "Server/Games/ArmaResistance";
 
 export function getPlayersEmbed(serverId: string, instanceId: string) {
-    const storage = getStorage();
+    const storage = getInstances();
     const instance = storage.get(serverId)!.instances.get(instanceId);
     if (!instance) return;
 

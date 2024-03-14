@@ -3,7 +3,7 @@ import fs from 'fs';
 import { Interaction, PermissionsBitField, TextChannel } from "discord.js";
 import { AvailableGame } from "Types";
 import { registerStanbyMessage } from "./Message";
-import Config, { getStorage, savePresetHtml, saveStorage } from "Config";
+import { getInstances, savePresetHtml, saveInstances } from "Config";
 import { getServerEmbed, getPlayersEmbed } from "./Embed";
 import { channelTrack, logError } from "Lib/Log";
 import { createRegisterModal } from "./Modal";
@@ -12,17 +12,23 @@ import { queryArma3 } from "Server/Games/Arma3";
 import { queryArmaResistance } from "Server/Games/ArmaResistance";
 
 export async function handleInteractions(interaction: Interaction) {
-    const storage = getStorage();
-    const server = storage.get(interaction.guildId!);
+    if (!interaction.guild) return;
+
+    const storage = getInstances();
+    const guild = interaction.guild;
+    const server = storage.get(guild.id);
+
     if (!server) return;
 
-    const guild = interaction.guild!;
-    const { user } = interaction;
-    const interactChannel = interaction.channel as TextChannel;
-    const serverChannel = await interaction.client.channels.fetch(server.channels.servers.channelId) as TextChannel;
+    const { channelId } = server.channels.servers;
+    const { cache } = interaction.client.channels;
+    const { user, channel } = interaction;
 
+    if (!channel) return;
+
+    const serverChannel = await cache.get(channelId)?.fetch() as TextChannel;
     if (!serverChannel) {
-        logError(`[App|Discord] ModalSubmitInteract: 등록된 서버가 아닙니다: ${channelTrack(interactChannel)}`);
+        logError(`[App|Discord] ModalSubmitInteract: 등록된 서버가 아닙니다: ${channelTrack(channel)}`);
         return;
     }
 
@@ -48,7 +54,7 @@ export async function handleInteractions(interaction: Interaction) {
                     });
                     if (fs.existsSync(instance.presetPath)) fs.unlinkSync(instance.presetPath);
                     server.instances.delete(key);
-                    saveStorage();
+                    saveInstances();
                 }
                 break;
             }
@@ -160,7 +166,7 @@ export async function handleInteractions(interaction: Interaction) {
                                     port: port,
                                 },
                                 players: info.players.map((x: any) => ({
-                                    name: x.name, 
+                                    name: x.name,
                                     // score: x.raw.score,
                                     // time: x.raw.time
                                 })),
@@ -171,7 +177,7 @@ export async function handleInteractions(interaction: Interaction) {
                             };
                             embed = getServerEmbed(stanbyMessage.id, serverQueries, instance, serverMemo);
                             server.instances.set(instanceKey, instance);
-                            saveStorage();
+                            saveInstances();
 
                             await stanbyMessage.edit(embed as any);
                             await ephemeralReplyMessage.edit({ content: ':white_check_mark: 서버가 등록되었습니다.' });

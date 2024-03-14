@@ -12,6 +12,7 @@ export interface AppConfigs {
     token: string;
     app_id: string;
     static_path: string;
+    updated: boolean;
 }
 
 export interface InstanceUser {
@@ -64,10 +65,10 @@ export interface InstanceStorage {
 const IS_DEVELOPMENT = process.env.NODE_ENV === 'development';
 
 const CONFIGS_PATH = IS_DEVELOPMENT ? path.join(`${__dirname}`, '../configs/configs.json') : `${__dirname}/configs/configs.json`;
-const STORAGE_PATH = IS_DEVELOPMENT ? path.join(`${__dirname}`, '../configs/instances.json') : `${__dirname}/configs/instances.json`;
+const INSTANCE_PATH = IS_DEVELOPMENT ? path.join(`${__dirname}`, '../configs/instances.json') : `${__dirname}/configs/instances.json`;
 
 const CONFIGS = JSON.parse(fs.readFileSync(CONFIGS_PATH).toString('utf8')) as AppConfigs;
-const STORAGE = new Map<string, InstanceStorage>(JSON.parse(fs.readFileSync(STORAGE_PATH).toString('utf8')));
+const STORAGE = new Map<string, InstanceStorage>(JSON.parse(fs.readFileSync(INSTANCE_PATH).toString('utf8')));
 
 for (const [k, v] of STORAGE) {
     v.instances = new Map(v.instances);
@@ -77,12 +78,6 @@ const { token, app_id, static_path } = CONFIGS;
 
 if (!token || !app_id || !static_path) {
     throw new Error("[App] Missing environment variables");
-}
-
-export function saveStorage() {
-    /* it will be problem if server processing many instances */
-    const p = advStringify(Array.from(_.cloneDeep(STORAGE).entries()));
-    fs.writeFileSync(STORAGE_PATH, p);
 }
 
 export function savePresetHtml(filename: string, preset?: string) {
@@ -102,17 +97,29 @@ export function savePresetHtml(filename: string, preset?: string) {
     }
 }
 
-export default {
-    isDevelopment: IS_DEVELOPMENT,
-    version: appJson.version,
-    discord: {
-        token: token,
-        appid: app_id,
-    },
-    // storage: STORAGE,
-    staticPath: static_path
-};
+export function getAppInfo() {
+    return {
+        name: appJson.name,
+        version: appJson.version,
+        isDevelopment: IS_DEVELOPMENT
+    }
+}
 
-export function getStorage() {
+export function getConfigs() {
+    return CONFIGS;
+}
+
+export function getInstances() {
     return STORAGE;
+}
+
+export function saveConfigs() {
+    const p = advStringify(CONFIGS);
+    fs.writeFileSync(CONFIGS_PATH, p);
+}
+
+export function saveInstances() {
+    /* it will be problem if server processing many instances */
+    const p = advStringify(Array.from(_.cloneDeep(STORAGE).entries()));
+    fs.writeFileSync(INSTANCE_PATH, p);
 }

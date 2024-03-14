@@ -4,10 +4,11 @@ import { logError, logNormal } from "Lib/Log";
 import { checkUnregisteredServer, initBotPresence, initRegisterInteractMessages } from "Discord/Initalize";
 import { handleInteractions } from "Discord/Interactions";
 import { taskRefresh } from "Lib/Refresher";
-import Config from 'Config';
+import { getConfigs } from 'Config';
 
 /* permissions=76800 */
 async function app() {
+    const configs = getConfigs();
     const client = new Client({
         intents: [
             GatewayIntentBits.Guilds,
@@ -35,7 +36,7 @@ async function app() {
         await handleInteractions(interaction);
     });
     
-    client.login(Config.discord.token);
+    client.login(configs.token);
 }
 
 app().catch(e => { 

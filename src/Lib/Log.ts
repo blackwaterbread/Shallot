@@ -1,6 +1,8 @@
-import Configs, { Instance } from 'Config';
+import { Instance, getAppInfo } from 'Config';
 import { Channel, TextChannel } from 'discord.js';
 import { DateTime } from 'luxon';
+
+const app = getAppInfo();
 
 function now() {
     return DateTime.now().toLocaleString(DateTime.DATETIME_MED_WITH_SECONDS);
@@ -15,7 +17,7 @@ export function logNormal(msg: string) {
 }
 
 export function logDevelopment(message?: any, ...optionalParams: any[]) {
-    if (Configs.isDevelopment) console.log(message, ...optionalParams);
+    if (app.isDevelopment) console.log(message, ...optionalParams);
 }
 
 export function logError(msg: any) {
@@ -30,6 +32,11 @@ export function instanceTrack(instance: Instance) {
     return `[${instance.game}|${instance.messageId}|${instance.connect.host}:${instance.connect.port}]`;
 }
 
-export function channelTrack(channel: TextChannel) {
-    return `[${channel.guildId},${channel.guild.name},${channel.name}]`
+export function channelTrack(channel: Channel) {
+    if (channel.isDMBased()) {
+        return `[${channel.id},${channel.flags}]`;
+    }
+    else if (channel.isTextBased()) {
+        return `[${channel.guildId},${channel.guild.name},${channel.name}]`;
+    }
 }
