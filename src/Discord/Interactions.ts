@@ -10,6 +10,7 @@ import { createRegisterModal } from "./Modal";
 import { ServerQueries } from "Server";
 import { queryArma3 } from "Server/Games/Arma3";
 import { queryArmaResistance } from "Server/Games/ArmaResistance";
+import { queryArmaReforger } from "Server/Games/ArmaReforger";
 
 export async function handleInteractions(interaction: Interaction) {
     if (!interaction.guild) return;
@@ -132,17 +133,16 @@ export async function handleInteractions(interaction: Interaction) {
                                 serverQueries = await queryArma3({ host: ipAddr, port: port });
                                 break;
                             }
-                            /*
                             case 'modal_armareforger': {
-                                game = 'armareforger';
+                                serverQueries = await queryArmaReforger({ host: ipAddr, port: port });
                                 break;
                             }
-                            */
                             case 'modal_armaresistance': {
                                 serverQueries = await queryArmaResistance({ host: ipAddr, port: port });
                                 break;
                             }
                             default: {
+                                await stanbyMessage.delete();
                                 await ephemeralReplyMessage.edit({ content: ':x: 잘못된 customId입니다.' });
                                 return;
                             }

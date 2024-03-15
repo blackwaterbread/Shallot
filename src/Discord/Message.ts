@@ -41,10 +41,10 @@ export function getRegisterInteractionMessage() {
         // .setDisabled(true);
 
     const reforger = new ButtonBuilder()
-        .setCustomId('register_reforger')
+        .setCustomId('register_armareforger')
         .setLabel('아르마: 리포저')
         .setStyle(ButtonStyle.Primary)
-        .setDisabled(true);
+        // .setDisabled(true);
 
     const ofpres = new ButtonBuilder()
         .setCustomId('register_armaresistance')
