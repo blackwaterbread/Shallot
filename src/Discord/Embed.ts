@@ -7,6 +7,7 @@ import { judgePing } from "Lib/Utils";
 import { SERVER_STATUS_COLOR } from "Types";
 import { Arma3ServerQueries } from "Server/Games/Arma3";
 import { ArmaResistanceServerQueries } from "Server/Games/ArmaResistance";
+import { ArmaReforgerServerQueries } from "Server/Games/ArmaReforger";
 
 export function getPlayersEmbed(serverId: string, instanceId: string) {
     const storage = getInstances();
@@ -89,11 +90,36 @@ export function getServerEmbed(messageId: string, queries: ServerQueries, instan
 
                 break;
             }
-            /*
             case 'armareforger': {
+                queries as ArmaReforgerServerQueries;
+                const { info } = queries.online;
+                embed = new EmbedBuilder()
+                    .setColor(SERVER_STATUS_COLOR['connected'])
+                    .setTitle(info.name)
+                    // .setURL(`https://files.hirua.me/presets/${messageId}.html`)
+                    .setAuthor({
+                        name: user.displayName,
+                        url: user.url,
+                        iconURL: user.avatarUrl
+                    })
+                    .setDescription(
+                        "Arma Reforger" +
+                        "\n```\n" + info.connect +
+                        "\n```"
+                    )
+                    .setThumbnail(thumbnail)
+                    .addFields(
+                        { name: '맵', value: info.map, inline: false },
+                        { name: '버전', value: info.version, inline: true },
+                        { name: '플레이어', value: `${info.numplayers} / ${info.maxplayers}`, inline: true },
+                        { name: '메모', value: `> ${memo ? memo : '메모가 없습니다.'}`, inline: false },
+                    )
+                    .setImage('https://files.hirua.me/images/banner.png')
+                    .setTimestamp(time)
+                    .setFooter({ text: `Online - ${info.ping}ms` });
+
                 break;
             }
-            */
             case 'armaresistance': {
                 queries as ArmaResistanceServerQueries;
                 const { info } = queries.online;

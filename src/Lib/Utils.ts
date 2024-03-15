@@ -1,3 +1,4 @@
+import _ from "lodash";
 import { pipe, split, toArray } from "iter-ops";
 
 export function byteSplit(buffer: Buffer, seperator: number) {
@@ -35,4 +36,13 @@ export function advStringify(object: any) {
 
 export function judgePing(ping?: number) {
     return ping ? ping < 80 ? 'good.png' : ping > 200 ? 'poor.png' : 'bad.png' : 'poor.png';
+}
+
+export function toEmptySafeObject(input: { [key: string]: any }) {
+    /* there's explosion when an empty string in discord embed */
+    const p = _.cloneDeep(input);
+    Object.entries(p).forEach(([k, v]) => {
+        if (_.isEmpty(v) && typeof v === 'string') p[k] = 'None';
+    });
+    return p;
 }

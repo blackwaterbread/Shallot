@@ -2,6 +2,7 @@ import _ from "lodash";
 import { GameDig } from "gamedig";
 import { logError } from "Lib/Log";
 import { ConnectInfo } from "Types";
+import { toEmptySafeObject } from "Lib/Utils";
 
 export interface ArmaResistanceServerQueries {
     game: 'armaresistance',
@@ -58,13 +59,11 @@ export async function queryArmaResistance(connection: ConnectInfo): Promise<Arma
             host: host,
             port: port
         });
-        Object.entries(state.raw).forEach(([k, v]) => {
-            if (_.isEmpty(v) && typeof v === 'string') state.raw[k] = 'None';
-        });
+        const info = toEmptySafeObject(state) as any;
         return {
             game: 'armaresistance',
             connect: connection, 
-            online: { info: state, tags: undefined, rules: undefined, preset: undefined }
+            online: { info: info, tags: undefined, rules: undefined, preset: undefined }
         };
     }
     catch (e) {
