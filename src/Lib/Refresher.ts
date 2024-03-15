@@ -6,6 +6,7 @@ import { ServerQueries } from 'Server';
 import { queryArma3 } from 'Server/Games/Arma3';
 import { queryArmaResistance } from 'Server/Games/ArmaResistance';
 import { getServerEmbed } from 'Discord/Embed';
+import { queryArmaReforger } from 'Server/Games/ArmaReforger';
 
 export function taskRefresh(client: Client<true>) {
     const storage = getInstances();
@@ -51,11 +52,10 @@ export function taskRefresh(client: Client<true>) {
                         }
                         break;
                     }
-                    /*
                     case 'armareforger': {
+                        queries = await queryArmaReforger(connect);
                         break;
                     }
-                    */
                     case 'armaresistance': {
                         queries = await queryArmaResistance(connect);
                         break;
