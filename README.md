@@ -37,7 +37,7 @@ Initialize
     "token": "Your-Discord-Bot-Token",
     "app_id": "Your-Discord-Bot-AppID",
     "static_path": "Path-where-static-files-will-be-stored",
-    "updated": true
+    "updated": false
 }
 ```
 
