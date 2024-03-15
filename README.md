@@ -1,6 +1,6 @@
 ![shallot](https://github.com/blackwaterbread/poro/assets/40688555/7193cd47-7510-4b9f-812c-b0f98d4d66a2)
 # Shallot
-Server information display bot for Bohemia Interactive's games
+Server information display discord bot for Bohemia Interactive's games
 
 ## Features
 * Display server information on Discord channel
@@ -11,11 +11,12 @@ Server information display bot for Bohemia Interactive's games
     - Priority server: privilege that exemption automatic delete from list
 
 ## Plan
-* English Translation
-* More games support
+* Multi Language
+* Support more games
 
 ## Supported
 * [Arma 3](https://store.steampowered.com/app/107410/Arma_3/)
+* [Arma Reforger](https://store.steampowered.com/app/1874880/Arma_Reforger/)
 * [Arma: Cold War Assualt (a.k.a Operation Flashpoint: Resistance)](https://store.steampowered.com/app/65790/ARMA_Cold_War_Assault/)
 
 # Usage
@@ -35,7 +36,8 @@ Initialize
 {
     "token": "Your-Discord-Bot-Token",
     "app_id": "Your-Discord-Bot-AppID",
-    "static_path": "Path-where-static-files-will-be-stored"
+    "static_path": "Path-where-static-files-will-be-stored",
+    "updated": true
 }
 ```
 
