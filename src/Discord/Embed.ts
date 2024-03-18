@@ -44,9 +44,9 @@ export function getServerEmbed(messageId: string, queries: ServerQueries, instan
         .addComponents(playersButton);
 
     let embed;
-    const thumbnail = queries.online ? 
-        `https://files.hirua.me/images/thumbnail/${queries.game}_online.png` : 
-        `https://files.hirua.me/images/thumbnail/${queries.game}_offline.png`;
+    const banner = queries.online ? 
+        `https://files.hirua.me/images/games/${queries.game}_banner_online.png` : 
+        `https://files.hirua.me/images/games/${queries.game}_banner_offline.png`;
 
     if (queries.online) {
         switch (queries.game) {
@@ -60,19 +60,18 @@ export function getServerEmbed(messageId: string, queries: ServerQueries, instan
                 embed = new EmbedBuilder()
                     .setColor(SERVER_STATUS_COLOR['connected'])
                     .setTitle(info.name)
-                    .setURL(`https://files.hirua.me/presets/${messageId}.html`)
+                    // .setURL(`https://files.hirua.me/presets/${messageId}.html`)
                     .setAuthor({
                         name: user.displayName,
                         url: user.url,
                         iconURL: user.avatarUrl
                     })
                     .setDescription(
-                        "Arma 3 | " +
-                        `BattlEye ${tags.battleEye ? 'On' : 'Off'}` +
-                        "\n```\n" + info.connect +
-                        "\n```"
+                        `[**[프리셋 다운로드]**](https://files.hirua.me/presets/${messageId}.html)\n` +
+                        // `BattlEye ${tags.battleEye ? 'On' : 'Off'}` +
+                        "```\n" + info.connect + "\n```"
                     )
-                    .setThumbnail(thumbnail)
+                    // .setThumbnail(thumbnail)
                     .addFields(
                         { name: '모드', value: info.raw.game, inline: false },
                         // { name: '\u200B', value: '\u200B' },
@@ -84,7 +83,7 @@ export function getServerEmbed(messageId: string, queries: ServerQueries, instan
                         // { name: '배틀아이', value: queries.tags.battleEye ? '적용' : '미적용', inline: true },
                         { name: '메모', value: `> ${memo ? memo : '메모가 없습니다.'}`, inline: false },
                     )
-                    .setImage('https://files.hirua.me/images/announcement.png')
+                    .setImage(banner)
                     .setTimestamp(time)
                     .setFooter({ text: `Online - ${info.ping}ms` });
 
@@ -108,14 +107,14 @@ export function getServerEmbed(messageId: string, queries: ServerQueries, instan
                         "\n```\n" + `${host}:${port}` +
                         "\n```"
                     )
-                    .setThumbnail(thumbnail)
+                    // .setThumbnail(thumbnail)
                     .addFields(
                         { name: '맵', value: info.map, inline: false },
                         { name: '버전', value: info.version, inline: true },
                         { name: '플레이어', value: `${info.numplayers} / ${info.maxplayers}`, inline: true },
                         { name: '메모', value: `> ${memo ? memo : '메모가 없습니다.'}`, inline: false },
                     )
-                    .setImage('https://files.hirua.me/images/banner.png')
+                    .setImage(banner)
                     .setTimestamp(time)
                     .setFooter({ text: `Online - ${info.ping}ms` });
 
@@ -134,7 +133,7 @@ export function getServerEmbed(messageId: string, queries: ServerQueries, instan
                         iconURL: user.avatarUrl
                     })
                     .setDescription("Operation FlashPoint: Resistance" + "\n```\n" + info.connect + "\n```")
-                    .setThumbnail(thumbnail)
+                    // .setThumbnail(thumbnail)
                     .addFields(
                         { name: '모드', value: _.isEmpty(info.raw.mod) ? '--' : info.raw.mod, inline: false },
                         // { name: '\u200B', value: '\u200B' },
@@ -144,7 +143,7 @@ export function getServerEmbed(messageId: string, queries: ServerQueries, instan
                         { name: '플레이어', value: `${info.numplayers} / ${info.maxplayers}`, inline: true },
                         { name: '메모', value: `> ${memo ? memo : '메모가 없습니다.'}`, inline: false },
                     )
-                    .setImage('https://files.hirua.me/images/banner.png')
+                    .setImage(banner)
                     .setTimestamp(time)
                     .setFooter({ text: `Online - ${info.ping}ms` });
 
@@ -165,7 +164,7 @@ export function getServerEmbed(messageId: string, queries: ServerQueries, instan
                 iconURL: user.avatarUrl
             })
             .setDescription("Arma 3" + "\n```\n" + `${queries.connect.host}:${queries.connect.port}` + "\n```")
-            .setThumbnail(thumbnail)
+            // .setThumbnail(thumbnail)
             .addFields(
                 { name: '상태', value: 'None', inline: false },
                 { name: '메모', value: `> ${memo ? memo : '메모가 없습니다.'}`, inline: false },
