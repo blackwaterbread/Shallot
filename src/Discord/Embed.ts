@@ -93,6 +93,7 @@ export function getServerEmbed(messageId: string, queries: ServerQueries, instan
             case 'armareforger': {
                 queries as ArmaReforgerServerQueries;
                 const { info } = queries.online;
+                const { host, port } = instance.connect;
                 embed = new EmbedBuilder()
                     .setColor(SERVER_STATUS_COLOR['connected'])
                     .setTitle(info.name)
@@ -104,7 +105,7 @@ export function getServerEmbed(messageId: string, queries: ServerQueries, instan
                     })
                     .setDescription(
                         "Arma Reforger" +
-                        "\n```\n" + info.connect +
+                        "\n```\n" + `${host}:${port}` +
                         "\n```"
                     )
                     .setThumbnail(thumbnail)
