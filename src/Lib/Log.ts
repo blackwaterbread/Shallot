@@ -1,5 +1,5 @@
 import { Instance, getAppInfo } from 'Config';
-import { Channel, TextChannel } from 'discord.js';
+import { Channel, TextChannel, User } from 'discord.js';
 import { DateTime } from 'luxon';
 
 const app = getAppInfo();
@@ -39,4 +39,8 @@ export function channelTrack(channel: Channel) {
     else if (channel.isTextBased()) {
         return `[${channel.guildId},${channel.guild.name},${channel.name}]`;
     }
+}
+
+export function userTrack(user: User) {
+    return `[${user.id}|${user.globalName}|${user.displayName}]`;
 }
