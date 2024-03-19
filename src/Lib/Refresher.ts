@@ -73,6 +73,7 @@ export function taskRefresh(client: Client<true>) {
                     instance.disconnectedFlag = 4;
                     instances.set(instanceId, {
                         ...instance,
+                        hostname: queries.online.info.name,
                         players: queries.online.info.players.map((x: any) => ({
                             name: x.name
                         })),
