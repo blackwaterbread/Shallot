@@ -5,7 +5,7 @@ import { AvailableGame } from "Types";
 import { registerStanbyMessage } from "./Message";
 import { getInstances, savePresetHtml, saveInstances } from "Config";
 import { getServerEmbed, getPlayersEmbed } from "./Embed";
-import { channelTrack, logError } from "Lib/Log";
+import { channelTrack, logError, logNormal, userTrack } from "Lib/Log";
 import { createRegisterModal } from "./Modal";
 import { ServerQueries } from "Server";
 import { queryArma3 } from "Server/Games/Arma3";
@@ -181,11 +181,12 @@ export async function handleInteractions(interaction: Interaction) {
 
                             await stanbyMessage.edit(embed as any);
                             await ephemeralReplyMessage.edit({ content: ':white_check_mark: 서버가 등록되었습니다.' });
+                            logNormal(`[Discord] 서버 등록: [${serverQueries.game},${info.connect}]${userTrack(user)}`);
                         }
                     }
                     catch (e) {
                         await stanbyMessage?.delete();
-                        logError(`[App|Discord] Error while registering server: ${e}`);
+                        logError(`[App|Discord] Error while registering server: ${e}, ${userTrack(user)}`);
                         await ephemeralReplyMessage.edit({ content: ':x: Shallot 오류로 인해 서버에 연결할 수 없습니다.' });
                         return;
                     }
