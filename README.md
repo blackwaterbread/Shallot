@@ -35,9 +35,9 @@ Initialize
 ```
 {
     "token": "Your-Discord-Bot-Token",
-    "app_id": "Your-Discord-Bot-AppID",
-    "static_path": "Path-where-static-files-will-be-stored",
-    "updated": false
+    "appId": "Your-Discord-Bot-AppID",
+    "staticPath": "Path-where-static-files-will-be-stored",
+    "refresh": false
 }
 ```
 
@@ -50,19 +50,21 @@ Initialize
     [
         "ServerID",
         {
-            ...,
             "channels": {
                 "interaction": {
-                    ...,
-                    "channelId": "Interaction-Channel-ID-that-you-want-to-use-on-your-server"
+                    "channelId": "INTERACTION-CHANNEL-ID",
+                    "noticeMessageId": "",
+                    "registerMessageId": "",
+                    "deleteMessageId": ""
                 },
-                "servers": {
-                    "channelId": "ServerList-Channel-ID-that-you-want-to-use-on-your-server"
+                "list": {
+                    "channelId": "SERVERLIST-CHANNEL-ID"
+                },
+                "rcon": {
+                    "channelId": "RCON-CHANNEL-ID"
                 }
             },
-            "instances": {
-                ...
-            },
+            "instances": [],
         }
     ]
 ]
