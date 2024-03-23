@@ -1,35 +1,40 @@
 import _ from "lodash";
 import fs from 'fs';
+import crypto from 'crypto';
 import { Interaction, PermissionsBitField, TextChannel } from "discord.js";
 import { AvailableGame } from "Types";
 import { registerStanbyMessage } from "./Message";
-import { getInstances, savePresetHtml, saveInstances } from "Config";
-import { getServerEmbed, getPlayersEmbed } from "./Embed";
-import { channelTrack, logError, logNormal, userTrack } from "Lib/Log";
+import { getInstances, saveInstances, Instance } from "Config";
+import { getServerInformationEmbed, getPlayersEmbed, getServerRconEmbed } from "./Embed";
+import { channelTrack, logError, logNormal, messageTrack, userTrack } from "Lib/Log";
 import { createRegisterModal } from "./Modal";
 import { ServerQueries } from "Server";
-import { queryArma3 } from "Server/Games/Arma3";
+import { queryArma3, savePresetHtml } from "Server/Games/Arma3";
 import { queryArmaResistance } from "Server/Games/ArmaResistance";
 import { queryArmaReforger } from "Server/Games/ArmaReforger";
+import { startRefresher, stopRefresher } from "Lib/Refresher";
 
 export async function handleInteractions(interaction: Interaction) {
     if (!interaction.guild) return;
 
     const storage = getInstances();
     const guild = interaction.guild;
-    const server = storage.get(guild.id);
+    const serverInstance = storage.get(guild.id);
 
-    if (!server) return;
+    if (!serverInstance) return;
 
-    const { channelId } = server.channels.servers;
+    const { channelId: listChannelId } = serverInstance.channels.list;
+    const { channelId: rconChannelId } = serverInstance.channels.rcon;
     const { cache } = interaction.client.channels;
     const { user, channel } = interaction;
 
     if (!channel) return;
 
-    const serverChannel = await cache.get(channelId)?.fetch() as TextChannel;
-    if (!serverChannel) {
-        logError(`[App|Discord] ModalSubmitInteract: 등록된 서버가 아닙니다: ${channelTrack(channel)}`);
+    const listChannel = await cache.get(listChannelId)?.fetch() as TextChannel;
+    const rconChannel = await cache.get(rconChannelId)?.fetch() as TextChannel;
+
+    if (!listChannel || !rconChannel) {
+        logError('[App|Discord] handleInteractions: 채널 정보를 등록하지 않았습니다.');
         return;
     }
 
@@ -43,19 +48,31 @@ export async function handleInteractions(interaction: Interaction) {
                 break;
             }
             case 'delete': {
-                const target = Array.from(server.instances).find(([k, v]) => v.registeredUser.id === user.id);
+                const target = Array.from(serverInstance.instances).find(([k, v]) => v.discord.owner.id === user.id);
                 if (target) {
+                    stopRefresher();
                     const key = target[0];
-                    const instance = server.instances.get(key)!;
-                    const message = await serverChannel.messages.fetch(instance.messageId);
-                    await message.delete();
+                    const instance = serverInstance.instances.get(key)!;
+
+                    const [statusMessage, rconMessage] = await Promise.all([
+                        listChannel.messages.fetch(instance.discord.statusEmbedMessageId),
+                        rconChannel.messages.fetch(instance.discord.rconEmbedMessageId)
+                    ]);
+
+                    await Promise.all([
+                        statusMessage.delete(),
+                        rconMessage.delete()
+                    ]);
+
                     await interaction.reply({
                         content: ':wave: 등록하신 서버가 삭제되었습니다.',
                         ephemeral: true
                     });
+
                     if (fs.existsSync(instance.presetPath)) fs.unlinkSync(instance.presetPath);
-                    server.instances.delete(key);
+                    serverInstance.instances.delete(key);
                     saveInstances();
+                    startRefresher();
                 }
                 break;
             }
@@ -98,10 +115,10 @@ export async function handleInteractions(interaction: Interaction) {
                 const ipAddr = serverAddress[0];
                 await ephemeralReplyMessage.edit({ content: ':rocket: 서버 연결 중입니다...' });
 
-                if (server) {
+                if (serverInstance) {
                     const instanceKey = `${ipAddr}:${port}`;
-                    const isAlreadyExist = server.instances.has(instanceKey);
-                    const isUserAlreadyRegistered = Array.from(server.instances).find(([k, v]) => v.registeredUser.id === user.id);
+                    const isAlreadyExist = serverInstance.instances.has(instanceKey);
+                    const isUserAlreadyRegistered = Array.from(serverInstance.instances).find(([k, v]) => v.discord.owner.id === user.id);
                     const isAdmin = permissions.has(PermissionsBitField.Flags.Administrator);
 
                     if (isAlreadyExist) {
@@ -114,10 +131,10 @@ export async function handleInteractions(interaction: Interaction) {
                         return;
                     }
 
-                    let stanbyMessage;
+                    let statusMessage, rconMessage;
+                    let statusEmbed, rconEmbed;
                     let serverQueries: ServerQueries;
                     let presetPath: string;
-                    let embed;
                     const instanceUser = {
                         id: user.id,
                         displayName: user.displayName,
@@ -127,7 +144,9 @@ export async function handleInteractions(interaction: Interaction) {
 
                     /* quering server */
                     try {
-                        stanbyMessage = await registerStanbyMessage(serverChannel);
+                        statusMessage = await registerStanbyMessage(listChannel);
+                        rconMessage = await registerStanbyMessage(rconChannel);
+                        logNormal(`[Discord] 서버 Embed 생성 시도: ${messageTrack(statusMessage)}`);
                         switch (customId) {
                             case 'modal_arma3': {
                                 serverQueries = await queryArma3({ host: ipAddr, port: port });
@@ -142,51 +161,68 @@ export async function handleInteractions(interaction: Interaction) {
                                 break;
                             }
                             default: {
-                                await stanbyMessage.delete();
+                                await statusMessage.delete();
                                 await ephemeralReplyMessage.edit({ content: ':x: 잘못된 customId입니다.' });
                                 return;
                             }
                         }
                         if (!serverQueries.online) {
-                            await stanbyMessage.delete();
+                            await statusMessage.delete();
+                            await rconMessage.delete();
                             await ephemeralReplyMessage.edit({ content: ':x: 서버에 연결할 수 없습니다.' });
                             return;
                         }
                         else {
                             const { info, tags, rules, preset } = serverQueries.online;
-                            presetPath = savePresetHtml(stanbyMessage.id, preset);
-                            const instance = {
-                                isPriority: isAdmin,
-                                hostname: info.name,
-                                messageId: stanbyMessage.id,
-                                game: serverQueries.game,
-                                registeredUser: instanceUser,
-                                connect: {
-                                    host: ipAddr,
-                                    port: port,
+                            presetPath = savePresetHtml(statusMessage.id, preset);
+                            const instance: Instance = {
+                                type: serverQueries.game,
+                                nonce: crypto.randomBytes(4).toString('hex'),
+                                priority: isAdmin,
+                                connect: { host: ipAddr, port: port, },
+                                presetPath: presetPath,
+                                discord: {
+                                    statusEmbedMessageId: statusMessage.id,
+                                    rconEmbedMessageId: rconMessage.id,
+                                    owner: instanceUser
                                 },
-                                players: info.players.map((x: any) => ({
-                                    name: x.name,
-                                    // score: x.raw.score,
-                                    // time: x.raw.time
-                                })),
-                                memo: serverMemo,
-                                disconnectedFlag: 4,
-                                loadedContentHash: tags?.loadedContentHash ?? '',
-                                presetPath: presetPath
+                                information: {
+                                    hostname: info.name,
+                                    players: info.players.map((x: any) => ({
+                                        name: x.name,
+                                        // score: x.raw.score,
+                                        // time: x.raw.time
+                                    })),
+                                    memo: serverMemo,
+                                    addonsHash: tags?.loadedContentHash ?? '',
+                                },
+                                rcon: {
+                                    enabled: false,
+                                    port: 0,
+                                    password: '',
+                                    owned: null,
+                                    timeout: 300
+                                },
+                                connection: {
+                                    status: true,
+                                    count: 4
+                                }
                             };
-                            embed = getServerEmbed(stanbyMessage.id, serverQueries, instance, serverMemo);
-                            server.instances.set(instanceKey, instance);
+                            statusEmbed = getServerInformationEmbed(statusMessage.id, serverQueries, instance, serverMemo);
+                            rconEmbed = getServerRconEmbed(instanceKey, instance);
+                            serverInstance.instances.set(instanceKey, instance);
                             saveInstances();
 
-                            await stanbyMessage.edit(embed as any);
+                            await statusMessage.edit(statusEmbed as any);
+                            await rconMessage.edit(rconEmbed as any);
                             await ephemeralReplyMessage.edit({ content: ':white_check_mark: 서버가 등록되었습니다.' });
                             logNormal(`[Discord] 서버 등록: [${serverQueries.game},${info.connect}]${userTrack(user)}`);
                         }
                     }
                     catch (e) {
-                        await stanbyMessage?.delete();
-                        logError(`[App|Discord] Error while registering server: ${e}, ${userTrack(user)}`);
+                        await statusMessage?.delete();
+                        await rconMessage?.delete();
+                        logError(`[App|Discord] Error while registering server: ${e}`);
                         await ephemeralReplyMessage.edit({ content: ':x: Shallot 오류로 인해 서버에 연결할 수 없습니다.' });
                         return;
                     }

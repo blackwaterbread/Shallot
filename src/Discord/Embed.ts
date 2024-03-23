@@ -2,9 +2,9 @@ import _ from "lodash";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from "discord.js";
 import { DateTime } from "luxon";
 import { ServerQueries } from "Server";
-import { Instance, getInstances } from "Config";
+import { Instance, InstanceStorage, getInstances } from "Config";
 import { judgePing } from "Lib/Utils";
-import { SERVER_STATUS_COLOR } from "Types";
+import { Games, SERVER_STATUS_COLOR } from "Types";
 import { Arma3ServerQueries } from "Server/Games/Arma3";
 import { ArmaResistanceServerQueries } from "Server/Games/ArmaResistance";
 import { ArmaReforgerServerQueries } from "Server/Games/ArmaReforger";
@@ -14,22 +14,112 @@ export function getPlayersEmbed(serverId: string, instanceId: string) {
     const instance = storage.get(serverId)!.instances.get(instanceId);
     if (!instance) return;
 
-    const players = instance.players.map(x => x.name).join('\n');
+    const { hostname, players } = instance.information;
+    const p = players.map(x => x.name).join('\n');
     const time = DateTime.now().toMillis();
     const embed = new EmbedBuilder()
         .setColor(SERVER_STATUS_COLOR['discord'])
         .setTitle(':playground_slide: 플레이어 현황')
-        .setDescription(`${instance.hostname}\n\n\`\`\`\n${players}\n\`\`\``)
+        .setDescription(`${hostname}\n\n\`\`\`\n${p}\n\`\`\``)
         .setImage('https://files.hirua.me/images/width.png')
         .setTimestamp(time)
-        .setFooter({ text: '(주의) 이 임베드는 실시간으로 갱신되지 않습니다.', iconURL: 'https://files.hirua.me/images/status/warning.png' });
+        .setFooter({ text: '플레이어 확인 버튼을 누른 시점의 목록입니다.', iconURL: 'https://files.hirua.me/images/status/warning.png' });
 
-    // await interaction.reply({ content: '', embeds: [embed], ephemeral: true });
     return { content: '', embeds: [embed], ephemeral: true };
 }
 
-export function getServerEmbed(messageId: string, queries: ServerQueries, instance: Instance, memo?: string) {
-    const user = instance.registeredUser;
+export function getServerRconEmbed(key: string, instance: Instance) {
+    const time = DateTime.now().toMillis();
+    const { type, nonce, priority, connect, discord, information, rcon, connection } = instance;
+    const status = connection.status ? 'connected' : 'disconnected';
+    const game = Games[type];
+
+    const rconSessionButton = new ButtonBuilder()
+        .setCustomId(`admin_rcon_session_${key}`)
+        .setLabel('RCon 세션 시작')
+        .setStyle(ButtonStyle.Primary)
+        .setDisabled(!rcon.enabled);
+
+    const rconActiveButton = new ButtonBuilder()
+        .setCustomId(rcon.enabled ? `admin_rcon_active_${key}` : `admin_rcon_deactive_${key}`)
+        .setLabel(rcon.enabled ? 'RCon 비활성화' : 'RCon 활성화')
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(true);
+
+    const modifyButton = new ButtonBuilder()
+        .setCustomId(`admin_modify_${key}`)
+        .setLabel('수정')
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(true);
+
+    const delButton = new ButtonBuilder()
+        .setCustomId(`delete_${connect.host}:${connect.port}`)
+        .setLabel('서버 삭제')
+        .setStyle(ButtonStyle.Danger);
+
+    const onlineRow = new ActionRowBuilder()
+        .addComponents(rconSessionButton)
+        .addComponents(rconActiveButton)
+        .addComponents(modifyButton)
+        .addComponents(delButton);
+
+    const offlineRow = new ActionRowBuilder()
+        .addComponents(delButton);        
+
+    return {
+        content: '',
+        embeds: [
+            new EmbedBuilder()
+                .setColor(SERVER_STATUS_COLOR[status])
+                .setTitle(information.hostname)
+                .setDescription(
+                    `${game}` +
+                    "```\n" + `${nonce} | ${key}` + "\n```"
+                )
+                .setAuthor({
+                    name: discord.owner.displayName,
+                    url: discord.owner.url,
+                    iconURL: discord.owner.avatarUrl
+                })
+                .addFields(
+                    { name: 'RCon 세션', value: 'None', inline: false },
+                    { name: 'RCon 활성화', value: `${rcon.enabled}`, inline: true },
+                    { name: 'RCon 포트', value: `${rcon.port}`, inline: true },
+                    { name: 'RCon 패스워드', value: '******', inline: true },
+                    { name: '우선권', value: `${priority}`, inline: true },
+                    { name: '컨텐츠 해시', value: `${information.addonsHash ? information.addonsHash : 'None'}`, inline: true },
+                )
+                .setImage('https://files.hirua.me/images/width.png')
+                .setTimestamp(time)
+                .setFooter({ text: 'Updated: ' })
+        ],
+        components: connection.status ? [onlineRow] : [offlineRow]
+    }
+}
+
+export function getServerAdminCommandsEmbed() {
+    const embed = new EmbedBuilder()
+        .setTitle('📝 명령어')
+        .setDescription(
+            '서버 관리 명령어 목록입니다.\n' +
+            '/players [server_id]**\nGUID를 포함한 사용자 리스트를 불러옵니다.\nex) /players 1\n\n' +
+            '/bans [server_id]**\n밴리스트를 불러옵니다.\nex) /ban 1\n\n' +
+            '/kickban [server_id] [GUID] [period (minute)] [reason]**\n특정 사용자를 밴과 동시에 킥합니다.\n기간을 0으로 할 경우 영구 밴 처리됩니다.\nex) /kickban 1 a45ad0eae340734a0cfb3b214715b157 0 Fuckyou\n\n' +
+            '/kick [server_id] [player #]\n특정 사용자를 킥합니다.\nex) /kick 1 2\n\n' +
+            '/ban [server_id] [GUID] [period (minute] [reason]\n특정 사용자를 밴리스트에 추가합니다.\n기간을 0으로 할 경우 영구 밴 처리됩니다.\nex) /ban 1 a45ad0eae340734a0cfb3b214715b157  0 Fuckyou\n\n' +
+            '/unban [server_id] [ban #]\n특정 사용자를 밴리스트에서 삭제합니다.\nex) /unban 1 0\n\n' +
+            // '/rconpassword [server #] [password]\n(*주의) 원격 접속 비밀번호를 변경합니다.\nex) /rconpassword 1 5882\n\n' + 
+            // '/maxping [server #] [ping]\n서버의 Max Ping 설정을 변경합니다.\nex) /maxping 1 400\n\n' +
+            '/say [server_id] [player #]\n특정 플레이어에게 메세지를 전송합니다.\nplayer # 값이 -1일 경우 서버 전체에 메세지를 전송합니다.\nex) /say 1 1 안녕\n\n' +
+            '/restart [server_id]\n서버를 재시작합니다.\nex) /restart 1\n\n'
+        )
+        .setImage('https://files.hirua.me/images/width.png')
+
+    return { content: '', embeds: [embed] };
+}
+
+export function getServerInformationEmbed(messageId: string, queries: ServerQueries, instance: Instance, memo?: string) {
+    const owner = instance.discord.owner;
     const ping = judgePing(queries.online?.info.ping);
     const time = DateTime.now().toMillis();
     const key = `${queries.connect.host}:${queries.connect.port}`;
@@ -44,8 +134,8 @@ export function getServerEmbed(messageId: string, queries: ServerQueries, instan
         .addComponents(playersButton);
 
     let embed;
-    const banner = queries.online ? 
-        `https://files.hirua.me/images/games/${queries.game}_banner_online.png` : 
+    const banner = queries.online ?
+        `https://files.hirua.me/images/games/${queries.game}_banner_online.png` :
         `https://files.hirua.me/images/games/${queries.game}_banner_offline.png`;
 
     if (queries.online) {
@@ -62,12 +152,12 @@ export function getServerEmbed(messageId: string, queries: ServerQueries, instan
                     .setTitle(info.name)
                     // .setURL(`https://files.hirua.me/presets/${messageId}.html`)
                     .setAuthor({
-                        name: user.displayName,
-                        url: user.url,
-                        iconURL: user.avatarUrl
+                        name: owner.displayName,
+                        url: owner.url,
+                        iconURL: owner.avatarUrl
                     })
                     .setDescription(
-                        `[**[프리셋 다운로드]**](https://files.hirua.me/presets/${messageId}.html)\n` +
+                        `[**[프리셋 다운로드]**](https://files.hirua.me/presets/${messageId}.html)` +
                         // `BattlEye ${tags.battleEye ? 'On' : 'Off'}` +
                         "```\n" + info.connect + "\n```"
                     )
@@ -98,14 +188,13 @@ export function getServerEmbed(messageId: string, queries: ServerQueries, instan
                     .setTitle(info.name)
                     // .setURL(`https://files.hirua.me/presets/${messageId}.html`)
                     .setAuthor({
-                        name: user.displayName,
-                        url: user.url,
-                        iconURL: user.avatarUrl
+                        name: owner.displayName,
+                        url: owner.url,
+                        iconURL: owner.avatarUrl
                     })
                     .setDescription(
                         "Arma Reforger" +
-                        "\n```\n" + `${host}:${port}` +
-                        "\n```"
+                        "```\n" + `${host}:${port}` + "\n```"
                     )
                     // .setThumbnail(thumbnail)
                     .addFields(
@@ -128,11 +217,11 @@ export function getServerEmbed(messageId: string, queries: ServerQueries, instan
                     .setTitle(queries.online.info.name)
                     .setURL('https://discord.gg/9HzjsbjDD9')
                     .setAuthor({
-                        name: user.displayName,
-                        url: user.url,
-                        iconURL: user.avatarUrl
+                        name: owner.displayName,
+                        url: owner.url,
+                        iconURL: owner.avatarUrl
                     })
-                    .setDescription("Operation FlashPoint: Resistance" + "\n```\n" + info.connect + "\n```")
+                    .setDescription("Operation FlashPoint: Resistance" + "```\n" + info.connect + "\n```")
                     // .setThumbnail(thumbnail)
                     .addFields(
                         { name: '모드', value: _.isEmpty(info.raw.mod) ? '--' : info.raw.mod, inline: false },
@@ -153,23 +242,23 @@ export function getServerEmbed(messageId: string, queries: ServerQueries, instan
     }
 
     else {
-        const status = instance.disconnectedFlag > 0 ? 'losing' : 'disconnected';
+        const status = instance.connection.count > 0 ? 'losing' : 'disconnected';
         embed = new EmbedBuilder()
             .setColor(SERVER_STATUS_COLOR[status])
             .setTitle('오프라인')
             // .setURL(`https://files.hirua.me/presets/${message.id}.html`)
             .setAuthor({
-                name: user.displayName,
-                url: user.url,
-                iconURL: user.avatarUrl
+                name: owner.displayName,
+                url: owner.url,
+                iconURL: owner.avatarUrl
             })
-            .setDescription("Arma 3" + "\n```\n" + `${queries.connect.host}:${queries.connect.port}` + "\n```")
+            .setDescription("```\n" + `${queries.connect.host}:${queries.connect.port}` + "\n```")
             // .setThumbnail(thumbnail)
             .addFields(
                 { name: '상태', value: 'None', inline: false },
                 { name: '메모', value: `> ${memo ? memo : '메모가 없습니다.'}`, inline: false },
             )
-            .setImage('https://files.hirua.me/images/offline.png')
+            .setImage(banner)
             .setTimestamp(time)
             .setFooter({ text: 'Offline' });
     }

@@ -1,4 +1,4 @@
-export const GAMES = {
+export const Games = {
     arma3: 'Arma 3',
     armareforger: 'Arma Reforger',
     armaresistance: 'Operation Flashpoint: Resistance',
@@ -17,4 +17,4 @@ export interface ConnectInfo {
     port: number;
 }
 
-export type AvailableGame = keyof typeof GAMES;
+export type AvailableGame = keyof typeof Games;

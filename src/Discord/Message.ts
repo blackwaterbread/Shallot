@@ -2,8 +2,7 @@ import { logNormal } from "Lib/Log";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, TextChannel } from "discord.js";
 
 export async function registerStanbyMessage(channel: TextChannel) {
-    const message = await channel.send({ content: '서버 정보 Embed를 생성 중입니다...' });
-    logNormal(`[Discord] 서버 정보 Embed 생성 시도: [${message.id}, ${message.channelId}, ${message.channel.name}]`);
+    const message = await channel.send({ content: 'Embed를 생성 중입니다...' });
     return message;
 }
 

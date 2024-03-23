@@ -7,7 +7,7 @@ import { getNoticeMessage, getRegisterInteractionMessage, getDeleteInteractionMe
 export async function initBotPresence(client: Client<true>) {
     const app = getAppInfo();
     client.user.setPresence({
-        activities: [{ name: `${app.name}/${app.version}-beta`, type: ActivityType.Playing }],
+        activities: [{ name: `${app.name}/${app.version}`, type: ActivityType.Playing }],
         status: 'online',
     });
     logNormal('[Discord] 봇 상태 설정 완료');
@@ -25,7 +25,7 @@ export async function initRegisterInteractMessages(client: Client<true>) {
         if (server) {
             const { channelId, noticeMessageId, registerMessageId, deleteMessageId } = server.channels.interaction;
             const channel = await client.channels.fetch(channelId) as TextChannel;
-            if (configs.updated) {
+            if (configs.refresh) {
                 logNormal('[App|Discord] Interaction Message를 업데이트합니다.');
                 const [noticeMessage, registerMessage, deleteMessage] = await Promise.all([
                     channel.messages.fetch(noticeMessageId),
@@ -61,7 +61,7 @@ export async function initRegisterInteractMessages(client: Client<true>) {
             }
         }
     }
-    configs.updated = false;
+    configs.refresh = false;
     saveConfigs();
     logNormal('[Discord] Interaction 메세지 등록 완료');
 }
