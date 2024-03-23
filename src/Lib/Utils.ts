@@ -1,5 +1,6 @@
 import _ from "lodash";
 import { pipe, split, toArray } from "iter-ops";
+import { createHash } from 'crypto';
 
 export function byteSplit(buffer: Buffer, seperator: number) {
     return pipe(
@@ -46,3 +47,18 @@ export function toEmptySafeObject(input: { [key: string]: any }) {
     });
     return p;
 }
+
+export function uid2guid(uid: string) {
+    const steamId = BigInt(uid);
+    const bytes = [];
+
+    for (let i = 0; i < 8; i++) {
+        bytes.push(Number((steamId >> (BigInt(8) * BigInt(i))) & BigInt(0xFF)));
+    }
+
+    const guid = createHash('md5')
+        .update(Buffer.from([0x42, 0x45, ...bytes]))
+        .digest('hex');
+
+    return guid;
+};

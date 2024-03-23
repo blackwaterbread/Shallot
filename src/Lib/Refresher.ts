@@ -1,54 +1,68 @@
 import _ from 'lodash';
-import { getInstances, savePresetHtml, saveInstances } from 'Config';
+import { InstanceStorage, getInstances, saveInstances } from 'Config';
+import { ToadScheduler, SimpleIntervalJob, AsyncTask } from 'toad-scheduler';
 import { Client, Message, TextChannel } from 'discord.js';
 import { channelTrack, instanceTrack, logError, logNormal } from './Log';
 import { ServerQueries } from 'Server';
-import { queryArma3 } from 'Server/Games/Arma3';
+import { queryArma3, savePresetHtml } from 'Server/Games/Arma3';
 import { queryArmaResistance } from 'Server/Games/ArmaResistance';
-import { getServerEmbed } from 'Discord/Embed';
+import { getServerInformationEmbed, getServerRconEmbed } from 'Discord/Embed';
 import { queryArmaReforger } from 'Server/Games/ArmaReforger';
 
-export function taskRefresh(client: Client<true>) {
+const scheduler = new ToadScheduler();
+let task: AsyncTask | null = null;
+let job: SimpleIntervalJob | null = null;
+
+export function initRefresher(client: Client<true>) {
+    task = new AsyncTask('serverRefresh', async () => taskRefresh(client));
+    job = new SimpleIntervalJob({ seconds: 30, runImmediately: true }, task, { preventOverrun: true });
+    scheduler.addSimpleIntervalJob(job);
+}
+
+export function stopRefresher() {
+    job?.stop();
+}
+
+export function startRefresher() {
+    job?.start();
+}
+
+function taskRefresh(client: Client<true>) {
     const storage = getInstances();
     return Array.from(storage).map(async ([serverId, server]) => {
         const { instances } = server;
-        const { cache } = client.channels;
-        const channelId = server.channels.servers.channelId;
-        const channel = await cache.get(channelId)?.fetch() as TextChannel;
-        if (!channel) {
+        const listChannelId = server.channels.list.channelId;
+        const rconChannelId = server.channels.rcon.channelId;
+
+        const [listChannel, rconChannel] = await Promise.all([
+            client.channels.cache.get(listChannelId)?.fetch(),
+            client.channels.cache.get(rconChannelId)?.fetch()
+        ]);
+
+        if (!listChannel || !rconChannel) {
             return;
         }
-        const textChannel = channel as TextChannel;
-        return Array.from(instances).map(async ([instanceId, instance]) => {
-            const trackLog = `${channelTrack(textChannel)}${instanceTrack(instance)}`;
-            const { isPriority, messageId, game, connect, loadedContentHash } = instance;
-            let message: Message<true> | undefined;
+
+        return Array.from(server.instances).map(async ([instanceId, instance]) => {
+            const trackLog = `${channelTrack(listChannel)}${channelTrack(rconChannel)}${instanceTrack(instance)}`;
+            const { type, connect, priority, discord, information, connection } = instance;
+
             let queries: ServerQueries;
-            let embed;
+            let statusEmbed, rconEmbed;
+            let newInstance = { ...instance };
 
-            /* message exist check */
             try {
-                if (_.isEmpty(messageId)) {
-                    throw new Error();
-                }
-                message = await textChannel.messages.fetch(messageId);
-                if (!message) throw new Error();
-            }
-            catch {
-                instances.delete(instanceId);
-                saveInstances();
-                logNormal(`[Discord] 새로고침 실패: 메세지가 존재하지 않는 것 같음, 인스턴스 삭제: ${trackLog}`);
-                return;
-            }
+                const [statusMessage, rconMessage] = await Promise.all([
+                    (listChannel as TextChannel).messages.fetch(discord.statusEmbedMessageId),
+                    (rconChannel as TextChannel).messages.fetch(discord.rconEmbedMessageId)
+                ]);
 
-            if (message) {
-                switch (game) {
+                switch (type) {
                     case 'arma3': {
                         queries = await queryArma3(connect);
-                        if (queries && loadedContentHash !== queries.online?.tags.loadedContentHash) {
-                            savePresetHtml(messageId, queries.online?.preset);
-                            instance.loadedContentHash = queries.online?.tags.loadedContentHash ?? '';
-                            saveInstances();
+                        if (information.addonsHash !== queries.online?.tags.loadedContentHash) {
+                            savePresetHtml(discord.statusEmbedMessageId, queries.online?.preset);
+                            newInstance.information.addonsHash = queries.online?.tags.loadedContentHash ?? '';
                         }
                         break;
                     }
@@ -68,38 +82,61 @@ export function taskRefresh(client: Client<true>) {
                     }
                 }
 
-                embed = getServerEmbed(message.id, queries, instance, instance.memo);
+                statusEmbed = getServerInformationEmbed(statusMessage.id, queries, instance, information.memo);
+                rconEmbed = getServerRconEmbed(instanceId, instance);
+
                 if (queries.online) {
-                    instance.disconnectedFlag = 4;
-                    instances.set(instanceId, {
-                        ...instance,
-                        hostname: queries.online.info.name,
-                        players: queries.online.info.players.map((x: any) => ({
-                            name: x.name
-                        })),
-                    });
-                    await message.edit(embed as any);
-                    logNormal(`[Discord] 새로고침 완료: ${trackLog}`);
+                    newInstance = {
+                        ...newInstance,
+                        information: {
+                            ...newInstance.information,
+                            hostname: queries.online.info.name,
+                            players: queries.online.info.players.map((x: any) => ({
+                                name: x.name
+                            })),
+                        },
+                        connection: {
+                            status: true,
+                            count: 4
+                        }
+                    }
                 }
+
                 else {
-                    /* todo: if status not changed -> do not update embed (api call reduce) */
                     logNormal(`[Discord] 새로고침 실패: ${trackLog}`);
-                    if (!isPriority && instance.disconnectedFlag === 0) {
+                    if (!priority && connection.count === 0) {
                         instances.delete(instanceId);
-                        await message.delete();
+                        await statusMessage.delete();
+                        await rconMessage.delete();
                         logNormal(`[Discord] 인스턴스 삭제: ${trackLog}`);
                         saveInstances();
                         return;
                     }
-                    if (instance.disconnectedFlag > 0) instance.disconnectedFlag -= 1;
-                    await message.edit(embed as any);
+                    else if (connection.count > 0) {
+                        newInstance = {
+                            ...newInstance,
+                            connection: {
+                                status: false,
+                                count: instance.connection.count -= 1
+                            }
+                        }
+                    }
                 }
+
+                instances.set(instanceId, newInstance);
+                saveInstances();
+                await statusMessage.edit(statusEmbed as any);
+                await rconMessage.edit(rconEmbed as any);
+                logNormal(`[Discord] 새로고침 완료: ${trackLog}`);
             }
-            else {
+
+            catch (e) {
                 instances.delete(instanceId);
-                logError(`[Discord] 새로고침할 메세지 ID가 없습니다, 인스턴스를 삭제합니다: ${trackLog}`);
+                saveInstances();
+                logNormal(`[Discord] 새로고침 실패: 메세지가 존재하지 않는 것 같음, 인스턴스 삭제: ${trackLog}`);
+                logError(`[Discord] ${e}`);
+                return;
             }
-            saveInstances();
         });
     });
 }

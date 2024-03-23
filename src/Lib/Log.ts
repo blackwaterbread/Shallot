@@ -1,5 +1,5 @@
 import { Instance, getAppInfo } from 'Config';
-import { Channel, TextChannel, User } from 'discord.js';
+import { Channel, Message, TextChannel, User } from 'discord.js';
 import { DateTime } from 'luxon';
 
 const app = getAppInfo();
@@ -28,8 +28,12 @@ export function logWarning(msg: string) {
     console.warn(`[${now()}] [Warning]: ${msg}`);
 }
 
+export function messageTrack(message: Message<true>) {
+    return `[${message.id}, ${message.channelId}, ${message.channel.name}]`;
+}
+
 export function instanceTrack(instance: Instance) {
-    return `[${instance.game}|${instance.messageId}|${instance.connect.host}:${instance.connect.port}]`;
+    return `[${instance.type}|${instance.discord.statusEmbedMessageId}|${instance.connect.host}:${instance.connect.port}]`;
 }
 
 export function channelTrack(channel: Channel) {

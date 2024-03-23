@@ -1,12 +1,17 @@
 import _ from 'lodash';
+import fs from 'fs';
 import { GameDig } from 'gamedig';
 import { BufferList } from 'bl';
 import { HTMLElement, parse } from 'node-html-parser';
 import format from 'html-format';
 import { getBoolean, insertChar, toEmptySafeObject } from 'Lib/Utils';
 import { ConnectInfo } from 'Types';
-import { logError } from 'Lib/Log';
+import { logError, logNormal } from 'Lib/Log';
 import appJson from 'Root/package.json';
+import { readCfg, Socket as RconSocket } from '@senfo/battleye';
+import { Instance, getConfigs } from 'Config';
+
+const Config = getConfigs();
 
 const ARMA_3_SERVER_STATE = new Map([
     ['0', "NONE"],                /* no server */
@@ -383,6 +388,22 @@ export async function queryArma3(connection: ConnectInfo): Promise<Arma3ServerQu
     }
 }
 
+export async function rconArma3(instance: Instance, password: string) {
+    const socket = new RconSocket();
+    const connection = socket.connection({
+        name: instance.information.hostname,
+        ip: instance.connect.host,
+        port: instance.connect.port,
+        password: password
+    }, {
+        reconnect: false,
+        reconnectTimeout: 3000,
+        keepAlive: false,
+        timeout: false
+    });
+    return connection;
+}
+
 export function parseArma3Rules(message: Buffer, startOffset: number = 0x00): Arma3ServerRules {
     /* joining chunks */
     let offset = startOffset;
@@ -510,6 +531,23 @@ export function parseArma3PresetHtml(html: string): { name: string, mods: Arma3H
         name: presetName ?? 'Invalid HTML',
         dlcs: listDLC,
         mods: listMods
+    }
+}
+
+export function savePresetHtml(filename: string, preset?: string) {
+    if (preset) {
+        try {
+            const path = `${Config.staticPath}/presets/${filename}.html`;
+            fs.writeFileSync(path, preset);
+            logNormal(`[App] Arma 3 Preset Generated: ${path}`);
+            return path;
+        }
+        catch (e) {
+            throw new Error(`[App] savePresetHtml Error: ${e}`);
+        }
+    }
+    else {
+        return '';
     }
 }
 
