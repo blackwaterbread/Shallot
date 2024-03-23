@@ -112,6 +112,11 @@
   resolved "https://registry.yarnpkg.com/@sapphire/snowflake/-/snowflake-3.5.3.tgz#0c102aa2ec5b34f806e9bc8625fc6a5e1d0a0c6a"
   integrity sha512-jjmJywLAFoWeBi1W7994zZyiNWPIiqRRNAmSERxyg93xRGzNYvGjlZ0gR6x0F4gPRi2+0O6S71kOZYyr3cxaIQ==
 
+"@senfo/battleye@^2.2.2":
+  version "2.2.2"
+  resolved "https://registry.yarnpkg.com/@senfo/battleye/-/battleye-2.2.2.tgz#d63fd2b9bc377606910fcff39dfbe68e4ec66311"
+  integrity sha512-1oHG9X2Q3/0MeOIiMkSi/Dlmsatdn9D3N9lEI5SZuo37RIZpUT3y6lZIegkFZjz4T8uWlny1Im0HKDuOFPg5rw==
+
 "@sindresorhus/is@^5.2.0":
   version "5.6.0"
   resolved "https://registry.yarnpkg.com/@sindresorhus/is/-/is-5.6.0.tgz#41dd6093d34652cddb5d5bdeee04eafc33826668"
