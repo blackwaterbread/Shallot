@@ -1,6 +1,6 @@
 {
     "token": "",
-    "app_id": "",
-    "static_path": "",
-    "updated": false
+    "appId": "",
+    "staticPath": "",
+    "refresh": false
 }

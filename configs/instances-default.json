@@ -9,8 +9,11 @@
                     "registerMessageId": "",
                     "deleteMessageId": ""
                 },
-                "servers": {
+                "list": {
                     "channelId": "SERVERLIST-CHANNEL-ID"
+                },
+                "rcon": {
+                    "channelId": "RCON-CHANNEL-ID"
                 }
             },
             "instances": []
