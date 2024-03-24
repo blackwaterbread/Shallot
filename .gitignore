@@ -4,5 +4,6 @@ assets
 .vscode
 .env
 configs/dev/*
+src/configs
 ref
 Debug.ts
