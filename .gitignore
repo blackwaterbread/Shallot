@@ -3,8 +3,6 @@ dist
 assets
 .vscode
 .env
-configs.json
-instances.json
-rcon.json
+configs/dev/*
 ref
 Debug.ts
