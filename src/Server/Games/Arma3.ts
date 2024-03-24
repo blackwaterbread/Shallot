@@ -10,6 +10,7 @@ import { logError, logNormal } from 'Lib/Log';
 import appJson from 'Root/package.json';
 import { readCfg, Socket as RconSocket } from '@senfo/battleye';
 import { Instance, getConfigs } from 'Config';
+import { query } from 'Server';
 
 const Config = getConfigs();
 
@@ -352,7 +353,7 @@ type Arma3HtmlAddonsList = Array<{ name?: string, url: string }>;
 export async function queryArma3(connection: ConnectInfo): Promise<Arma3ServerQueries> {
     const { host, port } = connection;
     try {
-        const state: any = await GameDig.query({
+        const state: any = await query({
             type: 'arma3',
             host: host,
             port: port,
