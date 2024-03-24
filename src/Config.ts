@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import { AvailableGame } from 'Types';
 import { advStringify } from 'Lib/Utils';
 import appJson from 'Root/package.json';
-import path from 'path';
+import { ServerQueries } from 'Server';
 dotenv.config();
 
 export interface AppConfigs {
@@ -48,13 +48,13 @@ export interface Instance {
         players: InstancePlayers;
         memo: string;
         addonsHash: string;
+        lastQueries: ServerQueries;
     },
     rcon: {
         enabled: boolean;
         port: number;
         password: string;
-        owned: InstanceUser | null;
-        timeout: number;
+        owned: string | null;
     },
     connection: {
         status: boolean;
@@ -81,8 +81,10 @@ export interface InstanceStorage {
 }
 
 const IS_DEVELOPMENT = process.env.NODE_ENV === 'development';
-const CONFIGS_PATH = IS_DEVELOPMENT ? path.join(`${__dirname}`, '../configs/configs.json') : `${__dirname}/configs/configs.json`;
-const INSTANCE_PATH = IS_DEVELOPMENT ? path.join(`${__dirname}`, '../configs/instances.json') : `${__dirname}/configs/instances.json`;
+
+const CONFIGS_PATH = `${__dirname}/configs/configs.json`;
+const INSTANCE_PATH = `${__dirname}/configs/instances.json`;
+
 const CONFIGS = JSON.parse(fs.readFileSync(CONFIGS_PATH).toString('utf8')) as AppConfigs;
 const STORAGE = new Map<string, InstanceStorage>(JSON.parse(fs.readFileSync(INSTANCE_PATH).toString('utf8')));
 
