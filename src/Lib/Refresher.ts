@@ -147,15 +147,26 @@ async function serverRefresh(serverId?: string) {
                         count: 4
                     }
                 }
+
+                logNormal(`[Discord] 서버 응답함: ${trackLog}`);
             }
 
             else {
-                logNormal(`[Discord] Local Refresh 실패: ${trackLog}`);
+                newInstance = {
+                    ...newInstance,
+                    information: {
+                        ...newInstance.information,
+                        lastQueries: queries,
+                    }
+                }
+
+                logNormal(`[Discord] 서버 연결 실패: ${trackLog}`);
+
                 if (!priority && connection.count === 0) {
                     instances.delete(instanceId);
                     saveInstances();
 
-                    logNormal(`[Discord] Local Refresh: 인스턴스 삭제: ${trackLog}`);
+                    logNormal(`[Discord] Local Refresh: 자동 삭제: 인스턴스 삭제: ${trackLog}`);
                     return;
                 }
 
@@ -173,16 +184,16 @@ async function serverRefresh(serverId?: string) {
             instances.set(instanceId, newInstance);
             saveInstances();
 
-            logNormal(`[Discord] Local Refresh 완료: ${trackLog}`);
         });
     });
 
+    logNormal('[Discord] Local Refresh 완료');
     await Promise.all(tasks);
 }
 
 async function sessionRefresh() {
     const sessions = getRconSessions();
-
+    
 }
 
 async function embedRefresh(client: Client<true>) {
