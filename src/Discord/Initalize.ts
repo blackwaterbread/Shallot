@@ -3,13 +3,21 @@ import { ActivityType, Client, Guild, TextChannel } from "discord.js";
 import { logNormal, logWarning } from "Lib/Log";
 import { getConfigs, saveConfigs, getInstances, saveInstances, getAppInfo } from "Config";
 import { getNoticeMessage, getRegisterInteractionMessage, getDeleteInteractionMessage } from "./Message";
+import revision from 'child_process';
 
 export async function initBotPresence(client: Client<true>) {
     const app = getAppInfo();
+    const commitHash = revision
+        .execSync('git rev-parse HEAD')
+        .toString().trim().substring(0, 7);
+
+    const version = app.isDevelopment ? `develop/${commitHash}` : `v${app.version}/${commitHash}`;
+
     client.user.setPresence({
-        activities: [{ name: `${app.name}/${app.version}`, type: ActivityType.Playing }],
+        activities: [{ name: version, type: ActivityType.Playing }],
         status: 'online',
     });
+
     logNormal('[Discord] 봇 상태 설정 완료');
 }
 
