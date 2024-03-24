@@ -2,5 +2,7 @@
     "token": "",
     "appId": "",
     "staticPath": "",
-    "refresh": false
+    "refresh": false,
+    "localRefreshInterval": 15,
+    "embedRefreshInterval": 60
 }
