@@ -3,6 +3,7 @@ import { GameDig } from "gamedig";
 import { logError } from "Lib/Log";
 import { ConnectInfo } from "Types";
 import { toEmptySafeObject } from "Lib/Utils";
+import { query } from "Server";
 
 export interface ArmaResistanceServerQueries {
     game: 'armaresistance',
@@ -53,7 +54,7 @@ export interface ArmaResistanceServerQueries {
 export async function queryArmaResistance(connection: ConnectInfo): Promise<ArmaResistanceServerQueries> {
     const { host, port } = connection;
     try {
-        const state: any = await GameDig.query({
+        const state: any = await query({
             // this for 2.01, 1.99 : 'acwa'
             type: 'armaresistance',
             host: host,
