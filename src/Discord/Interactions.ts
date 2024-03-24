@@ -6,7 +6,7 @@ import { AvailableGame } from "Types";
 import { registerStanbyMessage } from "./Message";
 import { getInstances, saveInstances, Instance } from "Config";
 import { getServerInformationEmbed, getPlayersEmbed, getServerRconEmbed } from "./Embed";
-import { channelTrack, logError, logNormal, messageTrack, userTrack } from "Lib/Log";
+import { logError, logNormal, messageTrack, userTrack } from "Lib/Log";
 import { createRegisterModal } from "./Modal";
 import { ServerQueries } from "Server";
 import { queryArma3, savePresetHtml } from "Server/Games/Arma3";
@@ -195,13 +195,13 @@ export async function handleInteractions(interaction: Interaction) {
                                     })),
                                     memo: serverMemo,
                                     addonsHash: tags?.loadedContentHash ?? '',
+                                    lastQueries: serverQueries
                                 },
                                 rcon: {
                                     enabled: false,
                                     port: 0,
                                     password: '',
-                                    owned: null,
-                                    timeout: 300
+                                    owned: null
                                 },
                                 connection: {
                                     status: true,

@@ -12,6 +12,8 @@ export interface AppConfigs {
     appId: string;
     staticPath: string;
     refresh: boolean;
+    localRefreshInterval: number;
+    embedRefreshInterval: number;
 }
 
 export interface InstanceUser {
@@ -62,6 +64,11 @@ export interface Instance {
     }
 }
 
+export interface RconSession {
+    user: InstanceUser;
+    timeout: number; // timestamp
+}
+
 export interface InstanceStorage {
     channels: {
         interaction: {
@@ -78,15 +85,18 @@ export interface InstanceStorage {
         }
     },
     instances: Map<string, Instance>; // connectionString, Instance
+    rconSessions: Map<string, RconSession>; // discordUserId, RconSession
 }
 
 const IS_DEVELOPMENT = process.env.NODE_ENV === 'development';
 
 const CONFIGS_PATH = `${__dirname}/configs/configs.json`;
 const INSTANCE_PATH = `${__dirname}/configs/instances.json`;
+const SESSIONS_PATH = `${__dirname}/configs/sessions.json`;
 
 const CONFIGS = JSON.parse(fs.readFileSync(CONFIGS_PATH).toString('utf8')) as AppConfigs;
 const STORAGE = new Map<string, InstanceStorage>(JSON.parse(fs.readFileSync(INSTANCE_PATH).toString('utf8')));
+const SESSIONS = new Map<string, RconSession>(JSON.parse(fs.readFileSync(SESSIONS_PATH).toString('utf8')));
 
 for (const [k, v] of STORAGE) {
     v.instances = new Map(v.instances);
@@ -114,6 +124,10 @@ export function getInstances() {
     return STORAGE;
 }
 
+export function getRconSessions() {
+    return SESSIONS;
+}
+
 export function saveConfigs() {
     const p = advStringify(CONFIGS);
     fs.writeFileSync(CONFIGS_PATH, p);
@@ -123,4 +137,10 @@ export function saveInstances() {
     /* it will be problem if server processing many instances */
     const p = advStringify(Array.from(_.cloneDeep(STORAGE).entries()));
     fs.writeFileSync(INSTANCE_PATH, p);
+}
+
+export function saveRconSessions() {
+    /* it will be problem if server processing many instances */
+    const p = advStringify(Array.from(_.cloneDeep(SESSIONS).entries()));
+    fs.writeFileSync(SESSIONS_PATH, p);
 }
