@@ -7,8 +7,6 @@ export type ServerQueries = Arma3ServerQueries | ArmaReforgerServerQueries | Arm
 
 export function query(options: QueryOptions) {
     return GameDig.query({
-        ...options,
-        maxRetries: 1,
-        socketTimeout: 3000
+        ...options
     });
 }
