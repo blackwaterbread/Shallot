@@ -48,7 +48,7 @@ export async function handleInteractions(interaction: Interaction) {
                 break;
             }
             case 'delete': {
-                const target = Array.from(serverInstance.instances).find(([k, v]) => v.discord.owner.id === user.id);
+                const target = Array.from(serverInstance.instances).find(([k, v]) => k === buttonId[1]);
                 if (target) {
                     stopRefresher();
                     const key = target[0];
