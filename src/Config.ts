@@ -5,6 +5,7 @@ import { AvailableGame } from 'Types';
 import { advStringify } from 'Lib/Utils';
 import appJson from 'Root/package.json';
 import { ServerQueries } from 'Server';
+import path from 'path';
 dotenv.config();
 
 export interface AppConfigs {
@@ -84,8 +85,8 @@ export interface InstanceStorage {
 
 const IS_DEVELOPMENT = process.env.NODE_ENV === 'development';
 
-const CONFIGS_PATH = `${__dirname}/configs/configs.json`;
-const INSTANCE_PATH = `${__dirname}/configs/instances.json`;
+const CONFIGS_PATH = path.join(__dirname, '/configs/configs.json');
+const INSTANCE_PATH = path.join(__dirname, '/configs/instances.json');
 
 const CONFIGS = JSON.parse(fs.readFileSync(CONFIGS_PATH).toString('utf8')) as AppConfigs;
 const STORAGE = new Map<string, InstanceStorage>(JSON.parse(fs.readFileSync(INSTANCE_PATH).toString('utf8')));
