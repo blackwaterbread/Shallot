@@ -7,19 +7,16 @@ import { queryArma3, savePresetHtml } from 'Server/Games/Arma3';
 import { queryArmaResistance } from 'Server/Games/ArmaResistance';
 import { queryArmaReforger } from 'Server/Games/ArmaReforger';
 import { channelTrack, instanceTrack, logError, logNormal } from './Log';
-import { InstanceStorage, getConfigs, getInstances, getRconSessions, saveInstances } from 'Config';
+import { InstanceStorage, getConfigs, getInstances, saveInstances } from 'Config';
 
 const scheduler = new ToadScheduler();
 
 const localTaskName = 'localTask';
-const sessionTaskName = 'sessionTask';
 const embedTaskName = 'embedTask';
 
 let localTask: AsyncTask | null = null;
-let sessionTask: AsyncTask | null = null;
 let embedTask: AsyncTask | null = null;
 let localJob: SimpleIntervalJob | null = null;
-let sessionJob: SimpleIntervalJob | null = null;
 let embedJob: SimpleIntervalJob | null = null;
 
 export function initRefresher(client: Client<true>) {
@@ -35,16 +32,6 @@ export function initRefresher(client: Client<true>) {
         preventOverrun: true 
     });
 
-    sessionTask = new AsyncTask(sessionTaskName, async () => { await sessionRefresh() });
-    sessionJob = new SimpleIntervalJob({ 
-        seconds: configs.localRefreshInterval, 
-        runImmediately: true 
-    }, 
-        sessionTask, 
-    { 
-        preventOverrun: true 
-    });
-
     embedTask = new AsyncTask(embedTaskName, async () => { await embedRefresh(client) });
     embedJob = new SimpleIntervalJob({ 
         seconds: configs.embedRefreshInterval, 
@@ -56,7 +43,6 @@ export function initRefresher(client: Client<true>) {
     });
 
     scheduler.addSimpleIntervalJob(localJob);
-    scheduler.addSimpleIntervalJob(sessionJob);
     scheduler.addSimpleIntervalJob(embedJob);
 }
 
@@ -189,11 +175,6 @@ async function serverRefresh(serverId?: string) {
 
     logNormal('[Discord] Local Refresh 완료');
     await Promise.all(tasks);
-}
-
-async function sessionRefresh() {
-    const sessions = getRconSessions();
-    
 }
 
 async function embedRefresh(client: Client<true>) {
