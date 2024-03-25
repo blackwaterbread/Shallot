@@ -11,7 +11,7 @@
     "ops": "cross-env NODE_ENV=development ts-node -r tsconfig-paths/register src/Ops.ts",
     "build": "tsc && node build.js",
     "pm2-development": "pm2 start ecosystem.config.js --env development",
-    "pm2-production": "pm2 start ecosystem.config.js --env produnction"
+    "pm2-production": "pm2 start ecosystem.config.js --env production"
   },
   "keywords": [],
   "author": "dayrain",
