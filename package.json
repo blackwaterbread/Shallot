@@ -9,7 +9,9 @@
     "start": "cross-env NODE_ENV=development ts-node -r tsconfig-paths/register src/app.ts",
     "debug": "cross-env NODE_ENV=development ts-node -r tsconfig-paths/register src/Debug.ts",
     "ops": "cross-env NODE_ENV=development ts-node -r tsconfig-paths/register src/Ops.ts",
-    "build": "tsc && node build.js"
+    "build": "tsc && node build.js",
+    "pm2-development": "pm2 start ecosystem.config.js --env development",
+    "pm2-production": "pm2 start ecosystem.config.js --env produnction"
   },
   "keywords": [],
   "author": "dayrain",
