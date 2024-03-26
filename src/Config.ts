@@ -12,60 +12,60 @@ export interface AppConfigs {
     token: string;
     appId: string;
     staticPath: string;
-    refresh: boolean;
     localRefreshInterval: number;
+    sessionRefreshInterval: number;
     embedRefreshInterval: number;
+    sessionExpiredSec: number;
+    serverAutoDeleteCount: number;
 }
 
-export interface InstanceUser {
+export interface DiscordUser {
     id: string;
     displayName: string;
     url: string;
     avatarUrl: string;
 }
 
-export interface InstanceConnection {
+export interface BIConnection {
     host: string;
     port: number;
 }
 
-export type InstancePlayers = Array<{
+export type BIServerPlayers = Array<{
     name: string;
     score?: number;
     time?: number;
 }>
 
-export interface Instance {
+export interface BIServer {
     type: AvailableGame;
     nonce: string;
     priority: boolean;
-    connect: InstanceConnection;
+    connect: BIConnection;
     presetPath: string;
     discord: {
         statusEmbedMessageId: string;
         rconEmbedMessageId: string;
-        owner: InstanceUser;
+        owner: DiscordUser;
     },
     information: {
         hostname: string;
-        players: InstancePlayers;
+        players: BIServerPlayers;
         memo: string;
         addonsHash: string;
         lastQueries: ServerQueries;
     },
     rcon: {
-        enabled: boolean;
         port: number;
         password: string;
-        owned: string | null;
-    },
+    } | null,
     connection: {
         status: boolean;
         count: number;
     }
 }
 
-export interface InstanceStorage {
+export interface AppStorage {
     channels: {
         interaction: {
             channelId: string;
@@ -73,14 +73,14 @@ export interface InstanceStorage {
             registerMessageId: string;
             deleteMessageId: string;
         },
-        list: {
+        status: {
             channelId: string;
         },
-        rcon: {
+        admin: {
             channelId: string;
         }
     },
-    instances: Map<string, Instance>; // connectionString, Instance
+    servers: Map<string, BIServer>; // connectionString, Instance
 }
 
 const IS_DEVELOPMENT = process.env.NODE_ENV === 'development';
@@ -89,10 +89,10 @@ const CONFIGS_PATH = path.join(__dirname, '/configs/configs.json');
 const INSTANCE_PATH = path.join(__dirname, '/configs/instances.json');
 
 const CONFIGS = JSON.parse(fs.readFileSync(CONFIGS_PATH).toString('utf8')) as AppConfigs;
-const STORAGE = new Map<string, InstanceStorage>(JSON.parse(fs.readFileSync(INSTANCE_PATH).toString('utf8')));
+const STORAGE = new Map<string, AppStorage>(JSON.parse(fs.readFileSync(INSTANCE_PATH).toString('utf8')));
 
 for (const [k, v] of STORAGE) {
-    v.instances = new Map(v.instances);
+    v.servers = new Map(v.servers);
 }
 
 const { token, appId, staticPath } = CONFIGS;
@@ -113,7 +113,7 @@ export function getConfigs() {
     return CONFIGS;
 }
 
-export function getInstances() {
+export function getStorage() {
     return STORAGE;
 }
 
@@ -122,7 +122,7 @@ export function saveConfigs() {
     fs.writeFileSync(CONFIGS_PATH, p);
 }
 
-export function saveInstances() {
+export function saveStorage() {
     /* it will be problem if server processing many instances */
     const p = advStringify(Array.from(_.cloneDeep(STORAGE).entries()));
     fs.writeFileSync(INSTANCE_PATH, p);

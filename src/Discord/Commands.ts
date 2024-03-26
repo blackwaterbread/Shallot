@@ -1,3 +1,4 @@
+import _ from "lodash";
 import { 
     PermissionFlagsBits, 
     ApplicationCommandOptionType, 
@@ -5,87 +6,208 @@ import {
     CommandInteraction, 
     ApplicationCommandType, 
     Client,
-    Interaction
+    Interaction,
+    TextChannel
 } from "discord.js";
-import { logNormal, userTrack } from "Lib/Log";
+import { getStorage, saveStorage } from "Config";
+import { logError, logNormal, serverTrack, userTrack } from "Lib/Log";
+import { getDeleteInteractionMessage, getNoticeMessage, getRegisterInteractionMessage } from "./Message";
 import { uid2guid } from "Lib/Utils";
-import { getServerRconEmbed } from "./Embed";
-import { getInstances } from "Config";
 
 type SlashCommand = ChatInputApplicationCommandData &  {
     execute: (interaction: CommandInteraction) => void;
 }
 
 const commands: Array<SlashCommand> = [
-    /*
     {
         type: ApplicationCommandType.ChatInput,
-        name: 'server_list',
-        description: '서버 리스트를 불러옵니다.',
+        name: 'set_channels',
+        description: '필수 채널 설정',
+        options: [
+            {
+                name: 'interaction_channel_id',
+                description: '서버 등록/삭제 채널 ID',
+                type: ApplicationCommandOptionType.String,
+                required: true
+            },
+            {
+                name: 'status_channel_id',
+                description: '서버 현황 채널 ID',
+                type: ApplicationCommandOptionType.String,
+                required: true
+            },
+            {
+                name: 'admin_channel_id',
+                description: '서버 관리 채널 ID',
+                type: ApplicationCommandOptionType.String,
+                required: true
+            }
+        ],
         defaultMemberPermissions: PermissionFlagsBits.Administrator,
         execute: async interaction => {
-            // in direct message
-            if (!interaction.guildId) {
+            const storage = getStorage();
+            const { guild } = interaction;
+
+            if (guild?.id) {
+                const interactionChannelId = (interaction.options.get('interaction_channel_id')?.value || '') as string;
+                const statusChannelId = (interaction.options.get('status_channel_id')?.value || '') as string;
+                const adminChannelId = (interaction.options.get('admin_channel_id')?.value || '') as string;
+
+                storage.set(guild.id, {
+                    channels: {
+                        interaction: {
+                            channelId: interactionChannelId,
+                            noticeMessageId: '',
+                            registerMessageId: '',
+                            deleteMessageId: ''
+                        },
+                        status: {
+                            channelId: statusChannelId
+                        },
+                        admin: {
+                            channelId: adminChannelId
+                        }
+                    },
+                    servers: new Map()
+                });
+
+                saveStorage();
+
                 await interaction.followUp({
-                    content: ':x: 서버 관리 채널에서 명령어를 입력해주세요.',
+                    content: ':white_check_mark: 채널이 등록되었습니다.',
                     ephemeral: true
                 });
             }
+
             else {
-                const server = getInstances().get(interaction.guildId);
-                if (server) {
-                    const contents = getServerListEmbeds(server.instances);
-                    await interaction.followUp({ ...embed, ephemeral: true });
-                }
-                else {
+                await interaction.followUp({
+                    content: ':x: GuildID가 존재하지 않습니다.',
+                    ephemeral: true
+                });
+            }
+        }
+    },
+    {
+        type: ApplicationCommandType.ChatInput,
+        name: 'initalize',
+        description: 'Shallot을 사용하기 위해 초기 설정 작업을 시작합니다.',
+        defaultMemberPermissions: PermissionFlagsBits.Administrator,
+        execute: async interaction => {
+            const storage = getStorage();
+            const { guild } = interaction;
+
+            if (guild?.id) {
+                const serverStorage = storage.get(guild.id);
+
+                if (!serverStorage) {
                     await interaction.followUp({
-                        content: ':x: 올바르지 않은 접근',
+                        content: ':x: 아직 채널 설정을 완료하지 않은 것 같습니다.',
                         ephemeral: true
                     });
+                    return;
                 }
+
+                const { channelId, noticeMessageId, registerMessageId, deleteMessageId } = serverStorage.channels.interaction;
+                const channel = await guild.channels.fetch(channelId) as TextChannel;
+                
+                if (!channel) {
+                    await interaction.followUp({
+                        content: `:x: 채널 ${channelId}는 존재하지 않는 것 같습니다.`,
+                        ephemeral: true
+                    });
+                    return;
+                }
+
+                const newStorage = { ...serverStorage }
+
+                if (_.isEmpty(noticeMessageId) || _.isUndefined(noticeMessageId)) {
+                    const form = getNoticeMessage();
+                    const message = await channel.send(form);
+                    newStorage.channels.interaction.noticeMessageId = message.id;
+                }
+
+                if (_.isEmpty(registerMessageId) || _.isUndefined(registerMessageId)) {
+                    const form = getRegisterInteractionMessage();
+                    const message = await channel.send(form);
+                    newStorage.channels.interaction.registerMessageId = message.id;
+                }
+
+                if (_.isEmpty(deleteMessageId) || _.isUndefined(deleteMessageId)) {
+                    const form = getDeleteInteractionMessage();
+                    const message = await channel.send(form);
+                    newStorage.channels.interaction.deleteMessageId = message.id;
+                }
+
+                storage.set(guild.id, newStorage);
+                saveStorage();
+
+                await interaction.followUp({
+                    content: ':white_check_mark: 초기 설정이 완료되었습니다.',
+                    ephemeral: true
+                });
             }
         }
     },
-    */
     {
         type: ApplicationCommandType.ChatInput,
-        name: 'start_rcon_session',
-        description: '새로운 RCon 세션을 시작합니다. 추가 상호작용이 없을 시 세션은 300초 후에 자동으로 닫힙니다.',
-        options: [
-            {
-                name: 'server_id',
-                description: '세션을 열고자 하는 서버 ID',
-                type: ApplicationCommandOptionType.String
+        name: 'clear_servers',
+        description: '서버 리스트를 전부 삭제합니다.',
+        defaultMemberPermissions: PermissionFlagsBits.Administrator,
+        execute: async interaction => {
+            const storage = getStorage();
+            const { guild } = interaction;
+
+            if (guild?.id) {
+                const serverStorage = storage.get(guild.id);
+
+                if (!serverStorage) {
+                    await interaction.followUp({
+                        content: ':x: 아직 채널 설정을 완료하지 않은 것 같습니다.',
+                        ephemeral: true
+                    });
+                    return;
+                }
+
+                const { status, admin } = serverStorage.channels;
+                const tasks = Array.from(serverStorage.servers).map(async ([instanceId, instance]) => {
+                    try {
+                        const listChannel = await guild.channels.cache.get(status.channelId)?.fetch() as TextChannel;
+                        const rconChannel = await guild.channels.cache.get(admin.channelId)?.fetch() as TextChannel;
+    
+                        if (!listChannel || !rconChannel) {
+                            return;
+                        }
+
+                        const [statusMessage, rconMessage] = await Promise.all([
+                            listChannel.messages.fetch(instance.discord.statusEmbedMessageId),
+                            rconChannel.messages.fetch(instance.discord.rconEmbedMessageId)
+                        ]);
+    
+                        await Promise.all([
+                            statusMessage.delete(),
+                            rconMessage.delete()
+                        ]);
+                    }
+
+                    catch (e) {
+                        logError(`[Discord] clear_servers: ${e}`);
+                    }
+                });
+
+                await Promise.all(tasks);
+
+                storage.set(guild.id, {
+                    ...serverStorage,
+                    servers: new Map()
+                });
+
+                saveStorage();
+
+                await interaction.followUp({
+                    content: ':white_check_mark: 서버 리스트를 초기화 했습니다.',
+                    ephemeral: true
+                });
             }
-        ],
-        defaultMemberPermissions: PermissionFlagsBits.Administrator,
-        execute: async interaction => {
-            // 
-        }
-    },
-    {
-        type: ApplicationCommandType.ChatInput,
-        name: 'close_rcon_session',
-        description: '현재 할당된 RCon 세션을 닫습니다.',
-        defaultMemberPermissions: PermissionFlagsBits.Administrator,
-        execute: async interaction => {
-            // await interaction.followUp({ content: 'Hello', ephemeral: true });
-        }
-    },
-    {
-        type: ApplicationCommandType.ChatInput,
-        name: 'rcon',
-        description: 'rcon 명령어로 서버를 제어합니다.',
-        options: [
-            {
-                name: 'params',
-                description: '명령 파라미터',
-                type: ApplicationCommandOptionType.String
-            }
-        ],
-        defaultMemberPermissions: PermissionFlagsBits.Administrator,
-        execute: async interaction => {
-            // await interaction.followUp({ content: 'Hello', ephemeral: true });
         }
     },
     {
@@ -95,8 +217,9 @@ const commands: Array<SlashCommand> = [
         options: [
             {
                 name: 'steamid',
-                description: '변환하고자 하는 SteamID',
-                type: ApplicationCommandOptionType.String
+                description: 'SteamID',
+                type: ApplicationCommandOptionType.String,
+                required: true
             }
         ],
         defaultMemberPermissions: PermissionFlagsBits.Administrator,
@@ -118,6 +241,108 @@ const commands: Array<SlashCommand> = [
             }
         }
     }
+    /*
+    {
+        type: ApplicationCommandType.ChatInput,
+        name: 'rcon_players',
+        description: '서버 플레이어 목록 로드',
+        options: [
+            {
+                name: 'server_id',
+                description: '해당 서버 ID',
+                type: ApplicationCommandOptionType.String,
+                required: true
+            }
+        ],
+        defaultMemberPermissions: PermissionFlagsBits.Administrator,
+        execute: async interaction => {
+            const sessions = getRconSessions();
+            // await interaction.followUp({ content: 'Hello', ephemeral: true });
+        }
+    },
+    {
+        type: ApplicationCommandType.ChatInput,
+        name: 'rcon_banlist',
+        description: '서버 밴 리스트 로드',
+        options: [
+            {
+                name: 'server_id',
+                description: '해당 서버 ID',
+                type: ApplicationCommandOptionType.String,
+                required: true
+            }
+        ],
+        defaultMemberPermissions: PermissionFlagsBits.Administrator,
+        execute: async interaction => {
+            const sessions = getRconSessions();
+            // await interaction.followUp({ content: 'Hello', ephemeral: true });
+        }
+    },
+    {
+        type: ApplicationCommandType.ChatInput,
+        name: 'rcon_kick',
+        description: '서버 플레이어 킥',
+        options: [
+            {
+                name: 'guid',
+                description: '유저 GUID',
+                type: ApplicationCommandOptionType.String,
+                required: true
+            }
+        ],
+        defaultMemberPermissions: PermissionFlagsBits.Administrator,
+        execute: async interaction => {
+            const sessions = getRconSessions();
+            // await interaction.followUp({ content: 'Hello', ephemeral: true });
+        }
+    },
+    {
+        type: ApplicationCommandType.ChatInput,
+        name: 'rcon_ban',
+        description: '서버 플레이어 밴',
+        options: [
+            {
+                name: 'guid',
+                description: '유저 GUID',
+                type: ApplicationCommandOptionType.String,
+                required: true
+            }
+        ],
+        defaultMemberPermissions: PermissionFlagsBits.Administrator,
+        execute: async interaction => {
+            const sessions = getRconSessions();
+            // await interaction.followUp({ content: 'Hello', ephemeral: true });
+        }
+    },
+    {
+        type: ApplicationCommandType.ChatInput,
+        name: 'rcon_unban',
+        description: '서버 플레이어 밴 해제',
+        options: [
+            {
+                name: 'index',
+                description: '밴 리스트 유저 번호',
+                type: ApplicationCommandOptionType.Number,
+                required: true
+            }
+        ],
+        defaultMemberPermissions: PermissionFlagsBits.Administrator,
+        execute: async interaction => {
+            const sessions = getRconSessions();
+            // await interaction.followUp({ content: 'Hello', ephemeral: true });
+        }
+    },
+    {
+        type: ApplicationCommandType.ChatInput,
+        name: 'rcon_logout',
+        description: 'RCon 세션을 종료하고 점유를 중단합니다.',
+        defaultMemberPermissions: PermissionFlagsBits.Administrator,
+        execute: async interaction => {
+            const sessions = getRconSessions();
+            // await interaction.followUp({ content: 'Hello', ephemeral: true });
+        }
+    },
+    */
 ] as const;
 
 export async function initCommands(client: Client<true>) {
@@ -130,7 +355,7 @@ export async function handleCommands(interaction: Interaction) {
         if(comm){
             await interaction.deferReply({ ephemeral: true });
             await comm.execute(interaction);
-            logNormal(`[Discord] 명령어: ${comm.name}, ${userTrack(interaction.user)}`);
+            logNormal(`[Discord] 명령어: ${comm.name}, ${serverTrack(interaction.guildId!)} ${userTrack(interaction.user)}`);
         }
     }
 }

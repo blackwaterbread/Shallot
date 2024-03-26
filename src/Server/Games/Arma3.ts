@@ -1,16 +1,15 @@
 import _ from 'lodash';
 import fs from 'fs';
-import { GameDig } from 'gamedig';
 import { BufferList } from 'bl';
 import { HTMLElement, parse } from 'node-html-parser';
 import format from 'html-format';
-import { getBoolean, insertChar, toEmptySafeObject } from 'Lib/Utils';
+import { Socket as RconSocket } from '@senfo/battleye';
 import { ConnectInfo } from 'Types';
+import { getBoolean, insertChar, toEmptySafeObject } from 'Lib/Utils';
 import { logError, logNormal } from 'Lib/Log';
-import appJson from 'Root/package.json';
-import { readCfg, Socket as RconSocket } from '@senfo/battleye';
-import { Instance, getConfigs } from 'Config';
+import { BIServer, getConfigs } from 'Config';
 import { query } from 'Server';
+import appJson from 'Root/package.json';
 
 const Config = getConfigs();
 
@@ -389,7 +388,7 @@ export async function queryArma3(connection: ConnectInfo): Promise<Arma3ServerQu
     }
 }
 
-export async function rconArma3(instance: Instance, password: string) {
+export async function rconArma3(instance: BIServer, password: string) {
     const socket = new RconSocket();
     const connection = socket.connection({
         name: instance.information.hostname,

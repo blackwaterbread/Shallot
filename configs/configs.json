@@ -4,5 +4,7 @@
     "staticPath": "",
     "refresh": false,
     "localRefreshInterval": 15,
-    "embedRefreshInterval": 60
+    "sessionRefreshInterval": 1,
+    "embedRefreshInterval": 60,
+    "sessionExpiredSec": 300
 }

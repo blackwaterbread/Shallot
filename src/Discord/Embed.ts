@@ -2,16 +2,18 @@ import _ from "lodash";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from "discord.js";
 import { DateTime } from "luxon";
 import { ServerQueries } from "Server";
-import { Instance, InstanceStorage, getInstances } from "Config";
-import { judgePing } from "Lib/Utils";
+import { BIServer, getStorage } from "Config";
+import { getRconOwnedString, judgePing } from "Lib/Utils";
 import { Games, SERVER_STATUS_COLOR } from "Types";
 import { Arma3ServerQueries } from "Server/Games/Arma3";
 import { ArmaResistanceServerQueries } from "Server/Games/ArmaResistance";
 import { ArmaReforgerServerQueries } from "Server/Games/ArmaReforger";
+import { RconSession } from "Lib/Rcon";
+import { Interactions } from "./Interactions";
 
 export function getPlayersEmbed(serverId: string, instanceId: string) {
-    const storage = getInstances();
-    const instance = storage.get(serverId)!.instances.get(instanceId);
+    const storage = getStorage();
+    const instance = storage.get(serverId)!.servers.get(instanceId);
     if (!instance) return;
 
     const { hostname, players } = instance.information;
@@ -28,32 +30,35 @@ export function getPlayersEmbed(serverId: string, instanceId: string) {
     return { content: '', embeds: [embed], ephemeral: true };
 }
 
-export function getServerRconEmbed(key: string, instance: Instance) {
+export function getServerRconEmbed(key: string, instance: BIServer, rconSession?: RconSession) {
     const time = DateTime.now().toMillis();
     const { type, nonce, priority, connect, discord, information, rcon, connection } = instance;
+    const { adminStartRcon, adminRconRegister, adminRconDelete, serverModify, serverDelete } = Interactions.button;
     const status = connection.status ? 'connected' : 'disconnected';
     const game = Games[type];
+    const isRconEnabled = rcon ? true : false;
+    const isRconAvailable = (type === 'armaresistance' || !rconSession);
+    const owned = getRconOwnedString(rconSession);
 
     const rconSessionButton = new ButtonBuilder()
-        .setCustomId(`admin_rcon_session_${key}`)
-        .setLabel('RCon 세션 시작')
+        .setCustomId(`${adminStartRcon}_${key}`)
+        .setLabel('RCon 세션 시작/중단')
         .setStyle(ButtonStyle.Primary)
-        .setDisabled(!rcon.enabled);
+        .setDisabled(!isRconEnabled);
 
     const rconActiveButton = new ButtonBuilder()
-        .setCustomId(rcon.enabled ? `admin_rcon_active_${key}` : `admin_rcon_deactive_${key}`)
-        .setLabel(rcon.enabled ? 'RCon 비활성화' : 'RCon 활성화')
+        .setCustomId(rcon ? `${adminRconDelete}_${key}` : `${adminRconRegister}_${key}`)
+        .setLabel(rcon ? 'RCon 비활성화' : 'RCon 활성화')
         .setStyle(ButtonStyle.Secondary)
-        .setDisabled(true);
+        .setDisabled(!isRconAvailable);
 
     const modifyButton = new ButtonBuilder()
-        .setCustomId(`admin_modify_${key}`)
+        .setCustomId(`${serverModify}_${key}`)
         .setLabel('수정')
-        .setStyle(ButtonStyle.Secondary)
-        .setDisabled(true);
+        .setStyle(ButtonStyle.Secondary);
 
     const delButton = new ButtonBuilder()
-        .setCustomId(`delete_${connect.host}:${connect.port}`)
+        .setCustomId(`${serverDelete}_${connect.host}:${connect.port}`)
         .setLabel('서버 삭제')
         .setStyle(ButtonStyle.Danger);
 
@@ -73,7 +78,7 @@ export function getServerRconEmbed(key: string, instance: Instance) {
                 .setColor(SERVER_STATUS_COLOR[status])
                 .setTitle(information.hostname)
                 .setDescription(
-                    `${game}` +
+                    `${game.name}` +
                     "```\n" + `${nonce} | ${key}` + "\n```"
                 )
                 .setAuthor({
@@ -82,10 +87,8 @@ export function getServerRconEmbed(key: string, instance: Instance) {
                     iconURL: discord.owner.avatarUrl
                 })
                 .addFields(
-                    { name: 'RCon 세션', value: 'None', inline: false },
-                    { name: 'RCon 활성화', value: `${rcon.enabled}`, inline: true },
-                    { name: 'RCon 포트', value: `${rcon.port}`, inline: true },
-                    { name: 'RCon 패스워드', value: '******', inline: true },
+                    { name: 'RCon 점유', value: owned, inline: false },
+                    { name: 'RCon 활성화', value: `${rcon ? true : false}`, inline: true },
                     { name: '우선권', value: `${priority}`, inline: true },
                     { name: '컨텐츠 해시', value: `${information.addonsHash ? information.addonsHash : 'None'}`, inline: true },
                 )
@@ -118,14 +121,15 @@ export function getServerAdminCommandsEmbed() {
     return { content: '', embeds: [embed] };
 }
 
-export function getServerInformationEmbed(messageId: string, queries: ServerQueries, instance: Instance, memo?: string) {
+export function getServerInformationEmbed(messageId: string, queries: ServerQueries, instance: BIServer, memo?: string) {
     const owner = instance.discord.owner;
     const ping = judgePing(queries.online?.info.ping);
     const time = DateTime.now().toMillis();
     const key = `${queries.connect.host}:${queries.connect.port}`;
+    const { serverCheckPlayers } = Interactions.button;
 
     const playersButton = new ButtonBuilder()
-        .setCustomId(`checkPlayers_${key}`)
+        .setCustomId(`${serverCheckPlayers}_${key}`)
         .setLabel('플레이어 확인')
         .setStyle(ButtonStyle.Primary)
         .setDisabled(!queries);
@@ -263,6 +267,5 @@ export function getServerInformationEmbed(messageId: string, queries: ServerQuer
             .setFooter({ text: 'Offline' });
     }
 
-    // await message.edit({ content: '', embeds: [embed], components: [row as any] });
     return { content: '', embeds: [embed], components: [row as any] };
 }
