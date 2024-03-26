@@ -8,9 +8,8 @@ import {
     Interaction
 } from "discord.js";
 import { logNormal, userTrack } from "Lib/Log";
+import { getRconSessions } from "Lib/Rcon";
 import { uid2guid } from "Lib/Utils";
-import { getServerRconEmbed } from "./Embed";
-import { getInstances } from "Config";
 
 type SlashCommand = ChatInputApplicationCommandData &  {
     execute: (interaction: CommandInteraction) => void;
@@ -46,7 +45,6 @@ const commands: Array<SlashCommand> = [
             }
         }
     },
-    */
     {
         type: ApplicationCommandType.ChatInput,
         name: 'start_rcon_session',
@@ -72,6 +70,7 @@ const commands: Array<SlashCommand> = [
             // await interaction.followUp({ content: 'Hello', ephemeral: true });
         }
     },
+    */
     {
         type: ApplicationCommandType.ChatInput,
         name: 'rcon',
@@ -85,6 +84,7 @@ const commands: Array<SlashCommand> = [
         ],
         defaultMemberPermissions: PermissionFlagsBits.Administrator,
         execute: async interaction => {
+            const sessions = getRconSessions();
             // await interaction.followUp({ content: 'Hello', ephemeral: true });
         }
     },

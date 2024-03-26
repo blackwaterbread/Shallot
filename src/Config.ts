@@ -14,7 +14,9 @@ export interface AppConfigs {
     staticPath: string;
     refresh: boolean;
     localRefreshInterval: number;
+    sessionRefreshInterval: number;
     embedRefreshInterval: number;
+    sessionExpiredSec: number;
 }
 
 export interface InstanceUser {
@@ -54,11 +56,9 @@ export interface Instance {
         lastQueries: ServerQueries;
     },
     rcon: {
-        enabled: boolean;
         port: number;
         password: string;
-        owned: string | null;
-    },
+    } | null,
     connection: {
         status: boolean;
         count: number;

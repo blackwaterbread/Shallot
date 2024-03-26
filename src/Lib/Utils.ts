@@ -1,6 +1,8 @@
 import _ from "lodash";
 import { pipe, split, toArray } from "iter-ops";
 import { createHash } from 'crypto';
+import { DateTime } from "luxon";
+import { RconSession } from "./Rcon";
 
 export function byteSplit(buffer: Buffer, seperator: number) {
     return pipe(
@@ -62,3 +64,31 @@ export function uid2guid(uid: string) {
 
     return guid;
 };
+
+export function validationAddress(address: string): [string, number] {
+    const inputAddress = address.split(':');
+    let port = inputAddress.length === 2 ? Number(inputAddress[1]) : 2302;
+
+    if (0 > port || 65535 < port) {
+        throw new Error(':x: 잘못된 포트입니다. 포트는 0 ~ 65535의 범위를 가집니다.');
+    }
+
+    const sepIP = inputAddress[0].split('.');
+
+    if (sepIP.length !== 4 || sepIP.map(x => Number(x)).find(v => v < 0 || v > 255)) {
+        throw new Error(':x: 잘못된 IP입니다.');
+    }
+
+    return [inputAddress[0], port]
+}
+
+export function getRconOwnedString(rconSession?: RconSession) {
+    if (rconSession?.user) {
+        const { user } = rconSession;
+        const expired = DateTime.fromSeconds(rconSession.expired).toLocaleString(DateTime.DATETIME_MED_WITH_SECONDS);
+        return `[${user.id}:${user.displayName}|Expired:${expired}]`;
+    }
+    else {
+        return 'None';
+    }
+}

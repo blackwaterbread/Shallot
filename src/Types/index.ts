@@ -1,8 +1,20 @@
 export const Games = {
-    arma3: 'Arma 3',
-    armareforger: 'Arma Reforger',
-    armaresistance: 'Operation Flashpoint: Resistance',
-    unknown: 'Unknown'
+    arma3: {
+        name: 'Arma 3',
+        type: 'arma3'
+    },
+    armareforger: {
+        name: 'Arma Reforger',
+        type: 'armareforger'
+    },
+    armaresistance: {
+        name: 'Operation Flashpoint: Resistance',
+        type: 'armaresistance'
+    },
+    unknown: {
+        name: 'Unknown',
+        type: 'unknown'
+    }
 } as const;
 
 export const SERVER_STATUS_COLOR = {

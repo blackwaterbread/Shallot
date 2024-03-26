@@ -1,13 +1,17 @@
 import _ from 'lodash';
 import { ToadScheduler, SimpleIntervalJob, AsyncTask } from 'toad-scheduler';
-import { Client, TextChannel } from 'discord.js';
+import { Channel, Client, Message, TextChannel } from 'discord.js';
+import { DateTime } from 'luxon';
 import { getServerInformationEmbed, getServerRconEmbed } from 'Discord/Embed';
 import { ServerQueries } from 'Server';
 import { queryArma3, savePresetHtml } from 'Server/Games/Arma3';
 import { queryArmaResistance } from 'Server/Games/ArmaResistance';
 import { queryArmaReforger } from 'Server/Games/ArmaReforger';
 import { channelTrack, instanceTrack, logError, logNormal } from './Log';
-import { InstanceStorage, getConfigs, getInstances, saveInstances } from 'Config';
+import { Instance, InstanceStorage, getConfigs, getInstances, saveInstances } from 'Config';
+import { getRconSessions } from './Rcon';
+
+let client: Client<true>;
 
 const scheduler = new ToadScheduler();
 
@@ -19,10 +23,10 @@ let embedTask: AsyncTask | null = null;
 let localJob: SimpleIntervalJob | null = null;
 let embedJob: SimpleIntervalJob | null = null;
 
-export function initRefresher(client: Client<true>) {
+export function initRefresher(readyClient: Client<true>) {
     const configs = getConfigs();
 
-    localTask = new AsyncTask(localTaskName, async () => { await serverRefresh() });
+    localTask = new AsyncTask(localTaskName, async () => { await serverRefreshEntire() });
     localJob = new SimpleIntervalJob({ 
         seconds: configs.localRefreshInterval, 
         runImmediately: true 
@@ -32,10 +36,10 @@ export function initRefresher(client: Client<true>) {
         preventOverrun: true 
     });
 
-    embedTask = new AsyncTask(embedTaskName, async () => { await embedRefresh(client) });
+    embedTask = new AsyncTask(embedTaskName, async () => { await embedRefreshEntire(readyClient) });
     embedJob = new SimpleIntervalJob({ 
         seconds: configs.embedRefreshInterval, 
-        runImmediately: false 
+        runImmediately: true 
     }, 
         embedTask, 
     { 
@@ -44,27 +48,64 @@ export function initRefresher(client: Client<true>) {
 
     scheduler.addSimpleIntervalJob(localJob);
     scheduler.addSimpleIntervalJob(embedJob);
+
+    client = readyClient;
 }
 
-export function stopRefresher() {
+export function stopRefresherEntire() {
     localJob?.stop();
     embedJob?.stop();
 }
 
-export function startRefresher() {
+export function startRefresherEntire() {
     localJob?.start();
     embedJob?.start();
 }
 
-export function forcedLocalRefresh() {
-    localJob?.start();
+
+export async function forcedServerRefresh(target?: { serverId: string, instanceId: string }) {
+    if (target) {
+        const storage = getInstances();
+        const { serverId, instanceId } = target;
+        const instance = storage.get(serverId)?.instances.get(instanceId);
+
+        if (!instance) {
+            logError('[App] forcedServerRefresh: 존재하지 않는 인스턴스입니다.')
+            return;
+        }
+
+        const trackLog = `${instanceTrack(instance)}`;
+        const { type, connect, priority, discord, information, connection } = instance;
+
+        let queries: ServerQueries;
+        let newInstance = { ...instance };
+
+        code
+    }
+
+    else {
+        localJob?.start();
+    }
 }
 
-export function forcedEmbedRefresh() {
-    embedJob?.start();
+export async function forcedEmbedRefresh(instanceId?: string) {
+    if (instanceId) {
+        client.some
+    }
+
+    else {
+        embedJob?.start();
+    }
 }
 
-async function serverRefresh(serverId?: string) {
+async function serverRefresh(serverId: string, instanceId: string) {
+    const storage = getInstances();
+    const instance = storage.get(serverId)?.instances.get(instanceId);
+
+    client.some
+}
+
+async function serverRefreshEntire(serverId?: string) {
     const storage = getInstances();
     let serverInstances: [string, InstanceStorage][];
 
@@ -149,6 +190,31 @@ async function serverRefresh(serverId?: string) {
                 logNormal(`[Discord] 서버 연결 실패: ${trackLog}`);
 
                 if (!priority && connection.count === 0) {
+                    const guild = await client.guilds.cache.get(serverId)?.fetch();
+
+                    if (!guild) {
+                        logError(`[Discord] Local Refresh: 서버 ID를 찾을 수 없습니다.`);
+                        return;
+                    }
+
+                    const listChannel = await guild.channels.cache.get(server.channels.list.channelId)?.fetch() as TextChannel;
+                    const rconChannel = await guild.channels.cache.get(server.channels.rcon.channelId)?.fetch() as TextChannel;
+
+                    if (!listChannel || !rconChannel) {
+                        logError('[App|Discord] Local Refresh: 채널이 존재하지 않습니다.');
+                        return;
+                    }
+
+                    const [statusMessage, rconMessage] = await Promise.all([
+                        listChannel.messages.fetch(instance.discord.statusEmbedMessageId),
+                        rconChannel.messages.fetch(instance.discord.rconEmbedMessageId)
+                    ]);
+
+                    await Promise.all([
+                        statusMessage.delete(),
+                        rconMessage.delete()
+                    ]);
+
                     instances.delete(instanceId);
                     saveInstances();
 
@@ -177,7 +243,7 @@ async function serverRefresh(serverId?: string) {
     await Promise.all(tasks);
 }
 
-async function embedRefresh(client: Client<true>) {
+async function embedRefreshEntire(client: Client<true>) {
     const storage = getInstances();
     const tasks = Array.from(storage).map(async ([serverId, server]) => {
         const { instances } = server;
@@ -195,23 +261,12 @@ async function embedRefresh(client: Client<true>) {
 
         return Array.from(server.instances).map(async ([instanceId, instance]) => {
             const trackLog = `${channelTrack(listChannel)}${channelTrack(rconChannel)}${instanceTrack(instance)}`;
-            const { discord, information } = instance;
-            const { memo, lastQueries } = information;
-            let statusEmbed, rconEmbed;
 
             try {
-                const [statusMessage, rconMessage] = await Promise.all([
-                    (listChannel as TextChannel).messages.fetch(discord.statusEmbedMessageId),
-                    (rconChannel as TextChannel).messages.fetch(discord.rconEmbedMessageId)
+                Promise.all([
+                    statusEmbedRefresh(listChannel, instanceId, instance),
+                    rconEmbedRefresh(rconChannel, instanceId, instance)
                 ]);
-
-                statusEmbed = getServerInformationEmbed(statusMessage.id, lastQueries, instance, memo);
-                rconEmbed = getServerRconEmbed(instanceId, instance);
-
-                await statusMessage.edit(statusEmbed as any);
-                await rconMessage.edit(rconEmbed as any);
-
-                logNormal(`[Discord] Embed Refresh 완료: ${trackLog}`);
             }
 
             catch (e) {
@@ -219,7 +274,6 @@ async function embedRefresh(client: Client<true>) {
                 saveInstances();
 
                 logNormal(`[Discord] Embed Refresh 실패: 메세지가 존재하지 않는 것 같음, 인스턴스 삭제: ${trackLog}`);
-                logError(`[Discord] ${e}`);
 
                 return;
             }
@@ -227,4 +281,46 @@ async function embedRefresh(client: Client<true>) {
     });
 
     await Promise.all(tasks);
+}
+
+async function statusEmbedRefresh(listChannel: Channel, instanceId: string, instance: Instance) {
+    const trackLog = `${channelTrack(listChannel)}${instanceTrack(instance)}`;
+    const { discord, information } = instance;
+    const { memo, lastQueries } = information;
+    let statusEmbed;
+    let statusMessage: Message<true> | null = null;
+
+    try {
+        statusMessage = await (listChannel as TextChannel).messages.fetch(discord.statusEmbedMessageId);
+    }
+
+    catch (e) {
+        throw new Error(`[Discord] statusEmbedRefresh: Error on fetching Message: ${e}`);
+    }
+
+    statusEmbed = getServerInformationEmbed(statusMessage.id, lastQueries, instance, memo);
+    await statusMessage.edit(statusEmbed as any);
+
+    logNormal(`[Discord] statusEmbedRefresh 완료: ${trackLog}`);
+}
+
+async function rconEmbedRefresh(rconChannel: Channel, instanceId: string, instance: Instance) {
+    const rconSessions = getRconSessions();
+    const trackLog = `${channelTrack(rconChannel)}${instanceTrack(instance)}`;
+    const { discord } = instance;
+    let rconEmbed;
+    let rconMessage: Message<true> | null = null;
+
+    try {
+        rconMessage = await (rconChannel as TextChannel).messages.fetch(discord.rconEmbedMessageId);
+    }
+
+    catch (e) {
+        throw new Error(`[Discord] rconEmbedRefresh: Error on fetching Message: ${e}`);
+    }
+
+    rconEmbed = getServerRconEmbed(instanceId, instance, rconSessions.get(instanceId));
+    await rconMessage.edit(rconEmbed as any);
+
+    logNormal(`[Discord] rconEmbedRefresh 완료: ${trackLog}`);
 }
