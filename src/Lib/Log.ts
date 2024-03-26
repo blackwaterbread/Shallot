@@ -1,4 +1,4 @@
-import { Instance, getAppInfo } from 'Config';
+import { AppStorage, BIServer, getAppInfo } from 'Config';
 import { Channel, Message, TextChannel, User } from 'discord.js';
 import { DateTime } from 'luxon';
 
@@ -32,7 +32,11 @@ export function messageTrack(message: Message<true>) {
     return `[${message.id}, ${message.channelId}, ${message.channel.name}]`;
 }
 
-export function instanceTrack(instance: Instance) {
+export function serverTrack(serverId: string) {
+    return `[Server:${serverId}]`;
+}
+
+export function instanceTrack(instance: BIServer) {
     return `[${instance.type}|${instance.discord.statusEmbedMessageId}|${instance.connect.host}:${instance.connect.port}]`;
 }
 

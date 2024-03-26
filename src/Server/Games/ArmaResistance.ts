@@ -1,5 +1,4 @@
 import _ from "lodash";
-import { GameDig } from "gamedig";
 import { logError } from "Lib/Log";
 import { ConnectInfo } from "Types";
 import { toEmptySafeObject } from "Lib/Utils";
