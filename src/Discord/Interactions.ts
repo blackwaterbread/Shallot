@@ -139,7 +139,7 @@ export async function handleInteractions(interaction: Interaction) {
                         id: user.id,
                         displayName: user.displayName,
                         url: `https://discordapp.com/users/${user.id}`,
-                        avatarUrl: user.avatarURL() ?? ''
+                        avatarUrl: user.avatarURL() ?? 'https://cdn.discordapp.com/embed/avatars/0.png'
                     }
 
                     /* quering server */
