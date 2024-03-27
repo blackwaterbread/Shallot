@@ -9,6 +9,8 @@ import { queryArmaReforger } from 'Server/Games/ArmaReforger';
 import { channelTrack, instanceTrack, logError, logNormal } from './Log';
 import { InstanceStorage, getConfigs, getInstances, saveInstances } from 'Config';
 
+let client: Client<true>;
+
 const scheduler = new ToadScheduler();
 
 const localTaskName = 'localTask';
@@ -19,7 +21,7 @@ let embedTask: AsyncTask | null = null;
 let localJob: SimpleIntervalJob | null = null;
 let embedJob: SimpleIntervalJob | null = null;
 
-export function initRefresher(client: Client<true>) {
+export function initRefresher(readyClient: Client<true>) {
     const configs = getConfigs();
 
     localTask = new AsyncTask(localTaskName, async () => { await serverRefresh() });
@@ -32,7 +34,7 @@ export function initRefresher(client: Client<true>) {
         preventOverrun: true 
     });
 
-    embedTask = new AsyncTask(embedTaskName, async () => { await embedRefresh(client) });
+    embedTask = new AsyncTask(embedTaskName, async () => { await embedRefresh(readyClient) });
     embedJob = new SimpleIntervalJob({ 
         seconds: configs.embedRefreshInterval, 
         runImmediately: false 
@@ -44,6 +46,8 @@ export function initRefresher(client: Client<true>) {
 
     scheduler.addSimpleIntervalJob(localJob);
     scheduler.addSimpleIntervalJob(embedJob);
+
+    client = readyClient;
 }
 
 export function stopRefresher() {
@@ -149,6 +153,31 @@ async function serverRefresh(serverId?: string) {
                 logNormal(`[Discord] 서버 연결 실패: ${trackLog}`);
 
                 if (!priority && connection.count === 0) {
+                    const guild = await client.guilds.cache.get(serverId)?.fetch();
+
+                    if (!guild) {
+                        logError(`[Discord] Local Refresh: 서버 ID를 찾을 수 없습니다.`);
+                        return;
+                    }
+
+                    const listChannel = await guild.channels.cache.get(server.channels.list.channelId)?.fetch() as TextChannel;
+                    const rconChannel = await guild.channels.cache.get(server.channels.rcon.channelId)?.fetch() as TextChannel;
+
+                    if (!listChannel || !rconChannel) {
+                        logError('[App|Discord] Local Refresh: 채널이 존재하지 않습니다.');
+                        return;
+                    }
+
+                    const [statusMessage, rconMessage] = await Promise.all([
+                        listChannel.messages.fetch(instance.discord.statusEmbedMessageId),
+                        rconChannel.messages.fetch(instance.discord.rconEmbedMessageId)
+                    ]);
+
+                    await Promise.all([
+                        statusMessage.delete(),
+                        rconMessage.delete()
+                    ]);
+
                     instances.delete(instanceId);
                     saveInstances();
 
