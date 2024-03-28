@@ -86,10 +86,10 @@ export interface AppStorage {
 const IS_DEVELOPMENT = process.env.NODE_ENV === 'development';
 
 const CONFIGS_PATH = path.join(__dirname, '/configs/configs.json');
-const INSTANCE_PATH = path.join(__dirname, '/configs/instances.json');
+const STORAGE_PATH = path.join(__dirname, '/configs/storage.json');
 
 const CONFIGS = JSON.parse(fs.readFileSync(CONFIGS_PATH).toString('utf8')) as AppConfigs;
-const STORAGE = new Map<string, AppStorage>(JSON.parse(fs.readFileSync(INSTANCE_PATH).toString('utf8')));
+const STORAGE = new Map<string, AppStorage>(JSON.parse(fs.readFileSync(STORAGE_PATH).toString('utf8')));
 
 for (const [k, v] of STORAGE) {
     v.servers = new Map(v.servers);
@@ -125,5 +125,5 @@ export function saveConfigs() {
 export function saveStorage() {
     /* it will be problem if server processing many instances */
     const p = advStringify(Array.from(_.cloneDeep(STORAGE).entries()));
-    fs.writeFileSync(INSTANCE_PATH, p);
+    fs.writeFileSync(STORAGE_PATH, p);
 }
