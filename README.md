@@ -8,13 +8,12 @@ Server information display discord bot for Bohemia Interactive's games
 * Any users can add their own server
 * Automatically delete disconnected servers from the list
 * Allows specify a priority server
-    - Priority server: privilege that exemption automatic delete from list
 
 ## Plan
-* Multi Language
-* Support more games
+* Multilingual Support
+* RCon Commands
 
-## Supported
+## Supported Games
 * [Arma 3](https://store.steampowered.com/app/107410/Arma_3/)
 * [Arma Reforger](https://store.steampowered.com/app/1874880/Arma_Reforger/)
 * [Arma: Cold War Assualt (a.k.a Operation Flashpoint: Resistance)](https://store.steampowered.com/app/65790/ARMA_Cold_War_Assault/)
@@ -37,37 +36,13 @@ Initialize
     "token": "Your-Discord-Bot-Token",
     "appId": "Your-Discord-Bot-AppID",
     "staticPath": "Path-where-static-files-will-be-stored",
-    "refresh": false
+    ...
 }
 ```
 
-### instances.json
-Basically, if the messageId value is empty, shallot will resend it.
-
-Initialize
+### storage.json
 ```
-[
-    [
-        "ServerID",
-        {
-            "channels": {
-                "interaction": {
-                    "channelId": "INTERACTION-CHANNEL-ID",
-                    "noticeMessageId": "",
-                    "registerMessageId": "",
-                    "deleteMessageId": ""
-                },
-                "list": {
-                    "channelId": "SERVERLIST-CHANNEL-ID"
-                },
-                "rcon": {
-                    "channelId": "RCON-CHANNEL-ID"
-                }
-            },
-            "instances": [],
-        }
-    ]
-]
+Basically, do not need to modify this.
 ```
 
 ## Start
@@ -76,6 +51,11 @@ yarn install
 yarn build
 node dist/shallot.js or pm2 start dist/shallot.js
 ```
+
+## Initalize on Discord
+1. 3 channels must be created; **interaction, status, admin** (can change the channel name arbitrarily)
+2. Specifies the channel ID to use with the **/set_channels** command
+3. If completed the channel setup, do the initial setup with the **/initialize** command
 
 ---
 
