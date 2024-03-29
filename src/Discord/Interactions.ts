@@ -1,19 +1,21 @@
 import _ from "lodash";
 import fs from 'fs';
 import crypto from 'crypto';
+import { DateTime } from "luxon";
 import { Interaction, PermissionsBitField, TextChannel } from "discord.js";
 import { AvailableGame, Games } from "Types";
 import { registerStanbyMessage } from "./Message";
 import { getStorage, saveStorage, BIServer, getConfigs } from "Config";
 import { getServerInformationEmbed, getPlayersEmbed, getServerRconEmbed } from "./Embed";
 import { logError, logNormal, messageTrack, userTrack } from "Lib/Log";
-import { createServerModifyModal, createServerRegisterModal } from "./Modal";
+import { createRconRegisterModal, createServerModifyModal, createServerRegisterModal } from "./Modal";
 import { ServerQueries } from "Server";
 import { queryArma3, savePresetHtml } from "Server/Games/Arma3";
 import { queryArmaResistance } from "Server/Games/ArmaResistance";
 import { queryArmaReforger } from "Server/Games/ArmaReforger";
-import { startRefresherEntire, stopRefresherEntire } from "Lib/Refresher";
+import { rconEmbedRefresh, startRefresherEntire, statusEmbedRefresh, stopRefresherEntire } from "Lib/Refresher";
 import { validationAddress } from "Lib/Utils";
+import { getRconSessions, startRconSession } from "Lib/Rcon";
 
 const configs = getConfigs();
 
@@ -144,7 +146,6 @@ export async function handleInteractions(interaction: Interaction) {
                 break;
             }
 
-            /*
             case adminStartRcon: {
                 if (!isMemberAdmin) {
                     await handleRestrictedInteraction(interaction, isMemberAdmin);
@@ -247,8 +248,8 @@ export async function handleInteractions(interaction: Interaction) {
 
                     serverInstance.servers.set(key, newInstance);
                     saveStorage();
-                    forcedEmbedRefresh();
 
+                    // await forcedEmbedRefresh(newInstance.discord.rconEmbedMessageId);
                     await interaction.reply({
                         content: ':wave: RCon이 비활성화 되었습니다.',
                         ephemeral: true
@@ -264,7 +265,6 @@ export async function handleInteractions(interaction: Interaction) {
 
                 break;
             }
-            */
 
             default: {
                 logError(`[App] 등록되지 않은 버튼 상호작용: ${buttonId}`);
@@ -467,11 +467,12 @@ export async function handleInteractions(interaction: Interaction) {
                 serverInstance.servers.set(newInstanceKey, newInstance);
                 saveStorage();
 
+                await statusEmbedRefresh(guild.id, newInstanceKey);
                 await ephemeralReplyMessage.edit({ content: ':white_check_mark: 서버 정보가 수정되었습니다.' });
+
                 break;
             }
 
-            /*
             case rconRegister: {
                 const ephemeralReplyMessage = await interaction.reply({
                     content: ':tools: 유효성 확인 중입니다...',
@@ -513,12 +514,11 @@ export async function handleInteractions(interaction: Interaction) {
                 serverInstance.servers.set(instanceId, newInstance);
                 saveStorage();
 
+                await rconEmbedRefresh(guild.id, instanceId);
                 await ephemeralReplyMessage.edit({ content: ':white_check_mark: RCon 접속 정보를 추가했습니다.' });
-                forcedEmbedRefresh();
 
                 break;
             }
-            */
 
             default: {
                 // invalid Submit

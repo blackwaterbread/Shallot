@@ -10,7 +10,7 @@ import {
     TextChannel
 } from "discord.js";
 import { getStorage, saveStorage } from "Config";
-import { logError, logNormal, serverTrack, userTrack } from "Lib/Log";
+import { logError, logNormal, guildTrack, userTrack } from "Lib/Log";
 import { getDeleteInteractionMessage, getNoticeMessage, getRegisterInteractionMessage } from "./Message";
 import { uid2guid } from "Lib/Utils";
 
@@ -355,7 +355,7 @@ export async function handleCommands(interaction: Interaction) {
         if(comm){
             await interaction.deferReply({ ephemeral: true });
             await comm.execute(interaction);
-            logNormal(`[Discord] 명령어: ${comm.name}, ${serverTrack(interaction.guildId!)} ${userTrack(interaction.user)}`);
+            logNormal(`[Discord] 명령어: ${comm.name}, ${guildTrack(interaction.guildId!)} ${userTrack(interaction.user)}`);
         }
     }
 }
