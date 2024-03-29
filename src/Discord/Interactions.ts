@@ -302,7 +302,7 @@ export async function handleInteractions(interaction: Interaction) {
 
                 await ephemeralReplyMessage.edit({ content: ':rocket: 서버 연결 중입니다...' });
 
-                const instanceKey = inputAddress;
+                const instanceKey = `${validatedAddress[0]}:${validatedAddress[1]}`;
                 const isAlreadyExist = serverInstance.servers.has(instanceKey);
                 const isUserAlreadyRegistered = Array.from(serverInstance.servers).find(([k, v]) => v.discord.owner.id === user.id);
 
