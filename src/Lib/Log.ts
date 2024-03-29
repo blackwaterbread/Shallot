@@ -32,8 +32,8 @@ export function messageTrack(message: Message<true>) {
     return `[${message.id}, ${message.channelId}, ${message.channel.name}]`;
 }
 
-export function serverTrack(serverId: string) {
-    return `[Server:${serverId}]`;
+export function guildTrack(guildId: string) {
+    return `[Server:${guildId}]`;
 }
 
 export function instanceTrack(instance: BIServer) {

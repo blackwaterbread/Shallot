@@ -30,15 +30,15 @@ export function getPlayersEmbed(serverId: string, instanceId: string) {
     return { content: '', embeds: [embed], ephemeral: true };
 }
 
-export function getServerRconEmbed(key: string, instance: BIServer, rconSession?: RconSession) {
+export function getServerRconEmbed(key: string, instance: BIServer) {
     const time = DateTime.now().toMillis();
     const { type, nonce, priority, connect, discord, information, rcon, connection } = instance;
     const { adminStartRcon, adminRconRegister, adminRconDelete, serverModify, serverDelete } = Interactions.button;
     const status = connection.status ? 'connected' : 'disconnected';
     const game = Games[type];
     const isRconEnabled = rcon ? true : false;
-    const isRconAvailable = (type === 'armaresistance' || !rconSession);
-    const owned = getRconOwnedString(rconSession);
+    const isRconAvailable = (type === 'armaresistance');
+    // const owned = getRconOwnedString(rconSession);
 
     const rconSessionButton = new ButtonBuilder()
         .setCustomId(`${adminStartRcon}_${key}`)
@@ -88,7 +88,7 @@ export function getServerRconEmbed(key: string, instance: BIServer, rconSession?
                     iconURL: discord.owner.avatarUrl
                 })
                 .addFields(
-                    { name: 'RCon 점유', value: owned, inline: false },
+                    // { name: 'RCon 점유', value: owned, inline: false },
                     { name: 'RCon 활성화', value: `${rcon ? true : false}`, inline: true },
                     { name: '우선권', value: `${priority}`, inline: true },
                     { name: '컨텐츠 해시', value: `${information.addonsHash ? information.addonsHash : 'None'}`, inline: true },
