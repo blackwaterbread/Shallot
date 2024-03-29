@@ -69,7 +69,8 @@ export function getServerRconEmbed(key: string, instance: BIServer, rconSession?
         .addComponents(delButton);
 
     const offlineRow = new ActionRowBuilder()
-        .addComponents(delButton);        
+        .addComponents(modifyButton)
+        .addComponents(delButton);
 
     return {
         content: '',
