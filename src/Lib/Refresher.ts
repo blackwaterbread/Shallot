@@ -174,7 +174,7 @@ export async function serverRefresh(target?: { guildId: string, serverId: string
             logNormal(`[Discord] 서버 연결 실패: ${trackLog}`);
 
             if (!priority && connection.count === 0) {
-                const discordGuild = await client.guilds.cache.get(serverId)?.fetch();
+                const discordGuild = await client.guilds.cache.get(guildId)?.fetch();
 
                 if (!discordGuild) {
                     logError(`[Discord] serverRefresh: 서버 ID를 찾을 수 없습니다.`);
