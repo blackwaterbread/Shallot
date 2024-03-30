@@ -1,3 +1,7 @@
+import { Arma3ServerQueries } from "Server/Games/Arma3";
+import { ArmaReforgerServerQueries } from "Server/Games/ArmaReforger";
+import { ArmaResistanceServerQueries } from "Server/Games/ArmaResistance";
+
 export const Games = {
     arma3: {
         name: 'Arma 3',
@@ -30,3 +34,5 @@ export interface ConnectInfo {
 }
 
 export type AvailableGame = keyof typeof Games;
+
+export type ServerQueries = Arma3ServerQueries | ArmaReforgerServerQueries | ArmaResistanceServerQueries;
