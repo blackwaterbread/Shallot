@@ -25,16 +25,17 @@ export function createServerRegisterModal(type: AvailableGame) {
         .setRequired(false)
         .setStyle(TextInputStyle.Short);
 
-    const firstActionRow = new ActionRowBuilder().addComponents(inputAddress);
-    const secondActionRow = new ActionRowBuilder().addComponents(inputMemo);
-    modal.addComponents(firstActionRow, secondActionRow as any);
+    modal.addComponents(
+        new ActionRowBuilder().addComponents(inputAddress), 
+        new ActionRowBuilder().addComponents(inputMemo) as any
+    );
 
     return modal;
 }
 
 export function createServerModifyModal(instanceId: string, instance: BIServer) {
     const { serverModify } = Interactions.modal;
-    const { serverAddress, serverMemo } = Interactions.modalComponents;
+    const { serverAddress, serverPriority, serverMemo } = Interactions.modalComponents;
     const modal = new ModalBuilder()
         .setCustomId(`${serverModify}_${instanceId}`)
         .setTitle('서버 정보 수정')
@@ -47,6 +48,14 @@ export function createServerModifyModal(instanceId: string, instance: BIServer) 
         .setMaxLength(120)
         .setStyle(TextInputStyle.Short);
 
+    const inputPriority = new TextInputBuilder()
+        .setCustomId(serverPriority)
+        .setLabel('우선권 (true or false)')
+        .setValue(instance.priority.toString())
+        .setRequired(true)
+        .setMaxLength(5)
+        .setStyle(TextInputStyle.Short);
+
     const inputMemo = new TextInputBuilder()
         .setCustomId(serverMemo)
         .setLabel('메모')
@@ -54,9 +63,11 @@ export function createServerModifyModal(instanceId: string, instance: BIServer) 
         .setRequired(false)
         .setStyle(TextInputStyle.Short);
 
-    const firstActionRow = new ActionRowBuilder().addComponents(inputAddress);
-    const secondActionRow = new ActionRowBuilder().addComponents(inputMemo);
-    modal.addComponents(firstActionRow, secondActionRow as any);
+    modal.addComponents(
+        new ActionRowBuilder().addComponents(inputAddress), 
+        new ActionRowBuilder().addComponents(inputPriority),
+        new ActionRowBuilder().addComponents(inputMemo) as any
+    );
 
     return modal;
 }
@@ -82,9 +93,10 @@ export function createRconRegisterModal(instanceId: string) {
         .setMaxLength(64)
         .setStyle(TextInputStyle.Short);
 
-    const firstActionRow = new ActionRowBuilder().addComponents(inputRconPort);
-    const secondActionRow = new ActionRowBuilder().addComponents(inputRconPassword);
-    modal.addComponents(firstActionRow, secondActionRow as any);
+    modal.addComponents(
+        new ActionRowBuilder().addComponents(inputRconPort), 
+        new ActionRowBuilder().addComponents(inputRconPassword) as any
+    );
 
     return modal;
 }

@@ -13,8 +13,12 @@ export function byteSplit(buffer: Buffer, seperator: number) {
 }
 
 export function getBoolean(value: string | number): boolean {
-    if (typeof value === 'string')
-        return value === 't' ? true : false;
+    if (typeof value === 'string') {
+        if (value === 'true' || value == 'True') return true;
+        else if (value === 'false' || value == 'False') return false;
+        else if (value === 't' || value == 'T') return true;
+        else return false;
+    }
     else if (typeof value === 'number')
         if (value === 0x74) return true; // 't'
         else if (value === 0x66) return false; // 'f'
