@@ -3,12 +3,13 @@ import fs from 'fs';
 import { BufferList } from 'bl';
 import { HTMLElement, parse } from 'node-html-parser';
 import format from 'html-format';
+import { GameDig } from 'gamedig';
 import { Socket as RconSocket } from '@senfo/battleye';
 import { ConnectInfo } from 'Types';
 import { getBoolean, insertChar, toEmptySafeObject } from 'Lib/Utils';
 import { logError, logNormal } from 'Lib/Log';
-import { BIServer, getConfigs } from 'Config';
-import { query } from 'Server';
+import { getConfigs } from "Config";
+import { BIServer } from 'Storage';
 import appJson from 'Root/package.json';
 
 const Config = getConfigs();
@@ -352,7 +353,7 @@ type Arma3HtmlAddonsList = Array<{ name?: string, url: string }>;
 export async function queryArma3(connection: ConnectInfo): Promise<Arma3ServerQueries> {
     const { host, port } = connection;
     try {
-        const state: any = await query({
+        const state: any = await GameDig.query({
             type: 'arma3',
             host: host,
             port: port,

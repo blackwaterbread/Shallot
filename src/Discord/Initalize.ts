@@ -1,7 +1,8 @@
 import _ from "lodash";
 import { ActivityType, Client, Guild } from "discord.js";
 import { logNormal, logWarning } from "Lib/Log";
-import { getStorage, getAppInfo } from "Config";
+import { getAppInfo } from "Config";
+import { getStorage } from "Storage";
 import revision from 'child_process';
 
 export async function initBotPresence(client: Client<true>) {
