@@ -14,7 +14,7 @@ import { queryArma3, savePresetHtml } from "Server/Games/Arma3";
 import { queryArmaResistance } from "Server/Games/ArmaResistance";
 import { queryArmaReforger } from "Server/Games/ArmaReforger";
 import { rconEmbedRefresh, startRefresherEntire, statusEmbedRefresh, stopRefresherEntire } from "Lib/Refresher";
-import { validationAddress } from "Lib/Utils";
+import { getBoolean, validationAddress } from "Lib/Utils";
 import { getRconSessions, startRconSession } from "Lib/Rcon";
 
 const configs = getConfigs();
@@ -37,6 +37,7 @@ export const Interactions = {
     modalComponents: {
         serverAddress: 'serverAddress',
         serverMemo: 'serverMemo',
+        serverPriority: 'serverPriority',
         rconPort: 'rconPort',
         rconPassword: 'rconPassword'
     }
@@ -277,7 +278,7 @@ export async function handleInteractions(interaction: Interaction) {
     else if (interaction.isModalSubmit()) {
         const modalId = interaction.customId.split('_');
         const { serverRegister, serverModify, rconRegister } = Interactions.modal;
-        const { serverAddress, serverMemo } = Interactions.modalComponents;
+        const { serverAddress, serverPriority, serverMemo } = Interactions.modalComponents;
         const { arma3, armareforger, armaresistance } = Games;
 
         switch (modalId[0]) {
@@ -431,6 +432,7 @@ export async function handleInteractions(interaction: Interaction) {
                 });
 
                 const inputAddress = interaction.fields.getTextInputValue(serverAddress);
+                const inputPriority = interaction.fields.getTextInputValue(serverPriority);
                 const inputMemo = interaction.fields.getTextInputValue(serverMemo);
                 let validatedAddress;
 
@@ -453,6 +455,7 @@ export async function handleInteractions(interaction: Interaction) {
 
                 const newInstance: BIServer = {
                     ...origInstance,
+                    priority: getBoolean(inputPriority),
                     connect: { host: validatedAddress[0], port: validatedAddress[1] },
                     information: {
                         ...origInstance.information,
@@ -467,9 +470,11 @@ export async function handleInteractions(interaction: Interaction) {
                 serverInstance.servers.set(newInstanceKey, newInstance);
                 saveStorage();
 
-                await statusEmbedRefresh(guild.id, newInstanceKey);
+                await Promise.all([ 
+                    statusEmbedRefresh(guild.id, newInstanceKey), 
+                    rconEmbedRefresh(guild.id, newInstanceKey) 
+                ]);
                 await ephemeralReplyMessage.edit({ content: ':white_check_mark: 서버 정보가 수정되었습니다.' });
-
                 break;
             }
 
@@ -516,7 +521,6 @@ export async function handleInteractions(interaction: Interaction) {
 
                 await rconEmbedRefresh(guild.id, instanceId);
                 await ephemeralReplyMessage.edit({ content: ':white_check_mark: RCon 접속 정보를 추가했습니다.' });
-
                 break;
             }
 
