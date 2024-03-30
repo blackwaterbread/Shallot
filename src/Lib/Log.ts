@@ -1,5 +1,6 @@
-import { AppStorage, BIServer, getAppInfo } from 'Config';
-import { Channel, Message, TextChannel, User } from 'discord.js';
+import { getAppInfo } from 'Config';
+import { BIServer } from 'Storage';
+import { Channel, Message, User } from 'discord.js';
 import { DateTime } from 'luxon';
 
 const app = getAppInfo();

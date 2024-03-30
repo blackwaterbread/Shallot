@@ -1,8 +1,8 @@
 import _ from "lodash";
+import { GameDig } from "gamedig";
 import { ConnectInfo } from "Types";
 import { logError } from "Lib/Log";
 import { toEmptySafeObject } from "Lib/Utils";
-import { query } from "Server";
 
 export interface ArmaReforgerServerQueries {
     game: 'armareforger';
@@ -44,7 +44,7 @@ export interface ArmaReforgerServerQueries {
 export async function queryArmaReforger(connection: ConnectInfo): Promise<ArmaReforgerServerQueries> {
     const { host, port } = connection;
     try {
-        const state: any = await query({
+        const state: any = await GameDig.query({
             type: 'armareforger',
             host: host,
             // port: port

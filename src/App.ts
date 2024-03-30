@@ -22,7 +22,6 @@ async function app() {
         logNormal(`[Discord] Discord 로그인 성공 [${readyClient.user.id}, ${readyClient.user.tag}]`);
         await initCommands(readyClient);
         await initBotPresence(readyClient);
-        // await initRegisterInteractMessages(readyClient);
         initRefresher(readyClient);
     });
 
@@ -40,5 +39,4 @@ async function app() {
 
 app().catch(e => { 
     logError(`${e}`);
-    // throw new Error(e) 
 });

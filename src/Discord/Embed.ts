@@ -1,14 +1,13 @@
 import _ from "lodash";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from "discord.js";
 import { DateTime } from "luxon";
-import { ServerQueries } from "Server";
-import { BIServer, getStorage } from "Config";
-import { getRconOwnedString, judgePing } from "Lib/Utils";
+import { ServerQueries } from "Types";
+import { BIServer, getStorage } from "Storage";
+import { judgePing } from "Lib/Utils";
 import { Games, SERVER_STATUS_COLOR } from "Types";
 import { Arma3ServerQueries } from "Server/Games/Arma3";
 import { ArmaResistanceServerQueries } from "Server/Games/ArmaResistance";
 import { ArmaReforgerServerQueries } from "Server/Games/ArmaReforger";
-import { RconSession } from "Lib/Rcon";
 import { Interactions } from "./Interactions";
 
 export function getPlayersEmbed(serverId: string, instanceId: string) {
@@ -37,7 +36,7 @@ export function getServerRconEmbed(key: string, instance: BIServer) {
     const status = connection.status ? 'connected' : 'disconnected';
     const game = Games[type];
     const isRconEnabled = rcon ? true : false;
-    const isRconAvailable = (type === 'armaresistance');
+    const isRconAvailable = rcon ? true : !(type === 'armaresistance');
     // const owned = getRconOwnedString(rconSession);
 
     const rconSessionButton = new ButtonBuilder()
@@ -80,7 +79,7 @@ export function getServerRconEmbed(key: string, instance: BIServer) {
                 .setTitle(information.hostname)
                 .setDescription(
                     `${game.name}` +
-                    "```\n" + `${nonce} | ${key}` + "\n```"
+                    "```\n" + `${key}` + "\n```"
                 )
                 .setAuthor({
                     name: discord.owner.displayName,

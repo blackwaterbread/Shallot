@@ -2,7 +2,6 @@ import _ from "lodash";
 import { pipe, split, toArray } from "iter-ops";
 import { createHash } from 'crypto';
 import { DateTime } from "luxon";
-import { RconSession } from "./Rcon";
 
 export function byteSplit(buffer: Buffer, seperator: number) {
     return pipe(
@@ -86,6 +85,7 @@ export function validationAddress(address: string): [string, number] {
     return [inputAddress[0], port]
 }
 
+/*
 export function getRconOwnedString(rconSession?: RconSession) {
     if (rconSession?.user) {
         const { user } = rconSession;
@@ -96,3 +96,4 @@ export function getRconOwnedString(rconSession?: RconSession) {
         return 'None';
     }
 }
+*/

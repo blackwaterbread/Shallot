@@ -1,7 +1,7 @@
 import { AvailableGame } from "Types";
 import { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import { Interactions } from "./Interactions";
-import { BIServer } from "Config";
+import { BIServer } from "Storage";
 
 export function createServerRegisterModal(type: AvailableGame) {
     const { serverRegister } = Interactions.modal;
@@ -89,7 +89,7 @@ export function createRconRegisterModal(instanceId: string) {
     const inputRconPassword = new TextInputBuilder()
         .setCustomId(rconPassword)
         .setLabel('RCon 접속 암호')
-        .setRequired(false)
+        .setRequired(true)
         .setMaxLength(64)
         .setStyle(TextInputStyle.Short);
 
