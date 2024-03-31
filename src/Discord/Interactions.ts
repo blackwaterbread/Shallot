@@ -6,7 +6,7 @@ import { AvailableGame, Games } from "Types";
 import { registerStanbyMessage } from "./Message";
 import { getConfigs } from "Config";
 import { getStorage, saveStorage, BIServer } from "Storage";
-import { getServerInformationEmbed, getPlayersEmbed, getServerRconEmbed } from "./Embed";
+import { getServerStatusEmbed, getPlayersEmbed, getServerRconEmbed } from "./Embed";
 import { logError, logNormal, messageTrack, userTrack } from "Lib/Log";
 import { createRconRegisterModal, createServerModifyModal, createServerRegisterModal } from "./Modal";
 import { ServerQueries } from "Types";
@@ -14,7 +14,7 @@ import { queryArma3, savePresetHtml } from "Server/Games/Arma3";
 import { queryArmaResistance } from "Server/Games/ArmaResistance";
 import { queryArmaReforger } from "Server/Games/ArmaReforger";
 import { rconEmbedRefresh, startRefresherEntire, statusEmbedRefresh, stopRefresherEntire } from "Lib/Refresher";
-import { getBoolean, validationAddress } from "Lib/Utils";
+import { getBoolean } from "Lib/Utils";
 
 const configs = getConfigs();
 
@@ -24,7 +24,7 @@ export const Interactions = {
         serverDelete: 'serverDelete',
         serverModify: 'serverModify',
         serverCheckPlayers: 'serverCheckPlayers',
-        adminStartRcon: 'adminStartRcon',
+        // adminStartRcon: 'adminStartRcon',
         adminRconRegister: 'adminRconRegister',
         adminRconDelete: 'adminRconDelete',
     },
@@ -62,19 +62,22 @@ export async function handleInteractions(interaction: Interaction) {
     const rconChannel = await cache.get(rconChannelId)?.fetch() as TextChannel;
 
     if (!listChannel || !rconChannel) {
-        logError('[App|Discord] handleInteractions: 채널 정보를 등록하지 않았습니다.');
+        logError(`[App|Discord] handleInteractions: There's no channel: [${listChannelId}|${rconChannelId}]`);
         return;
     }
 
     const permissions = interaction.member!.permissions as Readonly<PermissionsBitField>;
     const isMemberAdmin = permissions.has(PermissionsBitField.Flags.Administrator);
 
+    
     /* Button Interaction */
     if (interaction.isButton()) {
+        logNormal(`[Discord] Interaction: ${interaction.customId}: ${userTrack(interaction.user)}`);
+
         const buttonId = interaction.customId.split('_');
         const {
             serverRegister, serverDelete, serverModify, serverCheckPlayers,
-            adminStartRcon, adminRconRegister, adminRconDelete
+            adminRconRegister, adminRconDelete
         } = Interactions.button;
 
         switch (buttonId[0]) {
@@ -269,7 +272,7 @@ export async function handleInteractions(interaction: Interaction) {
             }
 
             default: {
-                logError(`[App] 등록되지 않은 버튼 상호작용: ${buttonId}`);
+                logError(`[App] Unregistered button interaction: ${buttonId}`);
                 break;
             }
         }
@@ -277,6 +280,8 @@ export async function handleInteractions(interaction: Interaction) {
 
     /* ModalSubmit Interaction */
     else if (interaction.isModalSubmit()) {
+        logNormal(`[Discord] Interaction: ${interaction.customId}: ${userTrack(interaction.user)}`);
+
         const modalId = interaction.customId.split('_');
         const { serverRegister, serverModify, rconRegister } = Interactions.modal;
         const { serverAddress, serverPriority, serverMemo } = Interactions.modalComponents;
@@ -306,17 +311,19 @@ export async function handleInteractions(interaction: Interaction) {
 
                 const instanceKey = `${validatedAddress[0]}:${validatedAddress[1]}`;
                 const isAlreadyExist = serverInstance.servers.has(instanceKey);
-                const isUserAlreadyRegistered = Array.from(serverInstance.servers).find(([k, v]) => v.discord.owner.id === user.id);
+                // const isUserAlreadyRegistered = Array.from(serverInstance.servers).find(([k, v]) => v.discord.owner.id === user.id);
 
                 if (isAlreadyExist) {
                     await ephemeralReplyMessage.edit({ content: ':x: 이미 리스트에 존재하는 서버입니다.' });
                     return;
                 }
 
+                /*
                 if (!isMemberAdmin && isUserAlreadyRegistered) {
                     await ephemeralReplyMessage.edit({ content: ':x: 서버는 1인당 하나만 등록할 수 있습니다.' });
                     return;
                 }
+                */
 
                 let statusMessage, rconMessage;
                 let statusEmbed, rconEmbed;
@@ -332,8 +339,6 @@ export async function handleInteractions(interaction: Interaction) {
 
                 statusMessage = await registerStanbyMessage(listChannel);
                 rconMessage = await registerStanbyMessage(rconChannel);
-
-                logNormal(`[Discord] 서버 Embed 생성 시도: ${messageTrack(statusMessage)}`);
 
                 switch (modalId[1]) {
                     case arma3.type: {
@@ -399,7 +404,7 @@ export async function handleInteractions(interaction: Interaction) {
                             }
                         };
 
-                        statusEmbed = getServerInformationEmbed(statusMessage.id, serverQueries, instance, inputMemo);
+                        statusEmbed = getServerStatusEmbed(statusMessage.id, serverQueries, instance, inputMemo);
                         rconEmbed = getServerRconEmbed(instanceKey, instance);
 
                         serverInstance.servers.set(instanceKey, instance);
@@ -409,7 +414,7 @@ export async function handleInteractions(interaction: Interaction) {
                         await rconMessage.edit(rconEmbed as any);
                         await ephemeralReplyMessage.edit({ content: ':white_check_mark: 서버가 등록되었습니다.' });
 
-                        logNormal(`[Discord] 서버 등록: [${serverQueries.game},${info.connect}]${userTrack(user)}`);
+                        logNormal(`[App|Discord] Server registered: [${serverQueries.game},${info.connect}]${userTrack(user)}`);
                     }
                 }
 
@@ -542,4 +547,21 @@ async function handleRestrictedInteraction(interaction: Interaction, isMemberAdm
             });
         }
     }
+}
+
+function validationAddress(address: string): [string, number] {
+    const inputAddress = address.split(':');
+    let port = inputAddress.length === 2 ? Number(inputAddress[1]) : 2302;
+
+    if (0 > port || 65535 < port) {
+        throw new Error(':x: 잘못된 포트입니다. 포트는 0 ~ 65535의 범위를 가집니다.');
+    }
+
+    const sepIP = inputAddress[0].split('.');
+
+    if (sepIP.length !== 4 || sepIP.map(x => Number(x)).find(v => v < 0 || v > 255)) {
+        throw new Error(':x: 잘못된 IP입니다.');
+    }
+
+    return [inputAddress[0], port]
 }

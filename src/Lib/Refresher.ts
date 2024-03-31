@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import { ToadScheduler, SimpleIntervalJob, AsyncTask } from 'toad-scheduler';
 import { Client, Message, TextChannel } from 'discord.js';
-import { getServerInformationEmbed, getServerRconEmbed } from 'Discord/Embed';
+import { getServerStatusEmbed, getServerRconEmbed } from 'Discord/Embed';
 import { getConfigs } from "Config";
 import { AppStorage, getStorage, saveStorage } from 'Storage';
 import { ServerQueries } from 'Types';
@@ -88,7 +88,7 @@ async function serverRefreshEntire(serverId?: string) {
     }
 
     await Promise.all(tasks);
-    logNormal('[Discord] serverRefreshEntire 완료');
+    logNormal('[Discord] serverRefreshEntire Complete');
 }
 
 export async function serverRefresh(target?: { guildId: string, serverId: string }) {
@@ -98,7 +98,7 @@ export async function serverRefresh(target?: { guildId: string, serverId: string
         const guild = storage.get(guildId);
 
         if (!guild) {
-            logError('[App] forcedServerRefresh: 존재하지 않는 디스코드 서버입니다.');
+            logError(`[App] serverRefresh: failed: Cannot get guild: ${guildId}`);
             return;
         }
 
@@ -106,7 +106,7 @@ export async function serverRefresh(target?: { guildId: string, serverId: string
         const server = serverStorage.get(serverId);
 
         if (!server) {
-            logError('[App] serverRefresh: 존재하지 않는 서버입니다.');
+            logError(`[App] serverRefresh: failed: Cannot get server: ${serverId}`);
             return;
         }
 
@@ -137,7 +137,7 @@ export async function serverRefresh(target?: { guildId: string, serverId: string
                 serverStorage.delete(serverId);
                 saveStorage();
 
-                logNormal(`[Discord] serverRefresh 실패: 지원하지 않는 게임, 인스턴스 삭제: ${trackLog}`);
+                logNormal(`[Discord] serverRefresh: failed: Unsupported type, delete server: ${trackLog}`);
                 return;
             }
         }
@@ -159,7 +159,7 @@ export async function serverRefresh(target?: { guildId: string, serverId: string
                 }
             }
 
-            logNormal(`[App] serverRefresh: 서버 응답함: ${trackLog}`);
+            logNormal(`[App] serverRefresh: Server responses: ${trackLog}`);
         }
 
         else {
@@ -171,21 +171,24 @@ export async function serverRefresh(target?: { guildId: string, serverId: string
                 }
             }
 
-            logNormal(`[Discord] 서버 연결 실패: ${trackLog}`);
+            logNormal(`[Discord] serverRefresh: failed: Cannot connect server: ${trackLog}`);
 
             if (!priority && connection.count === 0) {
                 const discordGuild = await client.guilds.cache.get(guildId)?.fetch();
 
                 if (!discordGuild) {
-                    logError(`[Discord] serverRefresh: 서버 ID를 찾을 수 없습니다.`);
                     return;
                 }
 
-                const listChannel = await discordGuild.channels.cache.get(guild.channels.status.channelId)?.fetch() as TextChannel;
-                const rconChannel = await discordGuild.channels.cache.get(guild.channels.admin.channelId)?.fetch() as TextChannel;
+                const { status, admin } = guild.channels;
+
+                const listChannel = await discordGuild.channels.cache.get(status.channelId)?.fetch() as TextChannel;
+                const rconChannel = await discordGuild.channels.cache.get(admin.channelId)?.fetch() as TextChannel;
 
                 if (!listChannel || !rconChannel) {
-                    logError('[App|Discord] serverRefresh: 채널이 존재하지 않습니다.');
+                    logError(`[App|Discord] serverRefresh: There's no channel, delete server: [${status.channelId}|${admin.channelId}]${trackLog}`);
+                    serverStorage.delete(serverId);
+                    saveStorage();
                     return;
                 }
 
@@ -202,7 +205,7 @@ export async function serverRefresh(target?: { guildId: string, serverId: string
                 serverStorage.delete(serverId);
                 saveStorage();
 
-                logNormal(`[Discord] serverRefresh: 자동 삭제: 인스턴스 삭제: ${trackLog}`);
+                logNormal(`[Discord] serverRefresh: autodetele: ${trackLog}`);
                 return;
             }
 
@@ -220,7 +223,7 @@ export async function serverRefresh(target?: { guildId: string, serverId: string
         serverStorage.set(serverId, newInstance);
         saveStorage();
 
-        logNormal(`[Discord] serverRefresh 완료 ${trackLog}`);
+        logNormal(`[Discord] serverRefresh Complete: ${trackLog}`);
     }
 
     else {
@@ -258,7 +261,7 @@ async function embedRefreshEntire() {
                 servers.delete(serverId);
                 saveStorage();
 
-                logNormal(`[Discord] Embed Refresh 실패: 메세지가 존재하지 않는 것 같음, 인스턴스 삭제: ${trackLog}`);
+                logNormal(`[Discord] embedRefreshEntire failed: There's no message, delete: ${trackLog}`);
                 return;
             }
         });
@@ -272,7 +275,7 @@ export async function statusEmbedRefresh(guildId: string, serverId: string) {
     const guild = storage.get(guildId);
 
     if (!guild) {
-        logError('[App] statusEmbedRefresh: 존재하지 않는 디스코드 서버입니다.');
+        logError(`[App] statusEmbedRefresh: Cannot get guild: ${guildId}`);
         return;
     }
 
@@ -280,14 +283,14 @@ export async function statusEmbedRefresh(guildId: string, serverId: string) {
     const statusChannel = await client.channels.cache.get(statusChannelId)?.fetch();
 
     if (!statusChannel) {
-        logError('[App] statusEmbedRefresh: 존재하지 않는 채널입니다.');
+        logError(`[App] statusEmbedRefresh: Cannot get channel: ${statusChannelId}`);
         return;
     }
 
     const server = guild.servers.get(serverId);
 
     if (!server) {
-        logError('[App] statusEmbedRefresh: 존재하지 않는 인스턴스입니다.');
+        logError(`[App] statusEmbedRefresh: Cannot get server: ${serverId}`);
         return;
     }
 
@@ -303,13 +306,14 @@ export async function statusEmbedRefresh(guildId: string, serverId: string) {
     }
 
     catch (e) {
-        throw new Error(`[Discord] statusEmbedRefresh: Error on fetching Message: ${e}`);
+        logError(`[Discord] statusEmbedRefresh: Error on fetching Message: ${e}`);
+        throw new Error();
     }
 
-    statusEmbed = getServerInformationEmbed(statusMessage.id, lastQueries, server, memo);
+    statusEmbed = getServerStatusEmbed(statusMessage.id, lastQueries, server, memo);
     await statusMessage.edit(statusEmbed as any);
 
-    logNormal(`[Discord] statusEmbedRefresh 완료: ${trackLog}`);
+    logNormal(`[Discord] statusEmbedRefresh Complete: ${trackLog}`);
 }
 
 export async function rconEmbedRefresh(guildId: string, serverId: string) {
@@ -317,7 +321,7 @@ export async function rconEmbedRefresh(guildId: string, serverId: string) {
     const guild = storage.get(guildId);
 
     if (!guild) {
-        logError('[App] rconEmbedRefresh: 존재하지 않는 디스코드 서버입니다.');
+        logError(`[App] rconEmbedRefresh: Cannot get guild: ${guildId}`);
         return;
     }
 
@@ -325,14 +329,14 @@ export async function rconEmbedRefresh(guildId: string, serverId: string) {
     const adminChannel = await client.channels.cache.get(adminChannelId)?.fetch();
 
     if (!adminChannel) {
-        logError('[App] rconEmbedRefresh: 존재하지 않는 채널입니다.');
+        logError(`[App] statusEmbedRefresh: Cannot get channel: ${adminChannelId}`);
         return;
     }
 
     const server = guild.servers.get(serverId);
 
     if (!server) {
-        logError('[App] rconEmbedRefresh: 존재하지 않는 인스턴스입니다.');
+        logError(`[App] statusEmbedRefresh: Cannot get server: ${serverId}`);
         return;
     }
 
@@ -347,11 +351,12 @@ export async function rconEmbedRefresh(guildId: string, serverId: string) {
     }
 
     catch (e) {
-        throw new Error(`[Discord] rconEmbedRefresh: Error on fetching Message: ${e}`);
+        logError(`[Discord] rconEmbedRefresh: Error on fetching Message: ${e}`);
+        throw new Error();
     }
 
     rconEmbed = getServerRconEmbed(serverId, server);
     await rconMessage.edit(rconEmbed as any);
 
-    logNormal(`[Discord] rconEmbedRefresh 완료: ${trackLog}`);
+    logNormal(`[Discord] rconEmbedRefresh Complete: ${trackLog}`);
 }

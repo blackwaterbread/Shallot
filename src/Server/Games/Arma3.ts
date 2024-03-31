@@ -536,17 +536,23 @@ export function parseArma3PresetHtml(html: string): { name: string, mods: Arma3H
 }
 
 export function savePresetHtml(filename: string, preset?: string) {
+    if (!Config.static) {
+        logNormal(`[App] Cannot generate Arma 3 preset: no static config`);
+        return '';
+    }
+
     if (preset) {
         try {
-            const path = `${Config.staticPath}/presets/${filename}.html`;
+            const path = `${Config.static.path}/presets/${filename}.html`;
             fs.writeFileSync(path, preset);
-            logNormal(`[App] Arma 3 Preset Generated: ${path}`);
+            logNormal(`[App] savePresetHtml: Arma 3 preset generated: ${path}`);
             return path;
         }
         catch (e) {
             throw new Error(`[App] savePresetHtml Error: ${e}`);
         }
     }
+
     else {
         return '';
     }
