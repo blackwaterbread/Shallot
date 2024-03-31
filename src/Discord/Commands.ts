@@ -290,10 +290,10 @@ const commands: Array<SlashCommand> = [
 
             const guild = await assertGuild(interaction);
             if (!guild) return;
-        
+
             const guildStorage = await assertGuildStorage(interaction, storage, guild);
             if (!guildStorage) return;
-        
+
             const serverId = (interaction.options.get('server_id')?.value || '');
             const command = (interaction.options.get('command')?.value || '');
             const server = await assertServer(interaction, guildStorage, serverId as string);
@@ -302,12 +302,15 @@ const commands: Array<SlashCommand> = [
             try {
                 const connection = await startRconSession(server.connect.host, server.rcon!.port, server.rcon!.password);
                 const query = await connection.command(command as string);
+
+                logNormal(`[App] RCon 접근: ${command} ${guildTrack(guild.id)}${userTrack(interaction.user)}`);
+
                 await interaction.followUp({
                     content: query.data ?? ':grey_question: 연결은 정상적으로 되었으나 빈 데이터가 수신되었습니다.',
                     ephemeral: true
                 });
             }
-        
+
             catch (e) {
                 logError(`[App|Discord] 명령어: rcon ${command}: ${e}`);
                 await interaction.followUp({

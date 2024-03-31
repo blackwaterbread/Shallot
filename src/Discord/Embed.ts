@@ -100,27 +100,6 @@ export function getServerRconEmbed(key: string, instance: BIServer) {
     }
 }
 
-export function getServerAdminCommandsEmbed() {
-    const embed = new EmbedBuilder()
-        .setTitle('📝 명령어')
-        .setDescription(
-            '서버 관리 명령어 목록입니다.\n' +
-            '/players [server_id]**\nGUID를 포함한 사용자 리스트를 불러옵니다.\nex) /players 1\n\n' +
-            '/bans [server_id]**\n밴리스트를 불러옵니다.\nex) /ban 1\n\n' +
-            '/kickban [server_id] [GUID] [period (minute)] [reason]**\n특정 사용자를 밴과 동시에 킥합니다.\n기간을 0으로 할 경우 영구 밴 처리됩니다.\nex) /kickban 1 a45ad0eae340734a0cfb3b214715b157 0 Fuckyou\n\n' +
-            '/kick [server_id] [player #]\n특정 사용자를 킥합니다.\nex) /kick 1 2\n\n' +
-            '/ban [server_id] [GUID] [period (minute] [reason]\n특정 사용자를 밴리스트에 추가합니다.\n기간을 0으로 할 경우 영구 밴 처리됩니다.\nex) /ban 1 a45ad0eae340734a0cfb3b214715b157  0 Fuckyou\n\n' +
-            '/unban [server_id] [ban #]\n특정 사용자를 밴리스트에서 삭제합니다.\nex) /unban 1 0\n\n' +
-            // '/rconpassword [server #] [password]\n(*주의) 원격 접속 비밀번호를 변경합니다.\nex) /rconpassword 1 5882\n\n' + 
-            // '/maxping [server #] [ping]\n서버의 Max Ping 설정을 변경합니다.\nex) /maxping 1 400\n\n' +
-            '/say [server_id] [player #]\n특정 플레이어에게 메세지를 전송합니다.\nplayer # 값이 -1일 경우 서버 전체에 메세지를 전송합니다.\nex) /say 1 1 안녕\n\n' +
-            '/restart [server_id]\n서버를 재시작합니다.\nex) /restart 1\n\n'
-        )
-        .setImage('https://files.hirua.me/images/width.png')
-
-    return { content: '', embeds: [embed] };
-}
-
 export function getServerInformationEmbed(messageId: string, queries: ServerQueries, instance: BIServer, memo?: string) {
     const owner = instance.discord.owner;
     const ping = judgePing(queries.online?.info.ping);
