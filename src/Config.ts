@@ -1,9 +1,10 @@
 import _ from 'lodash';
 import fs from 'fs';
 import dotenv from "dotenv";
+import path from 'path';
 import { advStringify } from 'Lib/Utils';
 import appJson from 'Root/package.json';
-import path from 'path';
+import { StringTable } from 'Language';
 dotenv.config();
 
 export interface AppConfigs {
@@ -12,11 +13,10 @@ export interface AppConfigs {
     static: {
         path: string;
         url: string;
-    } | null,
+    } | null;
+    lang: keyof typeof StringTable;
     localRefreshInterval: number;
-    sessionRefreshInterval: number;
     embedRefreshInterval: number;
-    sessionExpiredSec: number;
     serverAutoDeleteCount: number;
 }
 

@@ -15,8 +15,10 @@ import { queryArmaResistance } from "Server/Games/ArmaResistance";
 import { queryArmaReforger } from "Server/Games/ArmaReforger";
 import { rconEmbedRefresh, startRefresherEntire, statusEmbedRefresh, stopRefresherEntire } from "Lib/Refresher";
 import { getBoolean } from "Lib/Utils";
+import { getStringTable } from "Language";
 
 const configs = getConfigs();
+const lang = getStringTable();
 
 export const Interactions = {
     button: {
@@ -98,7 +100,7 @@ export async function handleInteractions(interaction: Interaction) {
 
                 else {
                     await interaction.reply({
-                        content: ':x: 오류: 존재하지 않는 인스턴스입니다.',
+                        content: lang.interaction.button.serverModify.noServer,
                         ephemeral: true
                     });
                 }
@@ -128,7 +130,7 @@ export async function handleInteractions(interaction: Interaction) {
                     ]);
 
                     await interaction.reply({
-                        content: ':wave: 서버가 삭제되었습니다.',
+                        content: lang.interaction.button.serverDelete.deletedServer,
                         ephemeral: true
                     });
 
@@ -228,7 +230,7 @@ export async function handleInteractions(interaction: Interaction) {
 
                 else {
                     await interaction.reply({
-                        content: ':x: 오류: 존재하지 않는 인스턴스입니다.',
+                        content: lang.interaction.button.adminRconRegister.noServer,
                         ephemeral: true
                     });
                 }
@@ -256,14 +258,14 @@ export async function handleInteractions(interaction: Interaction) {
 
                     // await forcedEmbedRefresh(newInstance.discord.rconEmbedMessageId);
                     await interaction.reply({
-                        content: ':wave: RCon이 비활성화 되었습니다.',
+                        content: lang.interaction.button.adminRconDelete.rconDeactivated,
                         ephemeral: true
                     });
                 }
 
                 else {
                     await interaction.reply({
-                        content: ':x: 오류: 존재하지 않는 인스턴스입니다.',
+                        content: lang.interaction.button.adminRconDelete.noServer,
                         ephemeral: true
                     });
                 }
@@ -290,7 +292,7 @@ export async function handleInteractions(interaction: Interaction) {
         switch (modalId[0]) {
             case serverRegister: {
                 const ephemeralReplyMessage = await interaction.reply({
-                    content: ':tools: 유효성 확인 중입니다...',
+                    content: lang.interaction.modalSubmit.serverRegister.checkingValidation,
                     ephemeral: true
                 });
 
@@ -307,14 +309,14 @@ export async function handleInteractions(interaction: Interaction) {
                     break;
                 }
 
-                await ephemeralReplyMessage.edit({ content: ':rocket: 서버 연결 중입니다...' });
+                await ephemeralReplyMessage.edit({ content: lang.interaction.modalSubmit.serverRegister.connectingServer });
 
                 const instanceKey = `${validatedAddress[0]}:${validatedAddress[1]}`;
                 const isAlreadyExist = serverInstance.servers.has(instanceKey);
                 // const isUserAlreadyRegistered = Array.from(serverInstance.servers).find(([k, v]) => v.discord.owner.id === user.id);
 
                 if (isAlreadyExist) {
-                    await ephemeralReplyMessage.edit({ content: ':x: 이미 리스트에 존재하는 서버입니다.' });
+                    await ephemeralReplyMessage.edit({ content: lang.interaction.modalSubmit.serverRegister.duplicatedServer });
                     return;
                 }
 
@@ -357,7 +359,7 @@ export async function handleInteractions(interaction: Interaction) {
                     }
 
                     default: {
-                        await ephemeralReplyMessage.edit({ content: ':x: Shallot 오류입니다: 지원하지 않는 게임입니다.' });
+                        await ephemeralReplyMessage.edit({ content: lang.interaction.modalSubmit.serverRegister.unsupportedSerrverType });
                         return;
                     }
                 }
@@ -366,7 +368,7 @@ export async function handleInteractions(interaction: Interaction) {
                     if (!serverQueries.online) {
                         await statusMessage.delete();
                         await rconMessage.delete();
-                        await ephemeralReplyMessage.edit({ content: ':x: 서버에 연결할 수 없습니다.' });
+                        await ephemeralReplyMessage.edit({ content: lang.interaction.modalSubmit.serverRegister.failedConnectServer });
                         return;
                     }
 
@@ -412,7 +414,7 @@ export async function handleInteractions(interaction: Interaction) {
 
                         await statusMessage.edit(statusEmbed as any);
                         await rconMessage.edit(rconEmbed as any);
-                        await ephemeralReplyMessage.edit({ content: ':white_check_mark: 서버가 등록되었습니다.' });
+                        await ephemeralReplyMessage.edit({ content: lang.interaction.modalSubmit.serverRegister.success });
 
                         logNormal(`[App|Discord] Server registered: [${serverQueries.game},${info.connect}]${userTrack(user)}`);
                     }
@@ -421,7 +423,7 @@ export async function handleInteractions(interaction: Interaction) {
                 catch (e) {
                     await statusMessage?.delete();
                     await rconMessage?.delete();
-                    await ephemeralReplyMessage.edit({ content: ':x: Shallot 오류로 인해 서버에 연결할 수 없습니다.' });
+                    await ephemeralReplyMessage.edit({ content: lang.interaction.modalSubmit.serverRegister.uncatchedError });
 
                     logError(`[App|Discord] Error while registering server: ${e}`);
                     return;
@@ -433,7 +435,7 @@ export async function handleInteractions(interaction: Interaction) {
             case serverModify: {
                 const origInstanceKey = modalId[1];
                 const ephemeralReplyMessage = await interaction.reply({
-                    content: ':tools: 유효성 확인 중입니다...',
+                    content: lang.interaction.modalSubmit.serverModify.checkingValidation,
                     ephemeral: true
                 });
 
@@ -455,7 +457,7 @@ export async function handleInteractions(interaction: Interaction) {
                 const origInstance = serverInstance.servers.get(origInstanceKey);
 
                 if (!origInstance) {
-                    await ephemeralReplyMessage.edit({ content: ':x: 인스턴스가 존재하지 않습니다.' });
+                    await ephemeralReplyMessage.edit({ content: lang.interaction.modalSubmit.serverModify.noServer });
                     break;
                 }
 
@@ -480,13 +482,13 @@ export async function handleInteractions(interaction: Interaction) {
                     statusEmbedRefresh(guild.id, newInstanceKey), 
                     rconEmbedRefresh(guild.id, newInstanceKey) 
                 ]);
-                await ephemeralReplyMessage.edit({ content: ':white_check_mark: 서버 정보가 수정되었습니다.' });
+                await ephemeralReplyMessage.edit({ content: lang.interaction.modalSubmit.serverModify.success });
                 break;
             }
 
             case rconRegister: {
                 const ephemeralReplyMessage = await interaction.reply({
-                    content: ':tools: 유효성 확인 중입니다...',
+                    content: lang.interaction.modalSubmit.rconRegister.checkingValidation,
                     ephemeral: true
                 });
                 
@@ -510,7 +512,7 @@ export async function handleInteractions(interaction: Interaction) {
                 const instance = serverInstance.servers.get(instanceId);
                 
                 if (!instance) {
-                    await ephemeralReplyMessage.edit({ content: ':x: 인스턴스가 존재하지 않습니다.' });
+                    await ephemeralReplyMessage.edit({ content: lang.interaction.modalSubmit.rconRegister.noServer });
                     break;
                 }
 
@@ -526,7 +528,7 @@ export async function handleInteractions(interaction: Interaction) {
                 saveStorage();
 
                 await rconEmbedRefresh(guild.id, instanceId);
-                await ephemeralReplyMessage.edit({ content: ':white_check_mark: RCon 접속 정보를 추가했습니다.' });
+                await ephemeralReplyMessage.edit({ content: lang.interaction.modalSubmit.rconRegister.success });
                 break;
             }
 
@@ -542,7 +544,7 @@ async function handleRestrictedInteraction(interaction: Interaction, isMemberAdm
     if (!isMemberAdmin) {
         if (interaction.isRepliable()) {
             await interaction.reply({
-                content: ':x: 권한이 없습니다.',
+                content: lang.interaction.misc.noPermission,
                 ephemeral: true
             });
         }
@@ -554,13 +556,13 @@ function validationAddress(address: string): [string, number] {
     let port = inputAddress.length === 2 ? Number(inputAddress[1]) : 2302;
 
     if (0 > port || 65535 < port) {
-        throw new Error(':x: 잘못된 포트입니다. 포트는 0 ~ 65535의 범위를 가집니다.');
+        throw new Error(lang.interaction.misc.wrongPort);
     }
 
     const sepIP = inputAddress[0].split('.');
 
     if (sepIP.length !== 4 || sepIP.map(x => Number(x)).find(v => v < 0 || v > 255)) {
-        throw new Error(':x: 잘못된 IP입니다.');
+        throw new Error(lang.interaction.misc.wrongIP);
     }
 
     return [inputAddress[0], port]
