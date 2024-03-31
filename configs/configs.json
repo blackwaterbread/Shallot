@@ -1,10 +1,9 @@
 {
     "token": "",
     "appId": "",
-    "staticPath": "",
+    "static": null,
+    "lang": "en-US",
     "localRefreshInterval": 15,
-    "sessionRefreshInterval": 1,
     "embedRefreshInterval": 60,
-    "sessionExpiredSec": 300,
     "serverAutoDeleteCount": 4
 }

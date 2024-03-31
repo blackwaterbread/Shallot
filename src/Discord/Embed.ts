@@ -3,24 +3,25 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from "disc
 import { DateTime } from "luxon";
 import { ServerQueries } from "Types";
 import { BIServer, getStorage } from "Storage";
-import { judgePing } from "Lib/Utils";
+import { getConfigs } from "Config";
 import { Games, SERVER_STATUS_COLOR } from "Types";
 import { Arma3ServerQueries } from "Server/Games/Arma3";
 import { ArmaResistanceServerQueries } from "Server/Games/ArmaResistance";
 import { ArmaReforgerServerQueries } from "Server/Games/ArmaReforger";
 import { Interactions } from "./Interactions";
-import { getConfigs } from "Config";
+import { getStringTable } from "Language";
 
 const configs = getConfigs();
+const lang = getStringTable();
 
 export function getNoticeEmbed() {
     const embed = new EmbedBuilder()
-        .setTitle(':beginner: 안내')
+        .setTitle(lang.embed.notice.title)
         .setDescription(
-            '[Shallot](https://github.com/blackwaterbread/Shallot)은 서버 정보를 실시간으로 나타내 주는 봇입니다.\n' +
-            '각종 문의 / 버그 신고: [@dayrain](https://discordapp.com/users/119027576692801536)\n'
+            lang.embed.notice.description
         )
-        .setImage('https://files.hirua.me/images/width.png');
+        // .setImage('https://files.hirua.me/images/width.png');
+        .setImage(configs.static ? `${configs.static?.url}/images/width.png` : null);
 
     return {
         embeds: [embed]
@@ -33,28 +34,27 @@ export function getServerRegisterInteractionEmbed() {
 
     const embed = new EmbedBuilder()
         .setColor(0x41F097)
-        .setTitle(':rocket: 서버 등록')
-        .setDescription('서버 리스트에 등록할 게임을 선택해주세요.')
-        .setImage('https://files.hirua.me/images/width.png')
+        .setTitle(lang.embed.serverRegister.title)
+        .setDescription(lang.embed.serverRegister.description)
+        // .setImage('https://files.hirua.me/images/width.png')
+        .setImage(configs.static ? `${configs.static.url}/images/width.png` : null)
         .setFooter({ text: 
-            '* 1인당 하나만 등록할 수 있습니다.\n' +
-            '* 고정된 서버를 제외하고 1분간 응답이 없을 시 자동으로 삭제됩니다.\n' +
-            '* 짧은 시간에 너무 많은 요청 시 잠시 이용이 제한될 수 있습니다.'
+            lang.embed.serverRegister.footer
         });
 
     const arma3Button = new ButtonBuilder()
         .setCustomId(`${serverRegister}_${arma3.type}`)
-        .setLabel('아르마 3')
+        .setLabel(lang.embed.serverRegister.button.labelArma3)
         .setStyle(ButtonStyle.Primary)
 
     const reforgerButton = new ButtonBuilder()
         .setCustomId(`${serverRegister}_${armareforger.type}`)
-        .setLabel('아르마: 리포저')
+        .setLabel(lang.embed.serverRegister.button.labelReforger)
         .setStyle(ButtonStyle.Primary)
 
     const ofpButton = new ButtonBuilder()
         .setCustomId(`${serverRegister}_${armaresistance.type}`)
-        .setLabel('오플포')
+        .setLabel(lang.embed.serverRegister.button.labelOfp)
         .setStyle(ButtonStyle.Primary)
 
     const row = new ActionRowBuilder()
@@ -71,14 +71,14 @@ export function getServerDeleteInteractionEmbed() {
 
     const embed = new EmbedBuilder()
         .setColor(0xFF0000)
-        .setTitle(':x: 내 서버 삭제')
-        .setDescription('내가 등록한 서버를 삭제합니다.')
-        .setImage('https://files.hirua.me/images/width.png')
-        .setFooter({ text: '* 짧은 시간에 너무 많은 요청 시 잠시 이용이 제한될 수 있습니다.' });
+        .setTitle(lang.embed.serverDelete.title)
+        .setDescription(lang.embed.serverDelete.description)
+        .setImage(configs.static ? `${configs.static.url}/images/width.png` : null)
+        .setFooter({ text: lang.embed.serverDelete.footer });
 
     const del = new ButtonBuilder()
         .setCustomId(`${serverDelete}_user`)
-        .setLabel('삭제')
+        .setLabel(lang.embed.serverDelete.button.labelDetele)
         .setStyle(ButtonStyle.Secondary)
 
     const row = new ActionRowBuilder()
@@ -100,23 +100,23 @@ export function getPlayersEmbed(serverId: string, instanceId: string) {
     const time = DateTime.now().toMillis();
     const embed = new EmbedBuilder()
         .setColor(SERVER_STATUS_COLOR['discord'])
-        .setTitle(':playground_slide: 플레이어 현황')
+        .setTitle(lang.embed.players.title)
         .setDescription(`${hostname}\n\n\`\`\`\n${p}\n\`\`\``)
-        .setImage('https://files.hirua.me/images/width.png')
+        .setImage(configs.static ? `${configs.static.url}/images/width.png` : null)
         .setTimestamp(time)
-        .setFooter({ text: '플레이어 확인 버튼을 누른 시점의 목록입니다.', iconURL: 'https://files.hirua.me/images/status/warning.png' });
+        .setFooter({ text: lang.embed.players.footer });
 
     return { content: '', embeds: [embed], ephemeral: true };
 }
 
 export function getServerRconEmbed(key: string, instance: BIServer) {
     const time = DateTime.now().toMillis();
-    const { type, nonce, priority, connect, discord, information, rcon, connection } = instance;
+    const { type, priority, connect, discord, information, rcon, connection } = instance;
     const { adminRconRegister, adminRconDelete, serverModify, serverDelete } = Interactions.button;
     const status = connection.status ? 'connected' : 'disconnected';
     const game = Games[type];
-    const isRconEnabled = rcon ? true : false;
     const isRconAvailable = rcon ? true : !(type === 'armaresistance');
+    // const isRconEnabled = rcon ? true : false;
     // const owned = getRconOwnedString(rconSession);
 
     /*
@@ -129,18 +129,18 @@ export function getServerRconEmbed(key: string, instance: BIServer) {
 
     const rconActiveButton = new ButtonBuilder()
         .setCustomId(rcon ? `${adminRconDelete}_${key}` : `${adminRconRegister}_${key}`)
-        .setLabel(rcon ? 'RCon 비활성화' : 'RCon 활성화')
+        .setLabel(rcon ? lang.embed.rcon.button.labelRconDeactivate : lang.embed.rcon.button.labelRconActivate)
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(!isRconAvailable);
 
     const modifyButton = new ButtonBuilder()
         .setCustomId(`${serverModify}_${key}`)
-        .setLabel('수정')
+        .setLabel(lang.embed.rcon.button.labelServerModify)
         .setStyle(ButtonStyle.Secondary);
 
     const delButton = new ButtonBuilder()
         .setCustomId(`${serverDelete}_${connect.host}:${connect.port}`)
-        .setLabel('서버 삭제')
+        .setLabel(lang.embed.rcon.button.labelServerDelete)
         .setStyle(ButtonStyle.Danger);
 
     const onlineRow = new ActionRowBuilder()
@@ -168,10 +168,9 @@ export function getServerRconEmbed(key: string, instance: BIServer) {
                     iconURL: discord.owner.avatarUrl
                 })
                 .addFields(
-                    // { name: 'RCon 점유', value: owned, inline: false },
-                    { name: 'RCon 활성화', value: `${rcon ? true : false}`, inline: true },
-                    { name: '우선권', value: `${priority}`, inline: true },
-                    { name: '컨텐츠 해시', value: `${information.addonsHash ? information.addonsHash : 'None'}`, inline: true },
+                    { name: lang.embed.rcon.field.nameRconActivated, value: `${rcon ? true : false}`, inline: true },
+                    { name: lang.embed.rcon.field.namePriority, value: `${priority}`, inline: true },
+                    { name: lang.embed.rcon.field.nameAddonsHash, value: `${information.addonsHash ? information.addonsHash : 'None'}`, inline: true },
                 )
                 .setImage('https://files.hirua.me/images/width.png')
                 .setTimestamp(time)
@@ -186,12 +185,13 @@ export function getServerStatusEmbed(messageId: string, queries: ServerQueries, 
     // const ping = judgePing(queries.online?.info.ping);
     const time = DateTime.now().toMillis();
     const key = `${queries.connect.host}:${queries.connect.port}`;
-    const presetLink = configs.static ? `[**[프리셋 다운로드]**](https://files.hirua.me/presets/${messageId}.html)` : '';
+    const presetLink = `${configs.static?.url}/${messageId}.html`;
+    const presetLabel = configs.static ? `[**[${lang.embed.serverStatus.arma3.presetDownload}]**](${presetLink})` : '';
     const { serverCheckPlayers } = Interactions.button;
 
     const playersButton = new ButtonBuilder()
         .setCustomId(`${serverCheckPlayers}_${key}`)
-        .setLabel('플레이어 확인')
+        .setLabel(lang.embed.serverStatus.button.labelCheckPlayers)
         .setStyle(ButtonStyle.Primary)
         .setDisabled(!queries);
 
@@ -199,9 +199,11 @@ export function getServerStatusEmbed(messageId: string, queries: ServerQueries, 
         .addComponents(playersButton);
 
     let embed;
-    const banner = queries.online ?
-        `https://files.hirua.me/images/games/${queries.game}_banner_online.png` :
-        `https://files.hirua.me/images/games/${queries.game}_banner_offline.png`;
+    const banner =  configs.static ? 
+        (queries.online ?
+            `${configs.static.url}/images/games/${queries.game}_banner_online.png` :
+            `${configs.static.url}/images/games/${queries.game}_banner_offline.png`
+        ) : null;
 
     if (queries.online) {
         switch (queries.game) {
@@ -222,19 +224,19 @@ export function getServerStatusEmbed(messageId: string, queries: ServerQueries, 
                         iconURL: owner.avatarUrl
                     })
                     .setDescription(
-                        presetLink + "```\n" + info.connect + "\n```"
+                        presetLabel + "```\n" + info.connect + "\n```"
                     )
                     // .setThumbnail(thumbnail)
                     .addFields(
-                        { name: '모드', value: info.raw.game, inline: false },
+                        { name: lang.embed.serverStatus.arma3.field.labelMod, value: info.raw.game, inline: false },
                         // { name: '\u200B', value: '\u200B' },
-                        { name: '상태', value: tags.serverState, inline: false },
-                        { name: '맵', value: info.map, inline: true },
-                        { name: '버전', value: info.version, inline: true },
-                        { name: '플레이어', value: `${info.numplayers} / ${info.maxplayers}`, inline: true },
-                        { name: 'CDLC', value: `${CDLCs.length < 1 ? '없음' : `${CDLCs.join('\n')}`}`, inline: false },
+                        { name: lang.embed.serverStatus.arma3.field.labelStatus, value: tags.serverState, inline: false },
+                        { name: lang.embed.serverStatus.arma3.field.labelMap, value: info.map, inline: true },
+                        { name: lang.embed.serverStatus.arma3.field.labelMap, value: info.version, inline: true },
+                        { name: lang.embed.serverStatus.arma3.field.labelPlayers, value: `${info.numplayers} / ${info.maxplayers}`, inline: true },
+                        { name: lang.embed.serverStatus.arma3.field.labelCDLC, value: `${CDLCs.length < 1 ? lang.none : `${CDLCs.join('\n')}`}`, inline: false },
                         // { name: '배틀아이', value: queries.tags.battleEye ? '적용' : '미적용', inline: true },
-                        { name: '메모', value: `> ${memo ? memo : '메모가 없습니다.'}`, inline: false },
+                        { name: lang.embed.serverStatus.arma3.field.labelMemo, value: `> ${memo ? memo : lang.embed.serverStatus.labelBlankMemo}`, inline: false },
                     )
                     .setImage(banner)
                     .setTimestamp(time)
@@ -261,10 +263,10 @@ export function getServerStatusEmbed(messageId: string, queries: ServerQueries, 
                     )
                     // .setThumbnail(thumbnail)
                     .addFields(
-                        { name: '맵', value: info.map, inline: false },
-                        { name: '버전', value: info.version, inline: true },
-                        { name: '플레이어', value: `${info.numplayers} / ${info.maxplayers}`, inline: true },
-                        { name: '메모', value: `> ${memo ? memo : '메모가 없습니다.'}`, inline: false },
+                        { name: lang.embed.serverStatus.armareforger.field.labelMap, value: info.map, inline: false },
+                        { name: lang.embed.serverStatus.armareforger.field.labelVersion, value: info.version, inline: true },
+                        { name: lang.embed.serverStatus.armareforger.field.labelPlayers, value: `${info.numplayers} / ${info.maxplayers}`, inline: true },
+                        { name: lang.embed.serverStatus.armareforger.field.labelMemo, value: `> ${memo ? memo : lang.embed.serverStatus.labelBlankMemo}`, inline: false },
                     )
                     .setImage(banner)
                     .setTimestamp(time)
@@ -287,13 +289,13 @@ export function getServerStatusEmbed(messageId: string, queries: ServerQueries, 
                     .setDescription("Operation FlashPoint: Resistance" + "```\n" + info.connect + "\n```")
                     // .setThumbnail(thumbnail)
                     .addFields(
-                        { name: '모드', value: _.isEmpty(info.raw.mod) ? '--' : info.raw.mod, inline: false },
+                        { name: lang.embed.serverStatus.armaresistance.field.labelMods, value: _.isEmpty(info.raw.mod) ? '--' : info.raw.mod, inline: false },
                         // { name: '\u200B', value: '\u200B' },
-                        { name: '상태', value: info.raw.gamemode, inline: false },
-                        { name: '맵', value: _.isEmpty(info.map) ? '없음' : info.map, inline: true },
-                        { name: '버전', value: info.raw.gamever.toString(), inline: true },
-                        { name: '플레이어', value: `${info.numplayers} / ${info.maxplayers}`, inline: true },
-                        { name: '메모', value: `> ${memo ? memo : '메모가 없습니다.'}`, inline: false },
+                        { name: lang.embed.serverStatus.armaresistance.field.labelStatus, value: info.raw.gamemode, inline: false },
+                        { name: lang.embed.serverStatus.armaresistance.field.labelMap, value: _.isEmpty(info.map) ? lang.none : info.map, inline: true },
+                        { name: lang.embed.serverStatus.armaresistance.field.labelVersion, value: info.raw.gamever.toString(), inline: true },
+                        { name: lang.embed.serverStatus.armaresistance.field.labelPlayers, value: `${info.numplayers} / ${info.maxplayers}`, inline: true },
+                        { name: lang.embed.serverStatus.armaresistance.field.labelMemo, value: `> ${memo ? memo : lang.embed.serverStatus.labelBlankMemo}`, inline: false },
                     )
                     .setImage(banner)
                     .setTimestamp(time)
@@ -308,7 +310,7 @@ export function getServerStatusEmbed(messageId: string, queries: ServerQueries, 
         const status = instance.connection.count > 0 ? 'losing' : 'disconnected';
         embed = new EmbedBuilder()
             .setColor(SERVER_STATUS_COLOR[status])
-            .setTitle('오프라인')
+            .setTitle(lang.embed.serverStatus.offline.title)
             // .setURL(`https://files.hirua.me/presets/${message.id}.html`)
             .setAuthor({
                 name: owner.displayName,
@@ -318,8 +320,8 @@ export function getServerStatusEmbed(messageId: string, queries: ServerQueries, 
             .setDescription("```\n" + `${queries.connect.host}:${queries.connect.port}` + "\n```")
             // .setThumbnail(thumbnail)
             .addFields(
-                { name: '상태', value: 'None', inline: false },
-                { name: '메모', value: `> ${memo ? memo : '메모가 없습니다.'}`, inline: false },
+                { name: lang.embed.serverStatus.offline.field.labelStatus, value: lang.none, inline: false },
+                { name: lang.embed.serverStatus.offline.field.labelMemo, value: `> ${memo ? memo : lang.embed.serverStatus.labelBlankMemo}`, inline: false },
             )
             .setImage(banner)
             .setTimestamp(time)

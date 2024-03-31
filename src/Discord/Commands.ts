@@ -15,6 +15,9 @@ import { logError, logNormal, guildTrack, userTrack } from "Lib/Log";
 import { getServerDeleteInteractionEmbed, getNoticeEmbed, getServerRegisterInteractionEmbed } from "./Embed";
 import { uid2guid } from "Lib/Utils";
 import { startRconSession } from "Server/Rcon";
+import { getStringTable } from "Language";
+
+const lang = getStringTable();
 
 type SlashCommand = ChatInputApplicationCommandData & {
     execute: (interaction: CommandInteraction) => void;
@@ -24,7 +27,7 @@ async function assertGuild(interaction: CommandInteraction) {
     const { guild } = interaction;
     if (!guild) {
         await interaction.followUp({
-            content: ':x: GuildID가 존재하지 않습니다.',
+            content: lang.commands.assertGuild.noGuild,
             ephemeral: true
         });
         return;
@@ -39,7 +42,7 @@ async function assertGuildStorage(interaction: CommandInteraction, storage: Map<
 
     if (!serverStorage) {
         await interaction.followUp({
-            content: ':x: 아직 채널 설정을 완료하지 않은 것 같습니다.',
+            content: lang.commands.assertGuildStorage.noGuild,
             ephemeral: true
         });
         return;
@@ -53,7 +56,7 @@ async function assertServer(interaction: CommandInteraction, guildStorage: AppSt
 
     if (!server) {
         await interaction.followUp({
-            content: ':x: 잘못된 서버 ID입니다.',
+            content: lang.commands.assertServer.noServer,
             ephemeral: true
         });
         return;
@@ -61,7 +64,7 @@ async function assertServer(interaction: CommandInteraction, guildStorage: AppSt
 
     if (!server.rcon) {
         await interaction.followUp({
-            content: ':x: RCon 기능이 활성화되지 않은 서버입니다.',
+            content: lang.commands.assertServer.noRcon,
             ephemeral: true
         });
         return;
@@ -74,23 +77,23 @@ const commands: Array<SlashCommand> = [
     {
         type: ApplicationCommandType.ChatInput,
         name: 'set_channels',
-        description: '필수 채널 설정',
+        description: lang.commands.setChannels.description,
         options: [
             {
                 name: 'interaction_channel_id',
-                description: '서버 등록/삭제 채널 ID',
+                description: lang.commands.setChannels.options.descriptionInteractionChannelId,
                 type: ApplicationCommandOptionType.String,
                 required: true
             },
             {
                 name: 'status_channel_id',
-                description: '서버 현황 채널 ID',
+                description: lang.commands.setChannels.options.descriptionStatusChannelId,
                 type: ApplicationCommandOptionType.String,
                 required: true
             },
             {
                 name: 'admin_channel_id',
-                description: '서버 관리 채널 ID',
+                description: lang.commands.setChannels.options.descriptionAdminChannelId,
                 type: ApplicationCommandOptionType.String,
                 required: true
             }
@@ -101,11 +104,15 @@ const commands: Array<SlashCommand> = [
             const guild = await assertGuild(interaction);
             if (!guild) return;
 
+            const guildStorage = await assertGuildStorage(interaction, storage, guild);
+            if (!guildStorage) return;
+
             const interactionChannelId = (interaction.options.get('interaction_channel_id')?.value || '') as string;
             const statusChannelId = (interaction.options.get('status_channel_id')?.value || '') as string;
             const adminChannelId = (interaction.options.get('admin_channel_id')?.value || '') as string;
 
             storage.set(guild.id, {
+                ...guildStorage,
                 channels: {
                     interaction: {
                         channelId: interactionChannelId,
@@ -126,15 +133,15 @@ const commands: Array<SlashCommand> = [
             saveStorage();
 
             await interaction.followUp({
-                content: ':white_check_mark: 채널이 등록되었습니다.',
+                content: lang.commands.setChannels.success,
                 ephemeral: true
             });
         }
     },
     {
         type: ApplicationCommandType.ChatInput,
-        name: 'initalize',
-        description: 'Shallot을 사용하기 위해 초기 설정 작업을 시작합니다.',
+        name: 'register_interaction_messages',
+        description: lang.commands.registerMessages.description,
         defaultMemberPermissions: PermissionFlagsBits.Administrator,
         execute: async interaction => {
             const storage = getStorage();
@@ -149,7 +156,7 @@ const commands: Array<SlashCommand> = [
 
             if (!channel) {
                 await interaction.followUp({
-                    content: `:x: 채널 ${channelId}는 존재하지 않는 것 같습니다.`,
+                    content: `${lang.commands.registerMessages.noChannel}: ${channelId}`,
                     ephemeral: true
                 });
                 return;
@@ -169,7 +176,7 @@ const commands: Array<SlashCommand> = [
             saveStorage();
 
             await interaction.followUp({
-                content: ':white_check_mark: 초기 설정이 완료되었습니다.',
+                content: lang.commands.registerMessages.success,
                 ephemeral: true
             });
         }
@@ -177,7 +184,7 @@ const commands: Array<SlashCommand> = [
     {
         type: ApplicationCommandType.ChatInput,
         name: 'clear_servers',
-        description: '서버 리스트를 전부 삭제합니다.',
+        description: lang.commands.cleanServers.description,
         defaultMemberPermissions: PermissionFlagsBits.Administrator,
         execute: async interaction => {
             const storage = getStorage();
@@ -188,7 +195,7 @@ const commands: Array<SlashCommand> = [
             const guildStorage = storage.get(guild.id);
             if (!guildStorage) {
                 await interaction.followUp({
-                    content: ':x: 아직 채널 설정을 완료하지 않은 것 같습니다.',
+                    content: lang.commands.cleanServers.noGuild,
                     ephemeral: true
                 });
                 return;
@@ -230,7 +237,7 @@ const commands: Array<SlashCommand> = [
             saveStorage();
 
             await interaction.followUp({
-                content: ':white_check_mark: 서버 리스트를 초기화 했습니다.',
+                content: lang.commands.cleanServers.success,
                 ephemeral: true
             });
         }
@@ -238,11 +245,11 @@ const commands: Array<SlashCommand> = [
     {
         type: ApplicationCommandType.ChatInput,
         name: 'uid2guid',
-        description: 'SteamID를 GUID로 변환합니다.',
+        description: lang.commands.uid2guid.description,
         options: [
             {
                 name: 'steamid',
-                description: 'SteamID',
+                description: lang.commands.uid2guid.options.descriptionSteamID,
                 type: ApplicationCommandOptionType.String,
                 required: true
             }
@@ -258,9 +265,10 @@ const commands: Array<SlashCommand> = [
                     ephemeral: true
                 });
             }
+
             catch {
                 await interaction.followUp({
-                    content: ':x: 잘못된 입력값입니다.',
+                    content: lang.commands.uid2guid.uncatchedError,
                     ephemeral: true
                 });
             }
@@ -269,17 +277,17 @@ const commands: Array<SlashCommand> = [
     {
         type: ApplicationCommandType.ChatInput,
         name: 'rcon',
-        description: 'RCon 명령 실행',
+        description: lang.commands.rcon.description,
         options: [
             {
                 name: 'server_id',
-                description: '해당 서버 ID',
+                description: lang.commands.rcon.options.descriptionServerID,
                 type: ApplicationCommandOptionType.String,
                 required: true
             },
             {
                 name: 'command',
-                description: '명령',
+                description: lang.commands.rcon.options.descriptionCommand,
                 type: ApplicationCommandOptionType.String,
                 required: true
             }
@@ -306,20 +314,136 @@ const commands: Array<SlashCommand> = [
                 logNormal(`[App] RCon Accessed: ${command} ${guildTrack(guild.id)}${userTrack(interaction.user)}`);
 
                 await interaction.followUp({
-                    content: query.data ?? ':grey_question: 연결은 정상적으로 되었으나 빈 데이터가 수신되었습니다.',
+                    content: query.data ?? lang.commands.rcon.blankDataReceived,
                     ephemeral: true
                 });
             }
 
             catch (e) {
-                logError(`[App|Discord] 명령어: rcon ${command}: ${e}`);
+                logError(`[App|Discord] Command: rcon ${command}: ${e}`);
                 await interaction.followUp({
-                    content: ':x: 뭔가 잘못되었습니다.',
+                    content: lang.commands.rcon.uncatchedError,
                     ephemeral: true
                 });
             }
         }
-    }
+    },
+    /*
+    {
+        type: ApplicationCommandType.ChatInput,
+        name: 'initalize',
+        description: Lang.commands.initalize.description,
+        options: [
+            {
+                name: 'interaction_channel_id',
+                description: Lang.commands.initalize.options.descriptionInteractionChannelId,
+                type: ApplicationCommandOptionType.String,
+                required: true
+            },
+            {
+                name: 'status_channel_id',
+                description: Lang.commands.initalize.options.descriptionStatusChannelId,
+                type: ApplicationCommandOptionType.String,
+                required: true
+            },
+            {
+                name: 'admin_channel_id',
+                description: Lang.commands.initalize.options.descriptionAdminChannelId,
+                type: ApplicationCommandOptionType.String,
+                required: true
+            }
+        ],
+        defaultMemberPermissions: PermissionFlagsBits.Administrator,
+        execute: async interaction => {
+            const storage = getStorage();
+            const guild = await assertGuild(interaction);
+            if (!guild) return;
+
+            const guildStorage = await assertGuildStorage(interaction, storage, guild);
+            if (!guildStorage) return;
+
+            const interactionChannelId = (interaction.options.get('interaction_channel_id')?.value || '') as string;
+            const statusChannelId = (interaction.options.get('status_channel_id')?.value || '') as string;
+            const adminChannelId = (interaction.options.get('admin_channel_id')?.value || '') as string;
+
+            checkChannelsExist();
+
+            storage.set(guild.id, {
+                channels: {
+                    interaction: {
+                        channelId: interactionChannelId,
+                        noticeMessageId: noticeId,
+                        registerMessageId: regId,
+                        deleteMessageId: delId
+                    },
+                    status: {
+                        channelId: statusChannelId
+                    },
+                    admin: {
+                        channelId: adminChannelId
+                    }
+                },
+                servers: new Map()
+            });
+
+            saveStorage();
+
+            await interaction.followUp({
+                content: Lang.commands.initalize.success,
+                ephemeral: true
+            });
+        }
+    },
+    {
+        type: ApplicationCommandType.ChatInput,
+        name: 'set_language',
+        description: Lang.commands.setLanguage.description,
+        options: [
+            {
+                name: 'lang',
+                description: Lang.commands.setLanguage.options.descriptionLang,
+                type: ApplicationCommandOptionType.String,
+                required: true
+            }
+        ],
+        defaultMemberPermissions: PermissionFlagsBits.Administrator,
+        execute: async interaction => {
+            const storage = getStorage();
+            const guild = await assertGuild(interaction);
+            if (!guild) return;
+
+            const guildStorage = await assertGuildStorage(interaction, storage, guild);
+            if (!guildStorage) return;
+
+            const lang = (interaction.options.get('lang')?.value || '') as string;
+
+            try {
+                getStringTable(lang as keyof typeof StringTable);
+
+                storage.set(guild.id, {
+                    ...guildStorage,
+                    preferences: {
+                        langauge: lang as keyof typeof Lang,
+                    }
+                });
+
+                saveStorage();
+
+                await interaction.followUp({
+                    content: Lang.commands.setLanguage.success,
+                    ephemeral: true
+                });
+            }
+
+            catch (e) {
+                await interaction.followUp({
+                    content: Lang.commands.setLanguage.noLang,
+                    ephemeral: true
+                });
+            }
+        }
+    },
+    */
 ] as const;
 
 export async function initCommands(client: Client<true>) {

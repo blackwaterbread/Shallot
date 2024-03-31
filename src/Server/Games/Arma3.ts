@@ -10,9 +10,11 @@ import { getBoolean, insertChar, toEmptySafeObject } from 'Lib/Utils';
 import { logError, logNormal } from 'Lib/Log';
 import { getConfigs } from "Config";
 import { BIServer } from 'Storage';
+import { getStringTable } from "Language";
 import appJson from 'Root/package.json';
 
 const Config = getConfigs();
+const lang = getStringTable();
 
 const ARMA_3_SERVER_STATE = new Map([
     ['0', "NONE"],                /* no server */
@@ -693,7 +695,7 @@ export function buildArma3PresetHtml(presetName: string, address: string, mods: 
         <body>
             <h1><strong>${presetName}</strong></h1>
             <p class="before-list">
-                <em>${appJson.displayName} Discord 봇에 의해서 생성되었습니다. 아르마 3 런쳐에 드래그하여 프리셋 적용</em>
+                <em>${lang.preset.arma3}</em>
             </p>
             ${createContainers(mods)}
             <div class="footer">

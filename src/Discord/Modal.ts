@@ -1,27 +1,30 @@
-import { AvailableGame } from "Types";
 import { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
-import { Interactions } from "./Interactions";
+import { AvailableGame } from "Types";
 import { BIServer } from "Storage";
+import { Interactions } from "./Interactions";
+import { getStringTable } from "Language";
+
+const lang = getStringTable();
 
 export function createServerRegisterModal(type: AvailableGame) {
     const { serverRegister } = Interactions.modal;
     const { serverAddress, serverMemo } = Interactions.modalComponents;
     const modal = new ModalBuilder()
         .setCustomId(`${serverRegister}_${type}`)
-        .setTitle('서버 등록')
+        .setTitle(lang.modal.serverRegister.title)
 
     const inputAddress = new TextInputBuilder()
         .setCustomId(serverAddress)
-        .setLabel('서버 접속 주소 (포트 기본값: 2302)')
-        .setPlaceholder('127.0.0.1 or 127.0.0.1:2302')
+        .setLabel(lang.modal.serverRegister.inputIpAddr.label)
+        .setPlaceholder(lang.modal.serverRegister.inputIpAddr.placeholder)
         .setRequired(true)
         .setMaxLength(120)
         .setStyle(TextInputStyle.Short);
 
     const inputMemo = new TextInputBuilder()
         .setCustomId(serverMemo)
-        .setLabel('메모')
-        .setPlaceholder('자동으로 제공되는 정보 외에 따로 공지할만한 내용')
+        .setLabel(lang.modal.serverRegister.inputMemo.label)
+        .setPlaceholder(lang.modal.serverRegister.inputMemo.placeholder)
         .setRequired(false)
         .setStyle(TextInputStyle.Short);
 
@@ -38,11 +41,11 @@ export function createServerModifyModal(instanceId: string, instance: BIServer) 
     const { serverAddress, serverPriority, serverMemo } = Interactions.modalComponents;
     const modal = new ModalBuilder()
         .setCustomId(`${serverModify}_${instanceId}`)
-        .setTitle('서버 정보 수정')
+        .setTitle(lang.modal.serverModify.title)
 
     const inputAddress = new TextInputBuilder()
         .setCustomId(serverAddress)
-        .setLabel('서버 접속 주소 (포트 기본값: 2302)')
+        .setLabel(lang.modal.serverModify.inputIpAddr.label)
         .setValue(instanceId)
         .setRequired(true)
         .setMaxLength(120)
@@ -50,7 +53,7 @@ export function createServerModifyModal(instanceId: string, instance: BIServer) 
 
     const inputPriority = new TextInputBuilder()
         .setCustomId(serverPriority)
-        .setLabel('우선권 (true or false)')
+        .setLabel(lang.modal.serverModify.inputPriority.label)
         .setValue(instance.priority.toString())
         .setRequired(true)
         .setMaxLength(5)
@@ -58,7 +61,7 @@ export function createServerModifyModal(instanceId: string, instance: BIServer) 
 
     const inputMemo = new TextInputBuilder()
         .setCustomId(serverMemo)
-        .setLabel('메모')
+        .setLabel(lang.modal.serverModify.inputMemo.label)
         .setValue(instance.information.memo)
         .setRequired(false)
         .setStyle(TextInputStyle.Short);
@@ -77,18 +80,18 @@ export function createRconRegisterModal(instanceId: string) {
     const { rconPort, rconPassword } = Interactions.modalComponents;
     const modal = new ModalBuilder()
         .setCustomId(`${rconRegister}_${instanceId}`)
-        .setTitle('RCon 정보 수정')
+        .setTitle(lang.modal.rconRegister.title)
 
     const inputRconPort = new TextInputBuilder()
         .setCustomId(rconPort)
-        .setLabel('RCon 접속 포트')
+        .setLabel(lang.modal.rconRegister.inputRconPort.label)
         .setRequired(true)
         .setMaxLength(5)
         .setStyle(TextInputStyle.Short);
 
     const inputRconPassword = new TextInputBuilder()
         .setCustomId(rconPassword)
-        .setLabel('RCon 접속 암호')
+        .setLabel(lang.modal.rconRegister.inputRconPassword.label)
         .setRequired(true)
         .setMaxLength(64)
         .setStyle(TextInputStyle.Short);
