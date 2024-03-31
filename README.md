@@ -1,17 +1,12 @@
 ![shallot](https://github.com/blackwaterbread/poro/assets/40688555/7193cd47-7510-4b9f-812c-b0f98d4d66a2)
 # Shallot
-Server information display discord bot for Bohemia Interactive's games
+Server information display discord bot for [ArmA Series](https://en.wikipedia.org/wiki/Arma_(series))
 
 ## Features
 * Display server information on Discord channel
 * Display players name
 * Any users can add their own server
 * Automatically delete disconnected servers from the list
-* Allows specify a priority server
-
-## Plan
-* Multilingual Support
-* RCon Commands
 
 ## Supported Games
 * [Arma 3](https://store.steampowered.com/app/107410/Arma_3/)
@@ -26,17 +21,39 @@ Server information display discord bot for Bohemia Interactive's games
 ```
 git clone https://github.com/blackwaterbread/Shallot
 ```
-And should write Configs with reference to the following.
 
 ## Configuration
+### Required
 ### configs.json
-Initialize
 ```
 {
     "token": "Your-Discord-Bot-Token",
     "appId": "Your-Discord-Bot-AppID",
-    "staticPath": "Path-where-static-files-will-be-stored",
     ...
+}
+```
+
+### Optional
+### Static File Server
+* This setting is non-essential; however, if not set this, the preset auto-creation feature will not work.
+* You must have a static file server that works with a static path.
+* Recommend 'attachment' for static file server HTTP headers.
+```
+{
+    ...
+    static: {
+        path: "Path-where-static-files-will-be-stored",
+        url: "Your-static-file-server-url"
+    }
+}
+```
+
+### Language
+* Default is en-US
+```
+{
+    ...
+    lang: "en-US" or "ko-KR"
 }
 ```
 
@@ -53,9 +70,12 @@ node dist/shallot.js or pm2 start dist/shallot.js
 ```
 
 ## Initalize on Discord
-1. 3 channels must be created; **interaction, status, admin** (can change the channel name arbitrarily)
+1. 3 channels must be created. **interaction, status, admin** (can change the channel name arbitrarily)
 2. Specifies the channel ID to use with the **/set_channels** command
-3. If completed the channel setup, do the initial setup with the **/initialize** command
+3. If completed the channel setup, do the initial setup with the **/register_interaction_messages** command
+
+## License
+* MIT License
 
 ---
 
