@@ -12,9 +12,13 @@ import {
 } from "discord.js";
 import { AppStorage, getStorage, saveStorage } from "Storage";
 import { logError, logNormal, guildTrack, userTrack } from "Lib/Log";
-import { getDeleteInteractionMessage, getNoticeMessage, getRegisterInteractionMessage } from "./Message";
+import { getServerDeleteInteractionEmbed, getNoticeEmbed, getServerRegisterInteractionEmbed } from "./Embed";
 import { uid2guid } from "Lib/Utils";
 import { startRconSession } from "Server/Rcon";
+
+type SlashCommand = ChatInputApplicationCommandData & {
+    execute: (interaction: CommandInteraction) => void;
+}
 
 async function assertGuild(interaction: CommandInteraction) {
     const { guild } = interaction;
@@ -64,10 +68,6 @@ async function assertServer(interaction: CommandInteraction, guildStorage: AppSt
     }
 
     return server;
-}
-
-type SlashCommand = ChatInputApplicationCommandData & {
-    execute: (interaction: CommandInteraction) => void;
 }
 
 const commands: Array<SlashCommand> = [
@@ -157,9 +157,9 @@ const commands: Array<SlashCommand> = [
 
             const newStorage = { ...guildStorage }
 
-            const noticeMessage = await channel.send(getNoticeMessage());
-            const interactionMessage = await channel.send(getRegisterInteractionMessage());
-            const deleteMessage = await channel.send(getDeleteInteractionMessage());
+            const noticeMessage = await channel.send(getNoticeEmbed());
+            const interactionMessage = await channel.send(getServerRegisterInteractionEmbed());
+            const deleteMessage = await channel.send(getServerDeleteInteractionEmbed());
 
             newStorage.channels.interaction.noticeMessageId = noticeMessage.id;
             newStorage.channels.interaction.registerMessageId = interactionMessage.id;
@@ -303,7 +303,7 @@ const commands: Array<SlashCommand> = [
                 const connection = await startRconSession(server.connect.host, server.rcon!.port, server.rcon!.password);
                 const query = await connection.command(command as string);
 
-                logNormal(`[App] RCon 접근: ${command} ${guildTrack(guild.id)}${userTrack(interaction.user)}`);
+                logNormal(`[App] RCon Accessed: ${command} ${guildTrack(guild.id)}${userTrack(interaction.user)}`);
 
                 await interaction.followUp({
                     content: query.data ?? ':grey_question: 연결은 정상적으로 되었으나 빈 데이터가 수신되었습니다.',
@@ -332,7 +332,7 @@ export async function handleCommands(interaction: Interaction) {
         if (comm) {
             await interaction.deferReply({ ephemeral: true });
             await comm.execute(interaction);
-            logNormal(`[Discord] 명령어: ${comm.name}, ${guildTrack(interaction.guildId!)} ${userTrack(interaction.user)}`);
+            logNormal(`[Discord] Command: ${comm.name}, ${guildTrack(interaction.guildId!)} ${userTrack(interaction.user)}`);
         }
     }
 }

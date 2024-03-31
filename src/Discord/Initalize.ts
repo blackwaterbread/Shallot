@@ -18,12 +18,12 @@ export async function initBotPresence(client: Client<true>) {
         status: 'online',
     });
 
-    logNormal('[Discord] 봇 상태 설정 완료');
+    logNormal('[Discord] Completed setPresence');
 }
 
 export function checkUnregisteredServer(guild: Guild) {
     const storage = getStorage();
     if (!storage.get(guild.id)) {
-        logWarning(`[App] ID가 등록되지 않은 서버가 있습니다: [${guild.id}|${guild.name}]`);
+        logWarning(`[App] There's unregistered guild: [${guild.id}|${guild.name}]`);
     }
 }

@@ -19,7 +19,7 @@ async function app() {
     });
 
     client.once(Events.ClientReady, async readyClient => {
-        logNormal(`[Discord] Discord 로그인 성공 [${readyClient.user.id}, ${readyClient.user.tag}]`);
+        logNormal(`[Discord] Successfully Logged In: [${readyClient.user.id}, ${readyClient.user.tag}]`);
         await initCommands(readyClient);
         await initBotPresence(readyClient);
         initRefresher(readyClient);
