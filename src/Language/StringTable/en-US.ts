@@ -16,16 +16,6 @@ const EN_STRINGS: ShallotStrings = {
             noRcon: ':x: RCon feature is not enabled on this server.'
         },
         /*
-        initalize: {
-            description: 'Register Discord Server',
-            options: {
-                descriptionInteractionChannelId: 'Server Registration/Deletion Channel ID',
-                descriptionStatusChannelId: 'Server Status Channel ID',
-                descriptionAdminChannelId: 'Server Management Channel ID',
-                descriptionLang: 'Langauge (en-US, ko-KR)'
-            },
-            success: ':white_check_mark: Discord server registration complete.',
-        },
         setLanguage: {
             description: 'Language Settings',
             options: {
@@ -35,6 +25,15 @@ const EN_STRINGS: ShallotStrings = {
             noLang: ':x: Unsupported language.'
         },
         */
+        initalize: {
+            description: 'Register Discord Server',
+            options: {
+                descriptionInteractionChannelId: 'Server Registration/Deletion Channel ID',
+                descriptionStatusChannelId: 'Server Status Channel ID',
+                descriptionAdminChannelId: 'Server Management Channel ID',
+            },
+            success: ':white_check_mark: Discord server registration complete.',
+        },
         setChannels: {
             description: 'Required Channel Settings',
             options: {

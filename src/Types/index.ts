@@ -51,15 +51,6 @@ export interface ShallotStrings {
             noRcon: string;
         },
         /*
-        initalize: {
-            description: string;
-            options: {
-                descriptionInteractionChannelId: string;
-                descriptionStatusChannelId: string;
-                descriptionAdminChannelId: string;
-            },
-            success: string;
-        },
         setLanguage: {
             description: string;
             options: {
@@ -69,6 +60,15 @@ export interface ShallotStrings {
             noLang: string;
         },
         */
+        initalize: {
+            description: string;
+            options: {
+                descriptionInteractionChannelId: string;
+                descriptionStatusChannelId: string;
+                descriptionAdminChannelId: string;
+            },
+            success: string;
+        },
         setChannels: {
             description: string;
             options: {

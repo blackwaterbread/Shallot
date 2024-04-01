@@ -16,16 +16,6 @@ const KR_STRINGS: ShallotStrings = {
             noRcon: ':x: RCon 기능이 활성화되지 않은 서버입니다.'
         },
         /*
-        initalize: {
-            description: '디스코드 서버 등록',
-            options: {
-                descriptionInteractionChannelId: '서버 등록/삭제 채널 ID',
-                descriptionStatusChannelId: '서버 현황 채널 ID',
-                descriptionAdminChannelId: '서버 관리 채널 ID',
-                descriptionLang: '언어 (en-US, ko-KR)'
-            },
-            success: ':white_check_mark: 디스코드 서버 등록이 완료되었습니다.',
-        },
         setLanguage: {
             description: '언어 설정',
             options: {
@@ -35,6 +25,15 @@ const KR_STRINGS: ShallotStrings = {
             noLang: ':x: 지원하지 않는 언어입니다.'
         },
         */
+        initalize: {
+            description: '디스코드 서버 등록',
+            options: {
+                descriptionInteractionChannelId: '서버 등록/삭제 채널 ID',
+                descriptionStatusChannelId: '서버 현황 채널 ID',
+                descriptionAdminChannelId: '서버 관리 채널 ID',
+            },
+            success: ':white_check_mark: 디스코드 서버 등록이 완료되었습니다.',
+        },
         setChannels: {
             description: '필수 채널 설정',
             options: {
