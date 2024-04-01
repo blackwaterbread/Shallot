@@ -48,9 +48,11 @@ const EN_STRINGS: ShallotStrings = {
             noChannel: ':x: Channel does not appear to exist.',
             success: ':white_check_mark: Task complete.'
         },
+        servers: {
+            description: 'Load server list.'
+        },
         cleanServers: {
             description: 'Delete all server lists.',
-            noGuild: ':x: Looks like channel setting has been completed yet.',
             success: ':white_check_mark: Deleted all server list.'
         },
         uid2guid: {

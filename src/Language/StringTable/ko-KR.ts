@@ -48,9 +48,11 @@ const KR_STRINGS: ShallotStrings = {
             noChannel: ':x: 채널이 존재하지 않는 것 같습니다.',
             success: ':white_check_mark: 작업이 완료되었습니다.'
         },
+        servers: {
+            description: '서버 리스트를 불러옵니다.'
+        },
         cleanServers: {
             description: '서버 리스트를 전부 삭제합니다.',
-            noGuild: ':x: 아직 채널 설정을 완료하지 않은 것 같습니다.',
             success: ':white_check_mark: 서버 리스트를 초기화 했습니다.'
         },
         uid2guid: {
