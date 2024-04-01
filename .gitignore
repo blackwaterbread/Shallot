@@ -1,6 +1,5 @@
 node_modules
 dist
-assets
 .vscode
 .env
 configs/dev/*
