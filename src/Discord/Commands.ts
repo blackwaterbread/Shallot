@@ -261,6 +261,30 @@ const commands: Array<SlashCommand> = [
     },
     {
         type: ApplicationCommandType.ChatInput,
+        name: 'servers',
+        description: lang.commands.servers.description,
+        defaultMemberPermissions: PermissionFlagsBits.Administrator,
+        execute: async interaction => {
+            const storage = getStorage();
+
+            const guild = await assertGuild(interaction);
+            if (!guild) return;
+
+            const guildStorage = await assertGuildStorage(interaction, storage, guild);
+            if (!guildStorage) return;
+
+            const lists = Array.from(guildStorage.servers).map(([key, server]) => {
+                return `${key} | [${server.type},priority:${server.priority},${server.information.hostname},${server.information.memo}]`;
+            });
+
+            await interaction.followUp({
+                content: lists.join('\n'),
+                ephemeral: true
+            });
+        }
+    },
+    {
+        type: ApplicationCommandType.ChatInput,
         name: 'clear_servers',
         description: lang.commands.cleanServers.description,
         defaultMemberPermissions: PermissionFlagsBits.Administrator,
@@ -270,14 +294,8 @@ const commands: Array<SlashCommand> = [
             const guild = await assertGuild(interaction);
             if (!guild) return;
 
-            const guildStorage = storage.get(guild.id);
-            if (!guildStorage) {
-                await interaction.followUp({
-                    content: lang.commands.cleanServers.noGuild,
-                    ephemeral: true
-                });
-                return;
-            }
+            const guildStorage = await assertGuildStorage(interaction, storage, guild);
+            if (!guildStorage) return;
 
             const { status, admin } = guildStorage.channels;
             const tasks = Array.from(guildStorage.servers).map(async ([instanceId, instance]) => {

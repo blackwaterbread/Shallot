@@ -83,9 +83,11 @@ export interface ShallotStrings {
             noChannel: string;
             success: string;
         },
+        servers: {
+            description: string;
+        },
         cleanServers: {
             description: string;
-            noGuild: string;
             success: string;
         },
         uid2guid: {
