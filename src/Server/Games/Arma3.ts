@@ -695,7 +695,7 @@ export function buildArma3PresetHtml(presetName: string, address: string, mods: 
         <body>
             <h1><strong>${presetName}</strong></h1>
             <p class="before-list">
-                <em>${lang.preset.arma3}</em>
+                <em>${lang.preset.arma3.generated}</em>
             </p>
             ${createContainers(mods)}
             <div class="footer">
