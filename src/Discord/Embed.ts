@@ -172,7 +172,7 @@ export function getServerRconEmbed(key: string, instance: BIServer) {
                     { name: lang.embed.rcon.field.namePriority, value: `${priority}`, inline: true },
                     { name: lang.embed.rcon.field.nameAddonsHash, value: `${information.addonsHash ? information.addonsHash : 'None'}`, inline: true },
                 )
-                .setImage('https://files.hirua.me/images/width.png')
+                .setImage(configs.static ? `${configs.static.url}/images/width.png` : null)
                 .setTimestamp(time)
                 .setFooter({ text: 'Updated: ' })
         ],
@@ -185,7 +185,7 @@ export function getServerStatusEmbed(messageId: string, queries: ServerQueries, 
     // const ping = judgePing(queries.online?.info.ping);
     const time = DateTime.now().toMillis();
     const key = `${queries.connect.host}:${queries.connect.port}`;
-    const presetLink = `${configs.static?.url}/${messageId}.html`;
+    const presetLink = `${configs.static?.url}/presets/${messageId}.html`;
     const presetLabel = configs.static ? `[**[${lang.embed.serverStatus.arma3.presetDownload}]**](${presetLink})` : '';
     const { serverCheckPlayers } = Interactions.button;
 
