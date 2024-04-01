@@ -274,7 +274,8 @@ const commands: Array<SlashCommand> = [
             if (!guildStorage) return;
 
             const lists = Array.from(guildStorage.servers).map(([key, server]) => {
-                return `${key} | [${server.type},priority:${server.priority},${server.information.hostname},${server.information.memo}]`;
+                const { type, rcon, priority, information } = server;
+                return `${key} | [${type},rcon:${rcon ? 'enabled' : 'disabled'},priority:${priority},${information.hostname},${information.memo}]`;
             });
 
             await interaction.followUp({
