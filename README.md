@@ -70,9 +70,8 @@ node dist/shallot.js or pm2 start dist/shallot.js
 ```
 
 ## Initalize on Discord
-1. 3 channels must be created. **interaction, status, admin** (can change the channel name arbitrarily)
-2. Specifies the channel ID to use with the **/set_channels** command
-3. If completed the channel setup, do the initial setup with the **/register_interaction_messages** command
+1. 3 channels must be created. **interaction, status, admin** (can change the channel name what you want)
+2. Specifies the channel ID to use with the **/initalize** command
 
 ## License
 * MIT License

@@ -70,8 +70,7 @@ node dist/shallot.js or pm2 start dist/shallot.js
 
 ## Discord 서버에서 초기 설정
 1. 채널 3개가 필요합니다. **상호작용, 현황, 관리** (이름은 마음대로 바꾸실 수 있습니다.)
-2. **/set_channels** 명령어로 채널 ID를 등록 해 주세요.
-3. **/register_interaction_messages** 명령어로 상호작용 메세지를 등록 해 주세요.
+2. **/initalize** 명령어로 각 채널 ID를 등록하면 Shallot 봇을 사용할 수 있습니다.
 
 ## 라이센스
 * MIT License
