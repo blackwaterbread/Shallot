@@ -76,6 +76,84 @@ async function assertServer(interaction: CommandInteraction, guildStorage: AppSt
 const commands: Array<SlashCommand> = [
     {
         type: ApplicationCommandType.ChatInput,
+        name: 'initalize',
+        description: lang.commands.setChannels.description,
+        options: [
+            {
+                name: 'interaction_channel_id',
+                description: lang.commands.initalize.options.descriptionInteractionChannelId,
+                type: ApplicationCommandOptionType.String,
+                required: true
+            },
+            {
+                name: 'status_channel_id',
+                description: lang.commands.initalize.options.descriptionStatusChannelId,
+                type: ApplicationCommandOptionType.String,
+                required: true
+            },
+            {
+                name: 'admin_channel_id',
+                description: lang.commands.initalize.options.descriptionAdminChannelId,
+                type: ApplicationCommandOptionType.String,
+                required: true
+            }
+        ],
+        defaultMemberPermissions: PermissionFlagsBits.Administrator,
+        execute: async interaction => {
+            const storage = getStorage();
+            const guild = await assertGuild(interaction);
+            if (!guild) return;
+
+            const guildStorage = await assertGuildStorage(interaction, storage, guild);
+            if (!guildStorage) return;
+
+            const interactionChannelId = (interaction.options.get('interaction_channel_id')?.value || '') as string;
+            const statusChannelId = (interaction.options.get('status_channel_id')?.value || '') as string;
+            const adminChannelId = (interaction.options.get('admin_channel_id')?.value || '') as string;
+
+            const { channelId } = guildStorage.channels.interaction;
+            const channel = await guild.channels.fetch(channelId) as TextChannel;
+
+            if (!channel) {
+                await interaction.followUp({
+                    content: `${lang.commands.registerMessages.noChannel}: ${channelId}`,
+                    ephemeral: true
+                });
+                return;
+            }
+
+            const noticeMessage = await channel.send(getNoticeEmbed());
+            const interactionMessage = await channel.send(getServerRegisterInteractionEmbed());
+            const deleteMessage = await channel.send(getServerDeleteInteractionEmbed());
+
+            storage.set(guild.id, {
+                channels: {
+                    interaction: {
+                        channelId: interactionChannelId,
+                        noticeMessageId: noticeMessage.id,
+                        registerMessageId: interactionMessage.id,
+                        deleteMessageId: deleteMessage.id
+                    },
+                    status: {
+                        channelId: statusChannelId
+                    },
+                    admin: {
+                        channelId: adminChannelId
+                    }
+                },
+                servers: new Map()
+            });
+
+            saveStorage();
+
+            await interaction.followUp({
+                content: lang.commands.initalize.success,
+                ephemeral: true
+            });
+        }
+    },
+    {
+        type: ApplicationCommandType.ChatInput,
         name: 'set_channels',
         description: lang.commands.setChannels.description,
         options: [
