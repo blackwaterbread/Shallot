@@ -4,7 +4,7 @@ import { Client, Message, TextChannel } from 'discord.js';
 import { getServerStatusEmbed, getServerRconEmbed } from 'Discord/Embed';
 import { getConfigs } from "Config";
 import { AppStorage, getStorage, saveStorage } from 'Storage';
-import { CommonServerQueries } from 'Types';
+import { CommonServerQueries, ServerQueries } from 'Types';
 import { Arma3ServerMod, Arma3ServerQueries, queryArma3, savePresetHtml } from 'Server/Games/Arma3';
 import { ArmaResistanceServerQueries, queryArmaResistance } from 'Server/Games/ArmaResistance';
 import { ArmaReforgerServerQueries, queryArmaReforger } from 'Server/Games/ArmaReforger';
@@ -119,20 +119,25 @@ export async function serverRefresh(target?: { guildId: string, serverId: string
         switch (type) {
             case 'arma3': {
                 queries = await queryArma3(connect);
-                if (information.addonsHash !== queries.online?.tags.loadedContentHash) {
-                    savePresetHtml(discord.statusEmbedMessageId, queries.online?.preset);
-                    newServer.information.addonsHash = queries.online?.tags.loadedContentHash ?? '';
+                if (queries.online?.tags) {
+                    if (information.addonsHash !== queries.online.tags.loadedContentHash) {
+                        savePresetHtml(discord.statusEmbedMessageId, queries.online.preset);
+                        newServer.information.addonsHash = queries.online.tags.loadedContentHash;
+                    }
                 }
                 break;
             }
+
             case 'armareforger': {
                 queries = await queryArmaReforger(connect);
                 break;
             }
+
             case 'armaresistance': {
                 queries = await queryArmaResistance(connect);
                 break;
             }
+
             default: {
                 serverStorage.delete(serverId);
                 saveStorage();
