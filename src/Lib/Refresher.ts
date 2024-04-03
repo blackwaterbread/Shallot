@@ -4,10 +4,10 @@ import { Client, Message, TextChannel } from 'discord.js';
 import { getServerStatusEmbed, getServerRconEmbed } from 'Discord/Embed';
 import { getConfigs } from "Config";
 import { AppStorage, getStorage, saveStorage } from 'Storage';
-import { ServerQueries } from 'Types';
-import { queryArma3, savePresetHtml } from 'Server/Games/Arma3';
-import { queryArmaResistance } from 'Server/Games/ArmaResistance';
-import { queryArmaReforger } from 'Server/Games/ArmaReforger';
+import { CommonServerQueries } from 'Types';
+import { Arma3ServerMod, Arma3ServerQueries, queryArma3, savePresetHtml } from 'Server/Games/Arma3';
+import { ArmaResistanceServerQueries, queryArmaResistance } from 'Server/Games/ArmaResistance';
+import { ArmaReforgerServerQueries, queryArmaReforger } from 'Server/Games/ArmaReforger';
 import { channelTrack, instanceTrack, logError, logNormal, guildTrack } from './Log';
 
 let client: Client<true>;
@@ -27,24 +27,24 @@ export function initRefresher(readyClient: Client<true>) {
     client = readyClient;
 
     localTask = new AsyncTask(localTaskName, async () => { await serverRefreshEntire() });
-    localJob = new SimpleIntervalJob({ 
-        seconds: configs.localRefreshInterval, 
-        runImmediately: true 
-    }, 
-        localTask, 
-    { 
-        preventOverrun: true 
-    });
+    localJob = new SimpleIntervalJob({
+        seconds: configs.localRefreshInterval,
+        runImmediately: true
+    },
+        localTask,
+        {
+            preventOverrun: true
+        });
 
     embedTask = new AsyncTask(embedTaskName, async () => { await embedRefreshEntire() });
-    embedJob = new SimpleIntervalJob({ 
-        seconds: configs.embedRefreshInterval, 
-        runImmediately: true 
-    }, 
-        embedTask, 
-    { 
-        preventOverrun: true 
-    });
+    embedJob = new SimpleIntervalJob({
+        seconds: configs.embedRefreshInterval,
+        runImmediately: true
+    },
+        embedTask,
+        {
+            preventOverrun: true
+        });
 
     scheduler.addSimpleIntervalJob(localJob);
     scheduler.addSimpleIntervalJob(embedJob);
@@ -64,12 +64,12 @@ export function startRefresherEntire() {
 
 async function serverRefreshEntire(serverId?: string) {
     const storage = getStorage();
-    let guildInstances: [string, AppStorage][];
+    let guildStorages: [string, AppStorage][];
 
     if (serverId) {
         const p = storage.get(serverId);
         if (p) {
-            guildInstances = [[serverId, p]];
+            guildStorages = [[serverId, p]];
         }
         else {
             return;
@@ -77,7 +77,7 @@ async function serverRefreshEntire(serverId?: string) {
     }
 
     else {
-        guildInstances = Array.from(storage);
+        guildStorages = Array.from(storage);
     }
 
     let tasks = [];
@@ -103,25 +103,25 @@ export async function serverRefresh(target?: { guildId: string, serverId: string
         }
 
         const { servers: serverStorage } = guild;
-        const server = serverStorage.get(serverId);
+        const currentServer = serverStorage.get(serverId);
 
-        if (!server) {
+        if (!currentServer) {
             logError(`[App] serverRefresh: failed: Cannot get server: ${serverId}`);
             return;
         }
 
-        const trackLog = `${guildTrack(guildId)}${instanceTrack(server)}`;
-        const { type, connect, priority, discord, information, connection } = server;
+        const trackLog = `${guildTrack(guildId)}${instanceTrack(currentServer)}`;
+        const { type, connect, priority, discord, information, connection } = currentServer;
 
-        let queries: ServerQueries;
-        let newInstance = { ...server };
+        let queries: CommonServerQueries;
+        let newServer = { ...currentServer };
 
         switch (type) {
             case 'arma3': {
                 queries = await queryArma3(connect);
                 if (information.addonsHash !== queries.online?.tags.loadedContentHash) {
                     savePresetHtml(discord.statusEmbedMessageId, queries.online?.preset);
-                    newInstance.information.addonsHash = queries.online?.tags.loadedContentHash ?? '';
+                    newServer.information.addonsHash = queries.online?.tags.loadedContentHash ?? '';
                 }
                 break;
             }
@@ -143,10 +143,10 @@ export async function serverRefresh(target?: { guildId: string, serverId: string
         }
 
         if (queries.online) {
-            newInstance = {
-                ...newInstance,
+            newServer = {
+                ...newServer,
                 information: {
-                    ...newInstance.information,
+                    ...newServer.information,
                     hostname: queries.online.info.name,
                     players: queries.online.info.players.map((x: any) => ({
                         name: x.name
@@ -163,10 +163,10 @@ export async function serverRefresh(target?: { guildId: string, serverId: string
         }
 
         else {
-            newInstance = {
-                ...newInstance,
+            newServer = {
+                ...newServer,
                 information: {
-                    ...newInstance.information,
+                    ...newServer.information,
                     lastQueries: queries,
                 }
             }
@@ -210,20 +210,118 @@ export async function serverRefresh(target?: { guildId: string, serverId: string
             }
 
             else if (connection.count > 0) {
-                newInstance = {
-                    ...newInstance,
+                newServer = {
+                    ...newServer,
                     connection: {
                         status: false,
-                        count: newInstance.connection.count -= 1
+                        count: newServer.connection.count -= 1
                     }
                 }
             }
         }
 
-        serverStorage.set(serverId, newInstance);
+        serverStorage.set(serverId, newServer);
         saveStorage();
 
-        logNormal(`[Discord] serverRefresh Complete: ${trackLog}`);
+        let flagRefresh = false;
+        const curQueries = currentServer.information.lastQueries.online;
+        const newQueries = queries.online;
+
+        if (!curQueries) {
+            if (newQueries) {
+                flagRefresh = true;
+                logNormal(`[App|Discord] serverRefresh: DiffCheck: [Refreshed:ToOnline]: ${trackLog}`);
+            }
+        }
+
+        else {
+            if (!newQueries) {
+                flagRefresh = true;
+                logNormal(`[App|Discord] serverRefresh: DiffCheck: [Refresh:ToOffline]: ${trackLog}`);
+            }
+
+            else {
+                switch (type) {
+                    case 'arma3': {
+                        const { info: curInfo, tags: curTags } = curQueries as Arma3ServerQueries;
+                        const { info: newInfo, tags: newTags } = newQueries as Arma3ServerQueries;
+
+                        /* implementing CDLC deep comparison logic is too cumbersome, so pass right now */
+                        const none = 'None';
+                        const curCDLCs = curTags.mods ? Object.entries(curTags.mods) : none;
+                        const newCDLCs = curTags.mods ? Object.entries(newTags.mods) : none;
+
+                        if (
+                            curTags.serverState !== newTags.serverState ||
+                            curInfo.map !== newInfo.map ||
+                            curInfo.version !== newInfo.version ||
+                            curInfo.numplayers !== newInfo.numplayers ||
+                            curInfo.maxplayers !== newInfo.maxplayers ||
+                            curCDLCs.length !== newCDLCs.length
+                            // pass memo
+                        ) {
+                            flagRefresh = true;
+                            logNormal(`[App|Discord] serverRefresh: DiffCheck: [Refreshed:Diff]: ${trackLog}`);
+                        }
+
+                        logNormal(`[App] serverRefresh: DiffCheck: Passed: ${trackLog}`);
+                        break;
+                    }
+
+                    case 'armareforger': {
+                        const { info: curInfo } = curQueries as ArmaReforgerServerQueries;
+                        const { info: newInfo } = newQueries as ArmaReforgerServerQueries;
+
+                        if (
+                            curInfo.map !== newInfo.map ||
+                            curInfo.version !== newInfo.version ||
+                            curInfo.numplayers !== newInfo.numplayers ||
+                            curInfo.maxplayers !== newInfo.maxplayers
+                            // pass memo
+                        ) {
+                            flagRefresh = true;
+                            logNormal(`[App|Discord] serverRefresh: DiffCheck: [Refreshed:Diff]: ${trackLog}`);
+                        }
+
+                        logNormal(`[App] serverRefresh: DiffCheck: Passed: ${trackLog}`);
+                        break;
+                    }
+
+                    case 'armaresistance': {
+                        const { info: curInfo } = curQueries as ArmaResistanceServerQueries;
+                        const { info: newInfo } = newQueries as ArmaResistanceServerQueries;
+
+                        if (
+                            curInfo.raw.mod !== newInfo.raw.mod ||
+                            curInfo.raw.gamemode !== newInfo.raw.gamemode ||
+                            curInfo.map !== newInfo.map ||
+                            curInfo.numplayers !== newInfo.numplayers ||
+                            curInfo.maxplayers !== newInfo.maxplayers
+                            // pass memo
+                        ) {
+                            flagRefresh = true;
+                            logNormal(`[App|Discord] serverRefresh: DiffCheck: [Refreshed:Diff]: ${trackLog}`);
+                        }
+
+                        logNormal(`[App] serverRefresh: DiffCheck: Passed: ${trackLog}`);
+                        break;
+                    }
+
+                    /* not going to happen
+                    default: {
+                        break;
+                    }
+                    */
+                }
+            }
+        }
+
+        if (flagRefresh) {
+            await Promise.all([
+                statusEmbedRefresh(guildId, serverId),
+                rconEmbedRefresh(guildId, serverId)
+            ]);
+        }
     }
 
     else {

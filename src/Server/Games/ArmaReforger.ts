@@ -1,47 +1,43 @@
 import _ from "lodash";
 import { GameDig } from "gamedig";
-import { ConnectInfo } from "Types";
+import { ConnectInfo, ServerQueries } from "Types";
 import { logError } from "Lib/Log";
 import { toEmptySafeObject } from "Lib/Utils";
 
 export interface ArmaReforgerServerQueries {
-    game: 'armareforger';
-    connect: ConnectInfo;
-    online?: {
-        info: {
-            name: string;
-            map: string;
-            password: boolean;
-            raw: {
-                protocol: number;
-                folder: string;
-                game: string;
-                appId: number;
-                numbots: number;
-                listentype: string;
-                environment: string;
-                secure: number;
-                tags: string[];
-                players: any[];
-                rules: any;
-                rulesBytes: Buffer;
-            };
-            version: string;
-            maxplayers: number;
-            numplayers: number;
+    info: {
+        name: string;
+        map: string;
+        password: boolean;
+        raw: {
+            protocol: number;
+            folder: string;
+            game: string;
+            appId: number;
+            numbots: number;
+            listentype: string;
+            environment: string;
+            secure: number;
+            tags: string[];
             players: any[];
-            bots: any[];
-            queryPort: number;
-            connect: string;
-            ping: number;
-        },
-        tags: undefined;
-        rules: undefined;
-        preset: undefined;
-    }
+            rules: any;
+            rulesBytes: Buffer;
+        };
+        version: string;
+        maxplayers: number;
+        numplayers: number;
+        players: any[];
+        bots: any[];
+        queryPort: number;
+        connect: string;
+        ping: number;
+    },
+    tags: undefined;
+    rules: undefined;
+    preset: undefined;
 }
 
-export async function queryArmaReforger(connection: ConnectInfo): Promise<ArmaReforgerServerQueries> {
+export async function queryArmaReforger(connection: ConnectInfo): Promise<ServerQueries<ArmaReforgerServerQueries>> {
     const { host, port } = connection;
     try {
         const state: any = await GameDig.query({

@@ -5,7 +5,7 @@ import { HTMLElement, parse } from 'node-html-parser';
 import format from 'html-format';
 import { GameDig } from 'gamedig';
 import { Socket as RconSocket } from '@senfo/battleye';
-import { ConnectInfo } from 'Types';
+import { ConnectInfo, ServerQueries } from 'Types';
 import { getBoolean, insertChar, toEmptySafeObject } from 'Lib/Utils';
 import { logError, logNormal } from 'Lib/Log';
 import { getConfigs } from "Config";
@@ -283,7 +283,7 @@ export interface Arma3ServerInfo {
 }
 
 export interface Arma3ServerGametag {
-    [k: string]: any,
+    [key: string]: any,
     battleEye: boolean;
     reqVersion: string;
     reqBuild: string;
@@ -323,27 +323,23 @@ export interface Arma3ServerRules {
 }
 
 export interface Arma3ServerQueries {
-    game: 'arma3',
-    connect: ConnectInfo,
-    online?: {
-        info: {
-            name: string,
-            map: string,
-            password: boolean,
-            version: string,
-            raw: any,
-            maxplayers: number,
-            numplayers: number,
-            players: any[],
-            bots: any[],
-            queryPort: number,
-            connect: string,
-            ping: number,
-        };
-        tags: Arma3ServerGametag;
-        rules: Arma3ServerRules;
-        preset: string;
-    }
+    info: {
+        name: string,
+        map: string,
+        password: boolean,
+        version: string,
+        raw: any,
+        maxplayers: number,
+        numplayers: number,
+        players: any[],
+        bots: any[],
+        queryPort: number,
+        connect: string,
+        ping: number,
+    };
+    tags: Arma3ServerGametag;
+    rules: Arma3ServerRules;
+    preset: string;
 }
 
 export type Arma3ServerPlayers = Array<{
@@ -352,7 +348,7 @@ export type Arma3ServerPlayers = Array<{
 
 type Arma3HtmlAddonsList = Array<{ name?: string, url: string }>;
 
-export async function queryArma3(connection: ConnectInfo): Promise<Arma3ServerQueries> {
+export async function queryArma3(connection: ConnectInfo): Promise<ServerQueries<Arma3ServerQueries>> {
     const { host, port } = connection;
     try {
         const state: any = await GameDig.query({

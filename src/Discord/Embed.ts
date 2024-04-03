@@ -1,7 +1,7 @@
 import _ from "lodash";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from "discord.js";
 import { DateTime } from "luxon";
-import { ServerQueries } from "Types";
+import { CommonServerQueries, ServerQueries } from "Types";
 import { BIServer, getStorage } from "Storage";
 import { getConfigs } from "Config";
 import { Games, SERVER_STATUS_COLOR } from "Types";
@@ -180,7 +180,7 @@ export function getServerRconEmbed(key: string, instance: BIServer) {
     }
 }
 
-export function getServerStatusEmbed(messageId: string, queries: ServerQueries, instance: BIServer, memo?: string) {
+export function getServerStatusEmbed(messageId: string, queries: CommonServerQueries, instance: BIServer, memo?: string) {
     const owner = instance.discord.owner;
     // const ping = judgePing(queries.online?.info.ping);
     const time = DateTime.now().toMillis();
@@ -208,8 +208,8 @@ export function getServerStatusEmbed(messageId: string, queries: ServerQueries, 
     if (queries.online) {
         switch (queries.game) {
             case 'arma3': {
-                queries as Arma3ServerQueries;
-                const { info, tags, rules } = queries.online;
+                const assertedQueries = queries.online as Arma3ServerQueries;
+                const { info, tags, rules } = assertedQueries;
                 const CDLCs = Object.entries(rules.mods)
                     .filter(([k, v]) => v.isDLC === true)
                     .map(([k, v]) => `[${k}](https://store.steampowered.com/app/${v.steamid})`);
@@ -245,8 +245,8 @@ export function getServerStatusEmbed(messageId: string, queries: ServerQueries, 
                 break;
             }
             case 'armareforger': {
-                queries as ArmaReforgerServerQueries;
-                const { info } = queries.online;
+                const assertedQueries = queries.online as ArmaReforgerServerQueries;
+                const { info } = assertedQueries;
                 const { host, port } = instance.connect;
                 embed = new EmbedBuilder()
                     .setColor(SERVER_STATUS_COLOR['connected'])
@@ -275,8 +275,8 @@ export function getServerStatusEmbed(messageId: string, queries: ServerQueries, 
                 break;
             }
             case 'armaresistance': {
-                queries as ArmaResistanceServerQueries;
-                const { info } = queries.online;
+                const assertedQueries = queries.online as ArmaResistanceServerQueries;
+                const { info } = assertedQueries;
                 embed = new EmbedBuilder()
                     .setColor(SERVER_STATUS_COLOR['connected'])
                     .setTitle(queries.online.info.name)

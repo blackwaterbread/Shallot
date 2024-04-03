@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import fs from 'fs';
 import dotenv from "dotenv";
-import { AvailableGame, ServerQueries } from 'Types';
+import { AvailableGame, CommonServerQueries } from 'Types';
 import { advStringify } from 'Lib/Utils';
 import path from 'path';
 dotenv.config();
@@ -40,7 +40,7 @@ export interface BIServer {
         players: BIServerPlayers;
         memo: string;
         addonsHash: string;
-        lastQueries: ServerQueries;
+        lastQueries: CommonServerQueries;
     },
     rcon: {
         port: number;
