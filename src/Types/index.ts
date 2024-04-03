@@ -35,7 +35,13 @@ export interface ConnectInfo {
 
 export type AvailableGame = keyof typeof Games;
 
-export type ServerQueries = Arma3ServerQueries | ArmaReforgerServerQueries | ArmaResistanceServerQueries;
+export interface ServerQueries<ServerRawQueries> {
+    game: AvailableGame,
+    connect: ConnectInfo,
+    online?: ServerRawQueries
+}
+
+export type CommonServerQueries = ServerQueries<Arma3ServerQueries> | ServerQueries<ArmaReforgerServerQueries> | ServerQueries<ArmaResistanceServerQueries>;
 
 export interface ShallotStrings {
     none: string;

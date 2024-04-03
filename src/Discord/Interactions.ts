@@ -9,7 +9,7 @@ import { getStorage, saveStorage, BIServer } from "Storage";
 import { getServerStatusEmbed, getPlayersEmbed, getServerRconEmbed } from "./Embed";
 import { logError, logNormal, messageTrack, userTrack } from "Lib/Log";
 import { createRconRegisterModal, createServerModifyModal, createServerRegisterModal } from "./Modal";
-import { ServerQueries } from "Types";
+import { CommonServerQueries } from "Types";
 import { queryArma3, savePresetHtml } from "Server/Games/Arma3";
 import { queryArmaResistance } from "Server/Games/ArmaResistance";
 import { queryArmaReforger } from "Server/Games/ArmaReforger";
@@ -49,12 +49,12 @@ export async function handleInteractions(interaction: Interaction) {
 
     const storage = getStorage();
     const guild = interaction.guild;
-    const serverInstance = storage.get(guild.id);
+    const guildStorage = storage.get(guild.id);
 
-    if (!serverInstance) return;
+    if (!guildStorage) return;
 
-    const { channelId: listChannelId } = serverInstance.channels.status;
-    const { channelId: rconChannelId } = serverInstance.channels.admin;
+    const { channelId: listChannelId } = guildStorage.channels.status;
+    const { channelId: rconChannelId } = guildStorage.channels.admin;
     const { cache } = interaction.client.channels;
     const { user, channel } = interaction;
 
@@ -71,7 +71,6 @@ export async function handleInteractions(interaction: Interaction) {
     const permissions = interaction.member!.permissions as Readonly<PermissionsBitField>;
     const isMemberAdmin = permissions.has(PermissionsBitField.Flags.Administrator);
 
-    
     /* Button Interaction */
     if (interaction.isButton()) {
         logNormal(`[Discord] Interaction: ${interaction.customId}: ${userTrack(interaction.user)}`);
@@ -90,11 +89,11 @@ export async function handleInteractions(interaction: Interaction) {
             }
 
             case serverModify: {
-                const key = buttonId[1];
-                const instance = serverInstance.servers.get(key);
+                const serverKey = buttonId[1];
+                const server = guildStorage.servers.get(serverKey);
 
-                if (instance) {
-                    const modal = createServerModifyModal(key, instance);
+                if (server) {
+                    const modal = createServerModifyModal(serverKey, server);
                     await interaction.showModal(modal);
                 }
 
@@ -110,18 +109,18 @@ export async function handleInteractions(interaction: Interaction) {
 
             case serverDelete: {
                 const userId = interaction.user.id;
-                const key = buttonId[1];
-                const target = key === 'user' ?
-                    Array.from(serverInstance.servers).find(([k, v]) => v.discord.owner.id === userId) :
-                    Array.from(serverInstance.servers).find(([k, v]) => k === key);
+                const buttonKey = buttonId[1];
+                const target = buttonKey === 'user' ?
+                    Array.from(guildStorage.servers).find(([k, v]) => v.discord.owner.id === userId) :
+                    Array.from(guildStorage.servers).find(([k, v]) => k === buttonKey);
 
                 if (target) {
                     stopRefresherEntire();
-                    const key = target[0];
-                    const instance = serverInstance.servers.get(key)!;
+                    const serverKey = target[0];
+                    const server = guildStorage.servers.get(serverKey)!;
                     const [statusMessage, rconMessage] = await Promise.all([
-                        listChannel.messages.fetch(instance.discord.statusEmbedMessageId),
-                        rconChannel.messages.fetch(instance.discord.rconEmbedMessageId)
+                        listChannel.messages.fetch(server.discord.statusEmbedMessageId),
+                        rconChannel.messages.fetch(server.discord.rconEmbedMessageId)
                     ]);
 
                     await Promise.all([
@@ -134,8 +133,8 @@ export async function handleInteractions(interaction: Interaction) {
                         ephemeral: true
                     });
 
-                    if (fs.existsSync(instance.presetPath)) fs.unlinkSync(instance.presetPath);
-                    serverInstance.servers.delete(key);
+                    if (fs.existsSync(server.presetPath)) fs.unlinkSync(server.presetPath);
+                    guildStorage.servers.delete(serverKey);
 
                     saveStorage();
                     startRefresherEntire();
@@ -220,11 +219,11 @@ export async function handleInteractions(interaction: Interaction) {
                     break;
                 }
 
-                const key = buttonId[1];
-                const instance = serverInstance.servers.get(key);
+                const serverKey = buttonId[1];
+                const server = guildStorage.servers.get(serverKey);
 
-                if (instance) {
-                    const modal = createRconRegisterModal(key);
+                if (server) {
+                    const modal = createRconRegisterModal(serverKey);
                     await interaction.showModal(modal);
                 }
 
@@ -244,16 +243,16 @@ export async function handleInteractions(interaction: Interaction) {
                     break;
                 }
 
-                const key = buttonId[1];
-                const instance = serverInstance.servers.get(key);
+                const serverKey = buttonId[1];
+                const curServer = guildStorage.servers.get(serverKey);
 
-                if (instance) {
-                    const newInstance: BIServer = { 
-                        ...instance,
+                if (curServer) {
+                    const newServer: BIServer = { 
+                        ...curServer,
                         rcon: null
                     }
 
-                    serverInstance.servers.set(key, newInstance);
+                    guildStorage.servers.set(serverKey, newServer);
                     saveStorage();
 
                     // await forcedEmbedRefresh(newInstance.discord.rconEmbedMessageId);
@@ -311,8 +310,8 @@ export async function handleInteractions(interaction: Interaction) {
 
                 await ephemeralReplyMessage.edit({ content: lang.interaction.modalSubmit.serverRegister.connectingServer });
 
-                const instanceKey = `${validatedAddress[0]}:${validatedAddress[1]}`;
-                const isAlreadyExist = serverInstance.servers.has(instanceKey);
+                const newServerKey = `${validatedAddress[0]}:${validatedAddress[1]}`;
+                const isAlreadyExist = guildStorage.servers.has(newServerKey);
                 // const isUserAlreadyRegistered = Array.from(serverInstance.servers).find(([k, v]) => v.discord.owner.id === user.id);
 
                 if (isAlreadyExist) {
@@ -329,7 +328,7 @@ export async function handleInteractions(interaction: Interaction) {
 
                 let statusMessage, rconMessage;
                 let statusEmbed, rconEmbed;
-                let serverQueries: ServerQueries;
+                let serverQueries: CommonServerQueries;
                 let presetPath: string;
 
                 const instanceUser = {
@@ -377,7 +376,7 @@ export async function handleInteractions(interaction: Interaction) {
                         const { info, tags, rules, preset } = serverQueries.online;
                         presetPath = savePresetHtml(statusMessage.id, preset);
 
-                        const instance: BIServer = {
+                        const newServer: BIServer = {
                             type: serverQueries.game,
                             nonce: crypto.randomBytes(4).toString('hex'),
                             priority: isMemberAdmin,
@@ -406,10 +405,10 @@ export async function handleInteractions(interaction: Interaction) {
                             }
                         };
 
-                        statusEmbed = getServerStatusEmbed(statusMessage.id, serverQueries, instance, inputMemo);
-                        rconEmbed = getServerRconEmbed(instanceKey, instance);
+                        statusEmbed = getServerStatusEmbed(statusMessage.id, serverQueries, newServer, inputMemo);
+                        rconEmbed = getServerRconEmbed(newServerKey, newServer);
 
-                        serverInstance.servers.set(instanceKey, instance);
+                        guildStorage.servers.set(newServerKey, newServer);
                         saveStorage();
 
                         await statusMessage.edit(statusEmbed as any);
@@ -433,7 +432,7 @@ export async function handleInteractions(interaction: Interaction) {
             }
 
             case serverModify: {
-                const origInstanceKey = modalId[1];
+                const curServerKey = modalId[1];
                 const ephemeralReplyMessage = await interaction.reply({
                     content: lang.interaction.modalSubmit.serverModify.checkingValidation,
                     ephemeral: true
@@ -453,34 +452,34 @@ export async function handleInteractions(interaction: Interaction) {
                     break;
                 }
 
-                const newInstanceKey = inputAddress;
-                const origInstance = serverInstance.servers.get(origInstanceKey);
+                const newServerKey = inputAddress;
+                const curServer = guildStorage.servers.get(curServerKey);
 
-                if (!origInstance) {
+                if (!curServer) {
                     await ephemeralReplyMessage.edit({ content: lang.interaction.modalSubmit.serverModify.noServer });
                     break;
                 }
 
-                const newInstance: BIServer = {
-                    ...origInstance,
+                const newServer: BIServer = {
+                    ...curServer,
                     priority: getBoolean(inputPriority),
                     connect: { host: validatedAddress[0], port: validatedAddress[1] },
                     information: {
-                        ...origInstance.information,
+                        ...curServer.information,
                         memo: inputMemo
                     }
                 }
 
-                if (origInstanceKey !== newInstanceKey) {
-                    serverInstance.servers.delete(origInstanceKey);
+                if (curServerKey !== newServerKey) {
+                    guildStorage.servers.delete(curServerKey);
                 }
 
-                serverInstance.servers.set(newInstanceKey, newInstance);
+                guildStorage.servers.set(newServerKey, newServer);
                 saveStorage();
 
                 await Promise.all([ 
-                    statusEmbedRefresh(guild.id, newInstanceKey), 
-                    rconEmbedRefresh(guild.id, newInstanceKey) 
+                    statusEmbedRefresh(guild.id, newServerKey), 
+                    rconEmbedRefresh(guild.id, newServerKey) 
                 ]);
                 await ephemeralReplyMessage.edit({ content: lang.interaction.modalSubmit.serverModify.success });
                 break;
@@ -492,7 +491,7 @@ export async function handleInteractions(interaction: Interaction) {
                     ephemeral: true
                 });
                 
-                const instanceId = modalId[1];
+                const serverId = modalId[1];
                 const { rconPort, rconPassword } = Interactions.modalComponents;
                 const inputRconPort = interaction.fields.getTextInputValue(rconPort);
                 const inputRconPassword = interaction.fields.getTextInputValue(rconPassword);
@@ -509,25 +508,25 @@ export async function handleInteractions(interaction: Interaction) {
                 }
 
                 const port = validatedAddress[1];
-                const instance = serverInstance.servers.get(instanceId);
+                const curServer = guildStorage.servers.get(serverId);
                 
-                if (!instance) {
+                if (!curServer) {
                     await ephemeralReplyMessage.edit({ content: lang.interaction.modalSubmit.rconRegister.noServer });
                     break;
                 }
 
-                const newInstance: BIServer = { 
-                    ...instance,
+                const newServer: BIServer = { 
+                    ...curServer,
                     rcon: {
                         port: port,
                         password: inputRconPassword
                     }
                 }
 
-                serverInstance.servers.set(instanceId, newInstance);
+                guildStorage.servers.set(serverId, newServer);
                 saveStorage();
 
-                await rconEmbedRefresh(guild.id, instanceId);
+                await rconEmbedRefresh(guild.id, serverId);
                 await ephemeralReplyMessage.edit({ content: lang.interaction.modalSubmit.rconRegister.success });
                 break;
             }
