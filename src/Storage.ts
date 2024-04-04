@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import fs from 'fs';
 import dotenv from "dotenv";
-import { AvailableGame, CommonServerQueries } from 'Types';
+import { AvailableGame, CommonServerQueries, SERVER_STATUS_COLOR } from 'Types';
 import { advStringify } from 'Lib/Utils';
 import path from 'path';
 dotenv.config();
@@ -47,7 +47,7 @@ export interface BIServer {
         password: string;
     } | null,
     connection: {
-        status: boolean;
+        status: keyof typeof SERVER_STATUS_COLOR;
         count: number;
     }
 }

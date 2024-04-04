@@ -159,7 +159,7 @@ export async function serverRefresh(target?: { guildId: string, serverId: string
                     lastQueries: queries,
                 },
                 connection: {
-                    status: true,
+                    status: 'connected',
                     count: 4
                 }
             }
@@ -168,14 +168,6 @@ export async function serverRefresh(target?: { guildId: string, serverId: string
         }
 
         else {
-            newServer = {
-                ...newServer,
-                information: {
-                    ...newServer.information,
-                    lastQueries: queries,
-                }
-            }
-
             logNormal(`[Discord] serverRefresh: failed: Cannot connect server: ${trackLog}`);
 
             if (!priority && connection.count === 0) {
@@ -214,11 +206,25 @@ export async function serverRefresh(target?: { guildId: string, serverId: string
                 return;
             }
 
+            if (connection.count <= 0) {
+                newServer = {
+                    ...newServer,
+                    connection: {
+                        ...newServer.connection,
+                        status: 'disconnected',
+                    },
+                    information: {
+                        ...newServer.information,
+                        lastQueries: queries,
+                    }
+                }
+            }
+
             else if (connection.count > 0) {
                 newServer = {
                     ...newServer,
                     connection: {
-                        status: false,
+                        status: 'losing',
                         count: newServer.connection.count -= 1
                     }
                 }
@@ -229,7 +235,7 @@ export async function serverRefresh(target?: { guildId: string, serverId: string
         saveStorage();
 
         let flagRefresh = false;
-        const curQueries = currentServer.information.lastQueries.online;
+        const curQueries = information.lastQueries.online;
         const newQueries = queries.online;
 
         if (!curQueries) {

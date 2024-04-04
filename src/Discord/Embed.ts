@@ -109,23 +109,12 @@ export function getPlayersEmbed(serverId: string, instanceId: string) {
     return { content: '', embeds: [embed], ephemeral: true };
 }
 
-export function getServerRconEmbed(key: string, instance: BIServer) {
+export function getServerRconEmbed(key: string, server: BIServer) {
     const time = DateTime.now().toMillis();
-    const { type, priority, connect, discord, information, rcon, connection } = instance;
+    const { type, priority, connect, discord, information, rcon, connection } = server;
     const { adminRconRegister, adminRconDelete, serverModify, serverDelete } = Interactions.button;
-    const status = connection.status ? 'connected' : 'disconnected';
     const game = Games[type];
     const isRconAvailable = rcon ? true : !(type === 'armaresistance');
-    // const isRconEnabled = rcon ? true : false;
-    // const owned = getRconOwnedString(rconSession);
-
-    /*
-    const rconSessionButton = new ButtonBuilder()
-        .setCustomId(`${adminStartRcon}_${key}`)
-        .setLabel('RCon 세션 시작/중단')
-        .setStyle(ButtonStyle.Primary)
-        .setDisabled(!isRconEnabled);
-    */
 
     const rconActiveButton = new ButtonBuilder()
         .setCustomId(rcon ? `${adminRconDelete}_${key}` : `${adminRconRegister}_${key}`)
@@ -156,7 +145,7 @@ export function getServerRconEmbed(key: string, instance: BIServer) {
         content: '',
         embeds: [
             new EmbedBuilder()
-                .setColor(SERVER_STATUS_COLOR[status])
+                .setColor(SERVER_STATUS_COLOR[connection.status])
                 .setTitle(information.hostname)
                 .setDescription(
                     `${game.name}` +
@@ -180,8 +169,8 @@ export function getServerRconEmbed(key: string, instance: BIServer) {
     }
 }
 
-export function getServerStatusEmbed(messageId: string, queries: CommonServerQueries, instance: BIServer, memo?: string) {
-    const owner = instance.discord.owner;
+export function getServerStatusEmbed(messageId: string, queries: CommonServerQueries, server: BIServer, memo?: string) {
+    const { discord, connection } = server;
     // const ping = judgePing(queries.online?.info.ping);
     const time = DateTime.now().toMillis();
     const key = `${queries.connect.host}:${queries.connect.port}`;
@@ -215,13 +204,13 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
                     .map(([k, v]) => `[${k}](https://store.steampowered.com/app/${v.steamid})`);
 
                 embed = new EmbedBuilder()
-                    .setColor(SERVER_STATUS_COLOR['connected'])
+                    .setColor(SERVER_STATUS_COLOR[connection.status])
                     .setTitle(info.name)
                     // .setURL(`https://files.hirua.me/presets/${messageId}.html`)
                     .setAuthor({
-                        name: owner.displayName,
-                        url: owner.url,
-                        iconURL: owner.avatarUrl
+                        name: discord.owner.displayName,
+                        url: discord.owner.url,
+                        iconURL: discord.owner.avatarUrl
                     })
                     .setDescription(
                         presetLabel + "```\n" + info.connect + "\n```"
@@ -247,15 +236,15 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
             case 'armareforger': {
                 const assertedQueries = queries.online as ArmaReforgerServerQueries;
                 const { info } = assertedQueries;
-                const { host, port } = instance.connect;
+                const { host, port } = server.connect;
                 embed = new EmbedBuilder()
-                    .setColor(SERVER_STATUS_COLOR['connected'])
+                    .setColor(SERVER_STATUS_COLOR[connection.status])
                     .setTitle(info.name)
                     // .setURL(`https://files.hirua.me/presets/${messageId}.html`)
                     .setAuthor({
-                        name: owner.displayName,
-                        url: owner.url,
-                        iconURL: owner.avatarUrl
+                        name: discord.owner.displayName,
+                        url: discord.owner.url,
+                        iconURL: discord.owner.avatarUrl
                     })
                     .setDescription(
                         "Arma Reforger" +
@@ -278,13 +267,13 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
                 const assertedQueries = queries.online as ArmaResistanceServerQueries;
                 const { info } = assertedQueries;
                 embed = new EmbedBuilder()
-                    .setColor(SERVER_STATUS_COLOR['connected'])
+                    .setColor(SERVER_STATUS_COLOR[connection.status])
                     .setTitle(queries.online.info.name)
                     .setURL('https://discord.gg/9HzjsbjDD9')
                     .setAuthor({
-                        name: owner.displayName,
-                        url: owner.url,
-                        iconURL: owner.avatarUrl
+                        name: discord.owner.displayName,
+                        url: discord.owner.url,
+                        iconURL: discord.owner.avatarUrl
                     })
                     .setDescription("Operation FlashPoint: Resistance" + "```\n" + info.connect + "\n```")
                     // .setThumbnail(thumbnail)
@@ -307,15 +296,14 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
     }
 
     else {
-        const status = instance.connection.count > 0 ? 'losing' : 'disconnected';
         embed = new EmbedBuilder()
-            .setColor(SERVER_STATUS_COLOR[status])
+            .setColor(SERVER_STATUS_COLOR[connection.status])
             .setTitle(lang.embed.serverStatus.offline.title)
             // .setURL(`https://files.hirua.me/presets/${message.id}.html`)
             .setAuthor({
-                name: owner.displayName,
-                url: owner.url,
-                iconURL: owner.avatarUrl
+                name: discord.owner.displayName,
+                url: discord.owner.url,
+                iconURL: discord.owner.avatarUrl
             })
             .setDescription("```\n" + `${queries.connect.host}:${queries.connect.port}` + "\n```")
             // .setThumbnail(thumbnail)
