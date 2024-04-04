@@ -400,7 +400,7 @@ export async function handleInteractions(interaction: Interaction) {
                             },
                             rcon: null,
                             connection: {
-                                status: true,
+                                status: 'connected',
                                 count: configs.serverAutoDeleteCount
                             }
                         };
