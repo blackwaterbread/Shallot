@@ -111,7 +111,7 @@ export async function serverRefresh(target?: { guildId: string, serverId: string
         }
 
         if (currentServer.maintenance) {
-            logError(`[App] serverRefresh: passed: in maintenance: ${serverId}`);
+            logNormal(`[App] serverRefresh: passed: in maintenance: ${serverId}`);
             return;
         }
 
@@ -409,7 +409,7 @@ export async function statusEmbedRefresh(guildId: string, serverId: string) {
     }
 
     if (server.maintenance) {
-        logError(`[App] statusEmbedRefresh: passed: in maintenance: ${serverId}`);
+        logNormal(`[App] statusEmbedRefresh: passed: in maintenance: ${serverId}`);
         return;
     }
 
