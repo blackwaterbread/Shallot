@@ -109,6 +109,29 @@ export function getPlayersEmbed(serverId: string, instanceId: string) {
     return { content: '', embeds: [embed], ephemeral: true };
 }
 
+export function getMaintenanceEmbed(key: string, server: BIServer) {
+    const time = DateTime.now().toMillis();
+    const { type } = server;
+    const game = Games[type];
+
+    return {
+        content: '',
+        embeds: [
+            new EmbedBuilder()
+                .setColor(SERVER_STATUS_COLOR['discord'])
+                .setTitle(lang.embed.maintenance.title)
+                .setDescription(
+                    `${game.name}` +
+                    "```\n" + `${key}` + "\n```\n" +
+                    lang.embed.maintenance.description
+                )
+                .setImage(configs.static ? `${configs.static.url}/images/maintenance.png` : null)
+                .setTimestamp(time)
+        ],
+        components: []
+    }
+}
+
 export function getServerRconEmbed(key: string, server: BIServer) {
     const time = DateTime.now().toMillis();
     const { type, priority, connect, discord, information, rcon, connection } = server;
@@ -165,7 +188,7 @@ export function getServerRconEmbed(key: string, server: BIServer) {
                 .setTimestamp(time)
                 .setFooter({ text: 'Updated: ' })
         ],
-        components: connection.status ? [onlineRow] : [offlineRow]
+        components: connection.status ? [onlineRow] : [offlineRow] as any
     }
 }
 
@@ -316,5 +339,5 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
             // .setFooter({ text: 'Offline' });
     }
 
-    return { content: '', embeds: [embed], components: [row as any] };
+    return { content: '', embeds: [embed as EmbedBuilder], components: [row as any] };
 }
