@@ -28,6 +28,7 @@ export interface BIServer {
     type: AvailableGame;
     nonce: string;
     priority: boolean;
+    maintenance: boolean;
     connect: BIConnection;
     presetPath: string;
     discord: {

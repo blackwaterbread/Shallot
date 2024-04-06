@@ -380,6 +380,7 @@ export async function handleInteractions(interaction: Interaction) {
                             type: serverQueries.game,
                             nonce: crypto.randomBytes(4).toString('hex'),
                             priority: isMemberAdmin,
+                            maintenance: false,
                             connect: { host: validatedAddress[0], port: validatedAddress[1] },
                             presetPath: presetPath,
                             discord: {
@@ -411,8 +412,8 @@ export async function handleInteractions(interaction: Interaction) {
                         guildStorage.servers.set(newServerKey, newServer);
                         saveStorage();
 
-                        await statusMessage.edit(statusEmbed as any);
-                        await rconMessage.edit(rconEmbed as any);
+                        await statusMessage.edit(statusEmbed);
+                        await rconMessage.edit(rconEmbed);
                         await ephemeralReplyMessage.edit({ content: lang.interaction.modalSubmit.serverRegister.success });
 
                         logNormal(`[App|Discord] Server registered: [${serverQueries.game},${info.connect}]${userTrack(user)}`);

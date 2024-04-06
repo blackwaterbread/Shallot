@@ -70,6 +70,15 @@ const KR_STRINGS: ShallotStrings = {
             },
             blankDataReceived: ':grey_question: 연결은 정상적으로 되었으나 빈 데이터가 수신되었습니다.',
             uncatchedError: ':x: 뭔가 잘못되었습니다.'
+        },
+        maintenance: {
+            description: '서버 점검 상태 설정',
+            options: {
+                descriptionServerID: '서버 ID',
+                descriptionActivation: '설정 여부'
+            },
+            noServer: ':x: 잘못된 서버 ID입니다.',
+            success: ':white_check_mark: 서버 점검 상태 설정을 완료했습니다.'
         }
     },
     embed: {
@@ -101,6 +110,10 @@ const KR_STRINGS: ShallotStrings = {
         players: {
             title: ':playground_slide: 플레이어 현황',
             footer: '플레이어 확인 버튼을 누른 시점의 목록입니다.'
+        },
+        maintenance: {
+            title: ':man_mechanic: 점검 안내',
+            description: '불편을 드려 죄송합니다. 이 서버는 현재 점검 중에 있습니다.'
         },
         rcon: {
             field: {

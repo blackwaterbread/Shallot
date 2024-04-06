@@ -110,6 +110,11 @@ export async function serverRefresh(target?: { guildId: string, serverId: string
             return;
         }
 
+        if (currentServer.maintenance) {
+            logError(`[App] serverRefresh: passed: in maintenance: ${serverId}`);
+            return;
+        }
+
         const trackLog = `${guildTrack(guildId)}${instanceTrack(currentServer)}`;
         const { type, connect, priority, discord, information, connection } = currentServer;
 
@@ -403,6 +408,11 @@ export async function statusEmbedRefresh(guildId: string, serverId: string) {
         return;
     }
 
+    if (server.maintenance) {
+        logError(`[App] statusEmbedRefresh: passed: in maintenance: ${serverId}`);
+        return;
+    }
+
     const trackLog = `${channelTrack(statusChannel)}${instanceTrack(server)}`;
     const { discord, information } = server;
     const { memo, lastQueries } = information;
@@ -420,7 +430,7 @@ export async function statusEmbedRefresh(guildId: string, serverId: string) {
     }
 
     statusEmbed = getServerStatusEmbed(statusMessage.id, lastQueries, server, memo);
-    await statusMessage.edit(statusEmbed as any);
+    await statusMessage.edit(statusEmbed);
 
     logNormal(`[Discord] statusEmbedRefresh Complete: ${trackLog}`);
 }

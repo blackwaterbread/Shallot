@@ -70,6 +70,15 @@ const EN_STRINGS: ShallotStrings = {
             },
             blankDataReceived: ':grey_question: The connection was successful, but empty data was received.',
             uncatchedError: ':x: Something is wrong.'
+        },
+        maintenance: {
+            description: 'Setting the Server Maintenance Notice',
+            options: {
+                descriptionServerID: 'Server ID',
+                descriptionActivation: 'Set'
+            },
+            noServer: ':x: Invalid server ID.',
+            success: ':white_check_mark: Server maintenance notice setting has been completed.'
         }
     },
     embed: {
@@ -101,6 +110,10 @@ const EN_STRINGS: ShallotStrings = {
         players: {
             title: ':playground_slide: Player Status',
             footer: 'List of Players when button was pressed.'
+        },
+        maintenance: {
+            title: ':man_mechanic: Maintenance Notice',
+            description: 'We apologize for the inconvenience, this server is currently under maintenance.'
         },
         rcon: {
             field: {

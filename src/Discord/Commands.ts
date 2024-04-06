@@ -10,9 +10,9 @@ import {
     TextChannel,
     Guild
 } from "discord.js";
-import { AppStorage, getStorage, saveStorage } from "Storage";
+import { AppStorage, BIServer, getStorage, saveStorage } from "Storage";
 import { logError, logNormal, guildTrack, userTrack } from "Lib/Log";
-import { getServerDeleteInteractionEmbed, getNoticeEmbed, getServerRegisterInteractionEmbed } from "./Embed";
+import { getServerDeleteInteractionEmbed, getNoticeEmbed, getServerRegisterInteractionEmbed, getMaintenanceEmbed, getServerStatusEmbed } from "./Embed";
 import { uid2guid } from "Lib/Utils";
 import { startRconSession } from "Server/Rcon";
 import { getStringTable } from "Language";
@@ -423,6 +423,91 @@ const commands: Array<SlashCommand> = [
                     ephemeral: true
                 });
             }
+        }
+    },
+    {
+        type: ApplicationCommandType.ChatInput,
+        name: 'set_maintenance',
+        description: lang.commands.maintenance.description,
+        options: [
+            {
+                name: 'server_id',
+                description: lang.commands.maintenance.options.descriptionServerID, // id or 'all'
+                type: ApplicationCommandOptionType.String,
+                required: true
+            },
+            {
+                name: 'set',
+                description: lang.commands.maintenance.options.descriptionActivation,
+                type: ApplicationCommandOptionType.Boolean,
+                required: true
+            }
+        ],
+        defaultMemberPermissions: PermissionFlagsBits.Administrator,
+        execute: async interaction => {
+            const storage = getStorage();
+
+            const guild = await assertGuild(interaction);
+            if (!guild) return;
+
+            const guildStorage = await assertGuildStorage(interaction, storage, guild);
+            if (!guildStorage) return;
+
+            let target: [string, BIServer][];
+            const serverId = (interaction.options.get('server_id')?.value || '');
+            const set = (interaction.options.get('set')?.value ?? false);
+
+            if (serverId === 'all') {
+                target = Array.from(guildStorage.servers);
+            }
+
+            else {
+                const server = guildStorage.servers.get(serverId as string);
+                if (server) {
+                    target = [[serverId as string, server]];
+                }
+
+                else {
+                    await interaction.followUp({
+                        content: lang.commands.maintenance.noServer,
+                        ephemeral: true
+                    });
+                    return;
+                }
+            }
+
+            const { status } = guildStorage.channels;
+            const tasks = target.map(async ([key, server]) => {
+                try {
+                    const listChannel = await guild.channels.cache.get(status.channelId)?.fetch() as TextChannel;
+
+                    if (!listChannel) {
+                        return;
+                    }
+
+                    const statusMessage = await listChannel.messages.fetch(server.discord.statusEmbedMessageId);
+
+                    guildStorage.servers.set(key, {
+                        ...server,
+                        maintenance: set as boolean
+                    });
+
+                    if (set) return statusMessage.edit(getMaintenanceEmbed(key, server));
+                    else return statusMessage.edit(getServerStatusEmbed(statusMessage.id, server.information.lastQueries, server));
+                }
+
+                catch (e) {
+                    logError(`[Discord] set_maintenance: ${e}`);
+                }
+            });
+
+            await Promise.all(tasks);
+            saveStorage();
+
+            await interaction.followUp({
+                content: lang.commands.maintenance.success,
+                ephemeral: true
+            });
         }
     },
     /*

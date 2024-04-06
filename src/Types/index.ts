@@ -111,7 +111,16 @@ export interface ShallotStrings {
             },
             blankDataReceived: string;
             uncatchedError: string;
-        }
+        },
+        maintenance: {
+            description: string;
+            options: {
+                descriptionServerID: string;
+                descriptionActivation: string;
+            },
+            noServer: string;
+            success: string;
+        },
     },
     embed: {
         notice: {
@@ -139,6 +148,10 @@ export interface ShallotStrings {
         players: {
             title: string;
             footer: string;
+        },
+        maintenance: {
+            title: string;
+            description: string;
         },
         rcon: {
             field: {
