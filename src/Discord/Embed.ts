@@ -195,7 +195,7 @@ export function getServerRconEmbed(key: string, server: BIServer) {
 export function getServerStatusEmbed(messageId: string, queries: CommonServerQueries, server: BIServer, memo?: string) {
     const { discord, connection } = server;
     // const ping = judgePing(queries.online?.info.ping);
-    const time = DateTime.now().toMillis();
+    const time = DateTime.now().toLocaleString(DateTime.TIME_WITH_SECONDS);
     const key = `${queries.connect.host}:${queries.connect.port}`;
     const presetLink = `${configs.static?.url}/presets/${messageId}.html`;
     const presetLabel = configs.static ? `[**[${lang.embed.serverStatus.arma3.presetDownload}]**](${presetLink})` : '';
@@ -236,7 +236,7 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
                         iconURL: discord.owner.avatarUrl
                     })
                     .setDescription(
-                        presetLabel + "```\n" + info.connect + "\n```"
+                        presetLabel + "```" + info.connect + "```"
                     )
                     // .setThumbnail(thumbnail)
                     .addFields(
@@ -251,11 +251,12 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
                         { name: lang.embed.serverStatus.arma3.field.labelMemo, value: `> ${memo ? memo : lang.embed.serverStatus.labelBlankMemo}`, inline: false },
                     )
                     .setImage(banner)
-                    .setTimestamp(time)
-                    .setFooter({ text: `Online - ${info.ping}ms` });
+                    // .setTimestamp(time)
+                    .setFooter({ text: `Online - ${info.ping}ms, ${time}` });
 
                 break;
             }
+
             case 'armareforger': {
                 const assertedQueries = queries.online as ArmaReforgerServerQueries;
                 const { info } = assertedQueries;
@@ -270,8 +271,7 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
                         iconURL: discord.owner.avatarUrl
                     })
                     .setDescription(
-                        "Arma Reforger" +
-                        "```\n" + `${host}:${port}` + "\n```"
+                        "```" + `${host}:${port}` + "```"
                     )
                     // .setThumbnail(thumbnail)
                     .addFields(
@@ -281,11 +281,12 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
                         { name: lang.embed.serverStatus.armareforger.field.labelMemo, value: `> ${memo ? memo : lang.embed.serverStatus.labelBlankMemo}`, inline: false },
                     )
                     .setImage(banner)
-                    .setTimestamp(time)
-                    .setFooter({ text: `Online - ${info.ping}ms` });
+                    // .setTimestamp(time)
+                    .setFooter({ text: `Online - ${info.ping}ms, ${time}` });
 
                 break;
             }
+
             case 'armaresistance': {
                 const assertedQueries = queries.online as ArmaResistanceServerQueries;
                 const { info } = assertedQueries;
@@ -298,7 +299,7 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
                         url: discord.owner.url,
                         iconURL: discord.owner.avatarUrl
                     })
-                    .setDescription("Operation FlashPoint: Resistance" + "```\n" + info.connect + "\n```")
+                    .setDescription("Operation FlashPoint: Resistance" + "```" + info.connect + "```")
                     // .setThumbnail(thumbnail)
                     .addFields(
                         { name: lang.embed.serverStatus.armaresistance.field.labelMods, value: _.isEmpty(info.raw.mod) ? '--' : info.raw.mod, inline: false },
@@ -310,8 +311,8 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
                         { name: lang.embed.serverStatus.armaresistance.field.labelMemo, value: `> ${memo ? memo : lang.embed.serverStatus.labelBlankMemo}`, inline: false },
                     )
                     .setImage(banner)
-                    .setTimestamp(time)
-                    .setFooter({ text: `Online - ${info.ping}ms` });
+                    // .setTimestamp(time)
+                    .setFooter({ text: `Online - ${info.ping}ms, ${time}` });
 
                 break;
             }
@@ -328,15 +329,14 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
                 url: discord.owner.url,
                 iconURL: discord.owner.avatarUrl
             })
-            .setDescription("```\n" + `${queries.connect.host}:${queries.connect.port}` + "\n```")
+            .setDescription("```" + `${queries.connect.host}:${queries.connect.port}` + "```")
             // .setThumbnail(thumbnail)
             .addFields(
-                { name: lang.embed.serverStatus.offline.field.labelStatus, value: lang.none, inline: false },
                 { name: lang.embed.serverStatus.offline.field.labelMemo, value: `> ${memo ? memo : lang.embed.serverStatus.labelBlankMemo}`, inline: false },
             )
             .setImage(banner)
-            .setTimestamp(time)
-            // .setFooter({ text: 'Offline' });
+            //.setTimestamp(time)
+            .setFooter({ text: `Offline, ${time}` });
     }
 
     return { content: '', embeds: [embed as EmbedBuilder], components: [row as any] };
