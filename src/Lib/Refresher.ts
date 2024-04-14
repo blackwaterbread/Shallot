@@ -125,8 +125,9 @@ export async function serverRefresh(target?: { guildId: string, serverId: string
             case 'arma3': {
                 queries = await queryArma3(connect);
                 if (queries.online?.tags) {
-                    if (information.addonsHash !== queries.online.tags.loadedContentHash) {
-                        savePresetHtml(discord.statusEmbedMessageId, queries.online.preset);
+                    const newAddonsHash = queries.online.tags.loadedContentHash;
+                    if (information.addonsHash !== newAddonsHash) {
+                        savePresetHtml(`${discord.statusEmbedMessageId}-${newAddonsHash}`, queries.online.preset);
                         newServer.information.addonsHash = queries.online.tags.loadedContentHash;
                     }
                 }

@@ -197,7 +197,7 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
     // const ping = judgePing(queries.online?.info.ping);
     const time = DateTime.now().toLocaleString(DateTime.TIME_WITH_SECONDS);
     const key = `${queries.connect.host}:${queries.connect.port}`;
-    const presetLink = `${configs.static?.url}/presets/${messageId}.html`;
+    const presetLink = `${configs.static?.url}/presets/${messageId}-${server.information.addonsHash}.html`;
     const presetLabel = configs.static ? `[**[${lang.embed.serverStatus.arma3.presetDownload}]**](${presetLink})` : '';
     const { serverCheckPlayers } = Interactions.button;
 
