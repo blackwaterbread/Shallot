@@ -374,7 +374,7 @@ export async function handleInteractions(interaction: Interaction) {
                     else {
                         /* registering new server */
                         const { info, tags, rules, preset } = serverQueries.online;
-                        presetPath = savePresetHtml(statusMessage.id, preset);
+                        presetPath = savePresetHtml(`${statusMessage.id}-${tags?.loadedContentHash}`, preset);
 
                         const newServer: BIServer = {
                             type: serverQueries.game,
