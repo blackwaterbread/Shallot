@@ -218,6 +218,7 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
         ) : null;
 
     if (queries.online) {
+        const { host, port } = server.connect;
         switch (queries.game) {
             case 'arma3': {
                 const assertedQueries = queries.online as Arma3ServerQueries;
@@ -236,7 +237,7 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
                         iconURL: discord.owner.avatarUrl
                     })
                     .setDescription(
-                        presetLabel + "```" + info.connect + "```"
+                        presetLabel + "```" + `${host}:${port}` + "```"
                     )
                     // .setThumbnail(thumbnail)
                     .addFields(
@@ -260,7 +261,6 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
             case 'armareforger': {
                 const assertedQueries = queries.online as ArmaReforgerServerQueries;
                 const { info } = assertedQueries;
-                const { host, port } = server.connect;
                 embed = new EmbedBuilder()
                     .setColor(SERVER_STATUS_COLOR[connection.status])
                     .setTitle(info.name)
@@ -299,7 +299,7 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
                         url: discord.owner.url,
                         iconURL: discord.owner.avatarUrl
                     })
-                    .setDescription("Operation FlashPoint: Resistance" + "```" + info.connect + "```")
+                    .setDescription("Operation FlashPoint: Resistance" + "```" + `${host}:${port}` + "```")
                     // .setThumbnail(thumbnail)
                     .addFields(
                         { name: lang.embed.serverStatus.armaresistance.field.labelMods, value: _.isEmpty(info.raw.mod) ? '--' : info.raw.mod, inline: false },
