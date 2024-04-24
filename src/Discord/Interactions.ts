@@ -373,9 +373,17 @@ export async function handleInteractions(interaction: Interaction) {
 
                     else {
                         /* registering new server */
+                        let presets: string[] = [];
                         const { info, tags, rules, preset } = serverQueries.query;
-                        const presetPurchasedPath = savePresetHtml(`${statusMessage.id}-${tags?.loadedContentHash}-p`, preset!.purchased);
-                        const presetCompatibilityPath = savePresetHtml(`${statusMessage.id}-${tags?.loadedContentHash}-c`, preset!.compatibility);
+
+                        if (preset) {
+                            const presetPurchasedPath = savePresetHtml(`${statusMessage.id}-${tags?.loadedContentHash}-p`, preset!.purchased);
+                            const presetCompatibilityPath = savePresetHtml(`${statusMessage.id}-${tags?.loadedContentHash}-c`, preset!.compatibility);
+                            presets = [
+                                presetPurchasedPath,
+                                presetCompatibilityPath
+                            ];
+                        }
 
                         const newServer: BIServer = {
                             type: serverQueries.game,
@@ -383,10 +391,7 @@ export async function handleInteractions(interaction: Interaction) {
                             priority: isMemberAdmin,
                             maintenance: false,
                             connect: { host: validatedAddress[0], port: validatedAddress[1] },
-                            presetPath: [
-                                presetPurchasedPath,
-                                presetCompatibilityPath
-                            ],
+                            presetPath: presets,
                             discord: {
                                 statusEmbedMessageId: statusMessage.id,
                                 rconEmbedMessageId: rconMessage.id,
