@@ -124,11 +124,12 @@ export async function serverRefresh(target?: { guildId: string, serverId: string
         switch (type) {
             case 'arma3': {
                 queries = await queryArma3(connect);
-                if (queries.online?.tags) {
-                    const newAddonsHash = queries.online.tags.loadedContentHash;
+                if (queries.query?.tags) {
+                    const newAddonsHash = queries.query.tags.loadedContentHash;
                     if (information.addonsHash !== newAddonsHash) {
-                        savePresetHtml(`${discord.statusEmbedMessageId}-${newAddonsHash}`, queries.online.preset);
-                        newServer.information.addonsHash = queries.online.tags.loadedContentHash;
+                        savePresetHtml(`${discord.statusEmbedMessageId}-${newAddonsHash}-p`, queries.query.preset.purchased);
+                        savePresetHtml(`${discord.statusEmbedMessageId}-${newAddonsHash}-c`, queries.query.preset.compatibility);
+                        newServer.information.addonsHash = queries.query.tags.loadedContentHash;
                     }
                 }
                 break;
@@ -153,13 +154,13 @@ export async function serverRefresh(target?: { guildId: string, serverId: string
             }
         }
 
-        if (queries.online) {
+        if (queries.query) {
             newServer = {
                 ...newServer,
                 information: {
                     ...newServer.information,
-                    hostname: queries.online.info.name,
-                    players: queries.online.info.players.map((x: any) => ({
+                    hostname: queries.query.info.name,
+                    players: queries.query.info.players.map((x: any) => ({
                         name: x.name
                     })),
                     lastQueries: queries,
@@ -241,8 +242,8 @@ export async function serverRefresh(target?: { guildId: string, serverId: string
         saveStorage();
 
         let flagRefresh = false;
-        const curQueries = information.lastQueries.online;
-        const newQueries = queries.online;
+        const curQueries = information.lastQueries.query;
+        const newQueries = queries.query;
 
         if (!curQueries) {
             if (newQueries) {

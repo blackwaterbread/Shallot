@@ -50,7 +50,7 @@ export async function queryArmaReforger(connection: ConnectInfo): Promise<Server
         return {
             game: 'armareforger',
             connect: connection,
-            online: {
+            query: {
                 info: info, tags: undefined, rules: undefined, preset: undefined
             }
         }

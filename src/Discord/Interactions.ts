@@ -133,7 +133,7 @@ export async function handleInteractions(interaction: Interaction) {
                         ephemeral: true
                     });
 
-                    if (fs.existsSync(server.presetPath)) fs.unlinkSync(server.presetPath);
+                    server.presetPath.forEach(x => { if (fs.existsSync(x)) fs.unlinkSync(x) });
                     guildStorage.servers.delete(serverKey);
 
                     saveStorage();
@@ -329,7 +329,7 @@ export async function handleInteractions(interaction: Interaction) {
                 let statusMessage, rconMessage;
                 let statusEmbed, rconEmbed;
                 let serverQueries: CommonServerQueries;
-                let presetPath: string;
+                // let presetPath: string;
 
                 const instanceUser = {
                     id: user.id,
@@ -364,7 +364,7 @@ export async function handleInteractions(interaction: Interaction) {
                 }
 
                 try {
-                    if (!serverQueries.online) {
+                    if (!serverQueries.query) {
                         await statusMessage.delete();
                         await rconMessage.delete();
                         await ephemeralReplyMessage.edit({ content: lang.interaction.modalSubmit.serverRegister.failedConnectServer });
@@ -373,8 +373,9 @@ export async function handleInteractions(interaction: Interaction) {
 
                     else {
                         /* registering new server */
-                        const { info, tags, rules, preset } = serverQueries.online;
-                        presetPath = savePresetHtml(`${statusMessage.id}-${tags?.loadedContentHash}`, preset);
+                        const { info, tags, rules, preset } = serverQueries.query;
+                        const presetPurchasedPath = savePresetHtml(`${statusMessage.id}-${tags?.loadedContentHash}-p`, preset!.purchased);
+                        const presetCompatibilityPath = savePresetHtml(`${statusMessage.id}-${tags?.loadedContentHash}-c`, preset!.compatibility);
 
                         const newServer: BIServer = {
                             type: serverQueries.game,
@@ -382,7 +383,10 @@ export async function handleInteractions(interaction: Interaction) {
                             priority: isMemberAdmin,
                             maintenance: false,
                             connect: { host: validatedAddress[0], port: validatedAddress[1] },
-                            presetPath: presetPath,
+                            presetPath: [
+                                presetPurchasedPath,
+                                presetCompatibilityPath
+                            ],
                             discord: {
                                 statusEmbedMessageId: statusMessage.id,
                                 rconEmbedMessageId: rconMessage.id,

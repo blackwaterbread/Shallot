@@ -139,7 +139,8 @@ const EN_STRINGS: ShallotStrings = {
                     labelCDLC: 'CDLC',
                     labelMemo: 'Memo'
                 },
-                presetDownload: 'Get Preset HTML'
+                presetPurchasedDownload: ':floppy_disk: Get Preset (CDLC :o:)',
+                presetCompatibilityDownload: ':floppy_disk: Get Compatibility Preset (CDLC :x:)',
             },
             armareforger: {
                 field: {

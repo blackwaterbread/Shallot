@@ -194,11 +194,8 @@ export function getServerRconEmbed(key: string, server: BIServer) {
 
 export function getServerStatusEmbed(messageId: string, queries: CommonServerQueries, server: BIServer, memo?: string) {
     const { discord, connection } = server;
-    // const ping = judgePing(queries.online?.info.ping);
     const time = DateTime.now().toLocaleString(DateTime.TIME_WITH_SECONDS);
     const key = `${queries.connect.host}:${queries.connect.port}`;
-    const presetLink = `${configs.static?.url}/presets/${messageId}-${server.information.addonsHash}.html`;
-    const presetLabel = configs.static ? `[**[${lang.embed.serverStatus.arma3.presetDownload}]**](${presetLink})` : '';
     const { serverCheckPlayers } = Interactions.button;
 
     const playersButton = new ButtonBuilder()
@@ -212,19 +209,24 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
 
     let embed;
     const banner =  configs.static ? 
-        (queries.online ?
+        (queries.query ?
             `${configs.static.url}/images/games/${queries.game}_banner_online.png` :
             `${configs.static.url}/images/games/${queries.game}_banner_offline.png`
         ) : null;
 
-    if (queries.online) {
+    if (queries.query) {
         const { host, port } = server.connect;
         switch (queries.game) {
             case 'arma3': {
-                const assertedQueries = queries.online as Arma3ServerQueries;
+                // const presetLink = `${configs.static?.url}/presets/${messageId}-${server.information.addonsHash}.html`;
+                const presetLink = `${configs.static?.url}/presets/${messageId}-${server.information.addonsHash}`;
+                const presetLabel = configs.static ? 
+                    `[**[${lang.embed.serverStatus.arma3.presetPurchasedDownload}]**](${presetLink}-p.html)
+                    [**[${lang.embed.serverStatus.arma3.presetCompatibilityDownload}]**](${presetLink}-c.html)` : '';
+                const assertedQueries = queries.query as Arma3ServerQueries;
                 const { info, tags, rules } = assertedQueries;
                 const CDLCs = Object.entries(rules.mods)
-                    .filter(([k, v]) => v.isDLC === true)
+                    .filter(([k, v]) => v.isCDLC === true)
                     .map(([k, v]) => `[${k}](https://store.steampowered.com/app/${v.steamid})`);
 
                 embed = new EmbedBuilder()
@@ -259,7 +261,7 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
             }
 
             case 'armareforger': {
-                const assertedQueries = queries.online as ArmaReforgerServerQueries;
+                const assertedQueries = queries.query as ArmaReforgerServerQueries;
                 const { info } = assertedQueries;
                 embed = new EmbedBuilder()
                     .setColor(SERVER_STATUS_COLOR[connection.status])
@@ -288,11 +290,11 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
             }
 
             case 'armaresistance': {
-                const assertedQueries = queries.online as ArmaResistanceServerQueries;
+                const assertedQueries = queries.query as ArmaResistanceServerQueries;
                 const { info } = assertedQueries;
                 embed = new EmbedBuilder()
                     .setColor(SERVER_STATUS_COLOR[connection.status])
-                    .setTitle(queries.online.info.name)
+                    .setTitle(queries.query.info.name)
                     .setURL('https://discord.gg/9HzjsbjDD9')
                     .setAuthor({
                         name: discord.owner.displayName,

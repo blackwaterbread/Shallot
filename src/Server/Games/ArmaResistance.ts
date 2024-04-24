@@ -59,7 +59,7 @@ export async function queryArmaResistance(connection: ConnectInfo): Promise<Serv
         return {
             game: 'armaresistance',
             connect: connection, 
-            online: { info: info, tags: undefined, rules: undefined, preset: undefined }
+            query: { info: info, tags: undefined, rules: undefined, preset: undefined }
         };
     }
     catch (e) {
