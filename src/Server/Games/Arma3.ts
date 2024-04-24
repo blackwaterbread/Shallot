@@ -75,7 +75,7 @@ const ARMA_3_SERVER_VAC = new Map([
     [1, 'Secured']
 ]);
 
-const ARMA_3_DLCs = new Map([
+const ARMA_3_DLCs = new Map<string, number>([
     ['Kart', 0x1],
     ['Marksmen', 0x2],
     ['Heli', 0x4],
@@ -91,13 +91,49 @@ const ARMA_3_DLCs = new Map([
     ['AOW', 0x1000]
 ]);
 
-const ARMA_3_CDLCS = new Map([
-    [1042220, 'Global Mobilization - Cold War Germany'],
-    [1227700, 'S.O.G. Prairie Fire'],
-    [1294440, 'CSLA Iron Curtain'],
-    [1175380, 'Spearhead 1944'],
-    [1681170, 'Western Sahara'],
-    [2647760, 'Reaction Forces']
+const ARMA_3_CDLCS = new Map<number, { name: string, compatibility: number }>([
+    [
+        1042220, 
+        {
+            name: 'Global Mobilization - Cold War Germany',
+            compatibility: 1776428269
+        }
+    ],
+    [
+        1227700, 
+        {
+            name: 'S.O.G. Prairie Fire',
+            compatibility: 2477276806
+        }
+    ],
+    [
+        1294440, 
+        {
+            name: 'CSLA Iron Curtain',
+            compatibility: 2503886780
+        }
+    ],
+    [
+        1175380, 
+        {
+            name: 'Spearhead 1944',
+            compatibility: 2991828484
+        }
+    ],
+    [
+        1681170, 
+        {
+            name: 'Western Sahara',
+            compatibility: 2636962953
+        }
+    ],
+    [
+        2647760, 
+        {
+            name: 'Reaction Forces',
+            compatibility: 3150497912
+        }
+    ]
 ]);
 
 const RULES_ESCAPED = new Map([
@@ -307,18 +343,18 @@ export interface Arma3ServerGametag {
 }
 
 export interface Arma3ServerMod {
-    [modName: string]: {
-        hash: string,
-        steamid: number,
-        isDLC: boolean,
-        isServerside: boolean
-    }
+    hash: string,
+    steamid: number,
+    isCDLC: boolean,
+    isServerside: boolean
 }
 
 export interface Arma3ServerRules {
     protocol: number,
     difficulty: number, // todo: parse
-    mods: Arma3ServerMod,
+    mods: {
+        [name: string]: Arma3ServerMod
+    },
     signatures: Buffer[]
 }
 
@@ -339,17 +375,16 @@ export interface Arma3ServerQueries {
     };
     tags: Arma3ServerGametag;
     rules: Arma3ServerRules;
-    preset: string;
+    preset: { purchased: string, compatibility: string };
 }
 
 export type Arma3ServerPlayers = Array<{
     name: string;
 }>
 
-type Arma3HtmlAddonsList = Array<{ name?: string, url: string }>;
-
 export async function queryArma3(connection: ConnectInfo): Promise<ServerQueries<Arma3ServerQueries>> {
     const { host, port } = connection;
+
     try {
         const state: any = await GameDig.query({
             type: 'arma3',
@@ -357,8 +392,10 @@ export async function queryArma3(connection: ConnectInfo): Promise<ServerQueries
             port: port,
             requestRules: true
         });
+
         const info = toEmptySafeObject(state) as any;
         const r: { [k: keyof Arma3ServerGametag]: any } = {};
+
         state.raw.tags.forEach((x: string, i: number) => {
             if (_.isEmpty(x)) return;
             const p = ARMA_3_GAMETAG_MAP.get(x[0]);
@@ -367,17 +404,27 @@ export async function queryArma3(connection: ConnectInfo): Promise<ServerQueries
                 r[p.name] = value;
             }
         });
+
         const tags = toEmptySafeObject(r);
         const rules = parseArma3Rules(state.raw.rulesBytes);
-        const preset = format(buildArma3PresetHtml(state.name, `${host}:${port}`, rules.mods), " ".repeat(4), 200);
+        const presetPurchased = format(buildArma3PresetHtml(state.name, rules.mods, false), " ".repeat(4), 200);
+        const presetCompatibility = format(buildArma3PresetHtml(state.name, rules.mods, true), " ".repeat(4), 200);
+
         return {
             game: 'arma3',
             connect: connection,
-            online: {
-                info: info, tags: tags as Arma3ServerGametag, rules: rules, preset: preset
+            query: {
+                info: info, 
+                tags: tags as Arma3ServerGametag, 
+                rules: rules, 
+                preset: { 
+                    purchased: presetPurchased, 
+                    compatibility: presetCompatibility 
+                }
             }
         }
     }
+
     catch (e) {
         logError(`[App] Failed query Arma3 Server: ${e}: [${host}:${port}]`);
         return { 
@@ -400,6 +447,7 @@ export async function rconArma3(instance: BIServer, password: string) {
         keepAlive: false,
         timeout: false
     });
+
     return connection;
 }
 
@@ -438,7 +486,7 @@ export function parseArma3Rules(message: Buffer, startOffset: number = 0x00): Ar
     offset += 0x02;
     const diffBits = buf.readUInt16LE(offset);
     offset += 0x02;
-    const DLCs = new Map<string, any>(
+    const DLCs = new Map<string, boolean | Buffer>(
         Array.from(ARMA_3_DLCs).map(
             ([k, v]) => [k, Boolean(v & dlcsBits)]
         )
@@ -483,14 +531,14 @@ export function parseArma3Rules(message: Buffer, startOffset: number = 0x00): Ar
         }
 
         let isServerside = false;
-        const isDLC = Boolean(steamidBit & 0b10000);
+        const isCDLC = Boolean(steamidBit & 0b10000);
         if (steamidLength === 0) isServerside = true;
 
         let modName: string;
         const modNameLength = buf.readUInt8(offset++);
-        if (isDLC) {
+        if (isCDLC) {
             const cdlc = ARMA_3_CDLCS.get(steamid);
-            modName = cdlc ?? `Unknown CDLC[${modHash.toString()}]`;
+            modName = cdlc?.name ?? `Unknown CDLC[${modHash.toString()}]`;
         }
         else {
             modName = buf.subarray(offset, offset += modNameLength).toString('utf8');
@@ -499,7 +547,7 @@ export function parseArma3Rules(message: Buffer, startOffset: number = 0x00): Ar
         mods[modName] = {
             hash: modHash,
             steamid: steamid,
-            isDLC: isDLC,
+            isCDLC: isCDLC,
             isServerside: isServerside
         }
     }
@@ -518,18 +566,6 @@ export function parseArma3Rules(message: Buffer, startOffset: number = 0x00): Ar
         difficulty: diffBits,
         mods: mods,
         signatures: signatures
-    }
-}
-
-export function parseArma3PresetHtml(html: string): { name: string, mods: Arma3HtmlAddonsList, dlcs: Arma3HtmlAddonsList } {
-    const root = parse(html);
-    const presetName = root.getElementsByTagName('meta').find(x => x.attributes['name'] === 'arma:PresetName')?.attributes['content'];
-    const listDLC = parseHtmlAddons(root, ARMA_3_HTML_KEYS.TARGET_DLC_LIST, ARMA_3_HTML_KEYS.TARGET_DLC_CONTAINER);
-    const listMods = parseHtmlAddons(root, ARMA_3_HTML_KEYS.TARGET_MOD_LIST, ARMA_3_HTML_KEYS.TARGET_MOD_CONTAINER);
-    return {
-        name: presetName ?? 'Invalid HTML',
-        dlcs: listDLC,
-        mods: listMods
     }
 }
 
@@ -556,58 +592,109 @@ export function savePresetHtml(filename: string, preset?: string) {
     }
 }
 
-function createContainers(mods: Arma3ServerMod) {
-    const modNames = Object.keys(mods);
-    const addonContainers = `<div class="${ARMA_3_HTML_KEYS.TARGET_MOD_LIST}">
-        <table>
-        ${modNames.map(name => {
-        const mod = mods[name];
-        if (!mod.isDLC && !mod.isServerside) {
-            const url = `https://steamcommunity.com/sharedfiles/filedetails/?id=${mod.steamid}`;
-            return `<tr data-type="${ARMA_3_HTML_KEYS.TARGET_MOD_CONTAINER}">
-                    <td data-type="DisplayName">${name}</td>
-                    <td>
-                        <span class="from-steam">Steam</span>
-                    </td>
-                    <td>
-                        <a href="${url}" data-type="Link">${url}</a>
-                    </td>
-                </tr>`;
-        }
-        else {
-            return;
-        }
-    }).join('\r\n')}
-        </table>
-    </div>`;
-
-    let dlcContainers = '';
-    if (_.findKey(mods, x => x.isDLC === true)) {
-        dlcContainers = `\n<div class="dlc-list">
-            <table>
-                ${modNames.map(name => {
-            const mod = mods[name];
-            if (mod.isDLC) {
-                const url = `https://store.steampowered.com/app/${mod.steamid}`;
-                return `<tr data-type="${ARMA_3_HTML_KEYS.TARGET_DLC_CONTAINER}">
-                        <td data-type="DisplayName">${name}</td>
-                            <td>
-                                <a href="${url}" data-type="Link">${url}</a>
-                            </td>
-                        </tr>`
-            }
-            else {
-                return;
-            }
-        }).join('\r\n')}
-            </table>
-        </div>`;
+function generateAddonElement(name: string, id?: number) {
+    if (id) {
+        const url = `https://steamcommunity.com/sharedfiles/filedetails/?id=${id}`;
+        return `<tr data-type="${ARMA_3_HTML_KEYS.TARGET_MOD_CONTAINER}">
+            <td data-type="DisplayName">
+                ${name}
+            </td>
+            <td>
+                <span class="from-steam">Steam</span>
+            </td>
+            <td>
+                <a href="${url}" data-type="Link">${url}</a>
+            </td>
+        </tr>`;
     }
-
-    return addonContainers + dlcContainers;
+    else {
+        return;
+    }
 }
 
-export function buildArma3PresetHtml(presetName: string, address: string, mods: Arma3ServerMod) {
+function generateCDLCElement(name: string, id?: number) {
+    if (id) {
+        const url = `https://store.steampowered.com/app/${id}`;
+        return `<tr data-type="${ARMA_3_HTML_KEYS.TARGET_DLC_CONTAINER}">
+            <td data-type="DisplayName">
+                ${name}
+            </td>
+            <td>
+                <a href="${url}" data-type="Link">${url}</a>
+            </td>
+        </tr>`;
+    }
+    else {
+        return;
+    }
+}
+
+function createContainers(mods: { [name: string]: Arma3ServerMod }, compatibility: boolean = false) {
+    const modNames = Object.keys(mods);
+
+    if (compatibility) {
+        const containersAddons = `<div class="${ARMA_3_HTML_KEYS.TARGET_MOD_LIST}">
+            <table>
+                ${modNames.map(name => {
+                    const mod = mods[name];
+                    if (mod.isCDLC) {
+                        const CDLC = ARMA_3_CDLCS.get(mod.steamid);
+                        return generateAddonElement(name, CDLC?.compatibility); 
+                    }
+
+                    else if (!mod.isServerside) {
+                        return generateAddonElement(name, mod.steamid);
+                    }
+
+                    else {
+                        return;
+                    }
+                }).join('\r\n')}
+            </table>
+        </div>`;
+
+        return containersAddons;
+    }
+
+    else {
+        const containersAddons = `<div class="${ARMA_3_HTML_KEYS.TARGET_MOD_LIST}">
+            <table>
+                ${modNames.map(name => {
+                    const mod = mods[name];
+                    if (!mod.isCDLC && !mod.isServerside) {
+                        return generateAddonElement(name, mod.steamid);
+                    }
+
+                    else {
+                        return;
+                    }
+                }).join('\r\n')}
+            </table>
+        </div>`;
+
+        let containersCDLCs = '';
+
+        if (_.findKey(mods, x => x.isCDLC === true)) {
+            containersCDLCs = `\n<div class="${ARMA_3_HTML_KEYS.TARGET_DLC_LIST}">
+                <table>
+                    ${modNames.map(name => {
+                        const mod = mods[name];
+                        if (mod.isCDLC) {
+                            return generateCDLCElement(name, mod.steamid);
+                        }
+                        else {
+                            return;
+                        }
+                    }).join('\r\n')}
+                </table>
+            </div>`;
+        }
+
+        return containersAddons + containersCDLCs;
+    }
+}
+
+export function buildArma3PresetHtml(presetName: string, mods: { [name: string]: Arma3ServerMod }, compatibility: boolean = false) {
     return `<?xml version="1.0" encoding="utf-8"?>
     <html>
         <!--Created by ${appJson.displayName} Bot: https://github.com/blackwaterbread-->
@@ -693,12 +780,25 @@ export function buildArma3PresetHtml(presetName: string, address: string, mods: 
             <p class="before-list">
                 <em>${lang.preset.arma3.generated}</em>
             </p>
-            ${createContainers(mods)}
+            ${createContainers(mods, compatibility)}
             <div class="footer">
                 <span>Shallot - https://github.com/blackwaterbread/Shallot</span>
             </div>
         </body>
     </html>`;
+}
+
+/*
+export function parseArma3PresetHtml(html: string): { name: string, mods: Arma3HtmlAddonsList, dlcs: Arma3HtmlAddonsList } {
+    const root = parse(html);
+    const presetName = root.getElementsByTagName('meta').find(x => x.attributes['name'] === 'arma:PresetName')?.attributes['content'];
+    const listDLC = parseHtmlAddons(root, ARMA_3_HTML_KEYS.TARGET_DLC_LIST, ARMA_3_HTML_KEYS.TARGET_DLC_CONTAINER);
+    const listMods = parseHtmlAddons(root, ARMA_3_HTML_KEYS.TARGET_MOD_LIST, ARMA_3_HTML_KEYS.TARGET_MOD_CONTAINER);
+    return {
+        name: presetName ?? 'Invalid HTML',
+        dlcs: listDLC,
+        mods: listMods
+    }
 }
 
 function parseHtmlAddons(html: HTMLElement, targetListName: string, containerName: string): Arma3HtmlAddonsList {
@@ -718,3 +818,4 @@ function parseHtmlAddons(html: HTMLElement, targetListName: string, containerNam
         return [];
     }
 }
+*/

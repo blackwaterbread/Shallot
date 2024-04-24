@@ -30,7 +30,7 @@ export interface BIServer {
     priority: boolean;
     maintenance: boolean;
     connect: BIConnection;
-    presetPath: string;
+    presetPath: string[];
     discord: {
         statusEmbedMessageId: string;
         rconEmbedMessageId: string;

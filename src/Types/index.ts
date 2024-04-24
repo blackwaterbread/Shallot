@@ -38,7 +38,7 @@ export type AvailableGame = keyof typeof Games;
 export interface ServerQueries<ServerRawQueries> {
     game: AvailableGame,
     connect: ConnectInfo,
-    online?: ServerRawQueries
+    query?: ServerRawQueries
 }
 
 export type CommonServerQueries = ServerQueries<Arma3ServerQueries> | ServerQueries<ArmaReforgerServerQueries> | ServerQueries<ArmaResistanceServerQueries>;
@@ -177,7 +177,8 @@ export interface ShallotStrings {
                     labelCDLC: string;
                     labelMemo: string;
                 },
-                presetDownload: string;
+                presetPurchasedDownload: string;
+                presetCompatibilityDownload: string;
             },
             armareforger: {
                 field: {
