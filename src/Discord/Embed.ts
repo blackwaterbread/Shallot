@@ -193,7 +193,7 @@ export function getServerRconEmbed(key: string, server: BIServer) {
 }
 
 export function getServerStatusEmbed(messageId: string, queries: CommonServerQueries, server: BIServer, memo?: string) {
-    const { discord, connection } = server;
+    const { discord, connection, information } = server;
     const time = DateTime.now().toLocaleString(DateTime.TIME_WITH_SECONDS);
     const key = `${queries.connect.host}:${queries.connect.port}`;
     const { serverCheckPlayers } = Interactions.button;
@@ -216,18 +216,17 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
 
     if (queries.query) {
         const { host, port } = server.connect;
+
         switch (queries.game) {
             case 'arma3': {
-                // const presetLink = `${configs.static?.url}/presets/${messageId}-${server.information.addonsHash}.html`;
-                const presetLink = `${configs.static?.url}/presets/${messageId}-${server.information.addonsHash}`;
-                const presetLabel = configs.static ? 
-                    `[**[${lang.embed.serverStatus.arma3.presetPurchasedDownload}]**](${presetLink}-p.html)
-                    [**[${lang.embed.serverStatus.arma3.presetCompatibilityDownload}]**](${presetLink}-c.html)` : '';
                 const assertedQueries = queries.query as Arma3ServerQueries;
                 const { info, tags, rules } = assertedQueries;
+
                 const CDLCs = Object.entries(rules.mods)
                     .filter(([k, v]) => v.isCDLC === true)
                     .map(([k, v]) => `[${k}](https://store.steampowered.com/app/${v.steamid})`);
+
+                const presetLabel = generatePresetLabel(configs.static, messageId, information.addonsHash, !_.isEmpty(CDLCs));
 
                 embed = new EmbedBuilder()
                     .setColor(SERVER_STATUS_COLOR[connection.status])
@@ -342,4 +341,14 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
     }
 
     return { content: '', embeds: [embed as EmbedBuilder], components: [row as any] };
+}
+
+function generatePresetLabel(appStatic: typeof configs.static, messageId: string, loadedContentsHash: string, compatibility: boolean = false) {
+    if (!appStatic) return '';
+
+    const presetLink = `${appStatic.url}/presets/${messageId}-${loadedContentsHash}`;
+    const presetPurchasedLabel = `[**[${lang.embed.serverStatus.arma3.presetPurchasedDownload}]**](${presetLink}-p.html)`;
+    const presetCompatibilityLabel = `[**[${lang.embed.serverStatus.arma3.presetCompatibilityDownload}]**](${presetLink}-c.html)`;
+
+    return compatibility ? `${presetPurchasedLabel}\n${presetCompatibilityLabel}` : `${presetPurchasedLabel}`;
 }
