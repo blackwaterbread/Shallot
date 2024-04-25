@@ -139,8 +139,8 @@ const KR_STRINGS: ShallotStrings = {
                     labelCDLC: 'CDLC',
                     labelMemo: '메모'
                 },
-                presetPurchasedDownload: ':floppy_disk: 일반 프리셋 다운로드 (CDLC :o:)',
-                presetCompatibilityDownload: ':floppy_disk: 호환성 프리셋 다운로드 (CDLC :x:)',
+                presetPurchasedDownload: ':floppy_disk: 프리셋 다운로드 (일반)',
+                presetCompatibilityDownload: ':floppy_disk: 프리셋 다운로드 (호환, CDLC 미보유)',
             },
             armareforger: {
                 field: {
