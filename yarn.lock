@@ -478,8 +478,8 @@ form-data-encoder@^2.1.2:
   integrity sha512-yDYSgNMraqvnxiEXO4hi88+YZxaHC6QKzb5N84iRCTDeRO7ZALpir/lVmf/uXUhnwUr2O4HU8s/n6x+yNjQkHw==
 
 "gamedig@https://github.com/blackwaterbread/node-gamedig":
-  version "5.0.0-beta.2"
-  resolved "https://github.com/blackwaterbread/node-gamedig#ff99ae733d6841ef9790e29b02a0e479a233613e"
+  version "5.0.0"
+  resolved "https://github.com/blackwaterbread/node-gamedig#7b8b89ccc11a8d3a608c350359b4669370260ef7"
   dependencies:
     cheerio "^1.0.0-rc.12"
     gbxremote "^0.2.1"
@@ -707,9 +707,9 @@ node-html-parser@^6.1.12:
     he "1.2.0"
 
 normalize-url@^8.0.0:
-  version "8.0.0"
-  resolved "https://registry.yarnpkg.com/normalize-url/-/normalize-url-8.0.0.tgz#593dbd284f743e8dcf6a5ddf8fadff149c82701a"
-  integrity sha512-uVFpKhj5MheNBJRTiMZ9pE/7hD1QTeEvugSJW/OmLzAp78PB5O6adfMNTvmfKhXBkvCzC+rqifWcVYpGFwTjnw==
+  version "8.0.1"
+  resolved "https://registry.yarnpkg.com/normalize-url/-/normalize-url-8.0.1.tgz#9b7d96af9836577c58f5883e939365fa15623a4a"
+  integrity sha512-IO9QvjUMWxPQQhs60oOu10CRkWCiZzSUkzbXGGV9pviYl1fXYcvkzQ5jV9z8Y6un8ARoVRl4EtC6v6jNqbaJ/w==
 
 nth-check@^2.0.1:
   version "2.1.1"
