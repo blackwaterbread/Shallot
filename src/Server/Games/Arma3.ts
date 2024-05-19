@@ -390,7 +390,8 @@ export async function queryArma3(connection: ConnectInfo): Promise<ServerQueries
             type: 'arma3',
             host: host,
             port: port,
-            requestRules: true
+            requestRules: true,
+            requestRulesRequired: true
         });
 
         const info = toEmptySafeObject(state) as any;
