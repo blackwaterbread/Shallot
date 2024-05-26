@@ -377,8 +377,11 @@ export async function handleInteractions(interaction: Interaction) {
                         const { info, tags, rules, preset } = serverQueries.query;
 
                         if (preset) {
-                            const presetPurchasedPath = savePresetHtml(`${statusMessage.id}-${tags?.loadedContentHash}-p`, preset!.purchased);
-                            const presetCompatibilityPath = savePresetHtml(`${statusMessage.id}-${tags?.loadedContentHash}-c`, preset!.compatibility);
+                            const [presetPurchasedPath, presetCompatibilityPath] = await Promise.all([
+                                savePresetHtml(`${statusMessage.id}-${tags?.loadedContentHash}-p`, preset!.purchased),
+                                savePresetHtml(`${statusMessage.id}-${tags?.loadedContentHash}-c`, preset!.compatibility)
+                            ]);
+
                             presets = [
                                 presetPurchasedPath,
                                 presetCompatibilityPath
