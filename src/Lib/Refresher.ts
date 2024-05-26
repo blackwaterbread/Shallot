@@ -127,9 +127,12 @@ export async function serverRefresh(target?: { guildId: string, serverId: string
                 if (queries.query?.tags) {
                     const newAddonsHash = queries.query.tags.loadedContentHash;
                     if (information.addonsHash !== newAddonsHash) {
-                        savePresetHtml(`${discord.statusEmbedMessageId}-${newAddonsHash}-p`, queries.query.preset.purchased);
-                        savePresetHtml(`${discord.statusEmbedMessageId}-${newAddonsHash}-c`, queries.query.preset.compatibility);
+                        await Promise.all([
+                            savePresetHtml(`${discord.statusEmbedMessageId}-${newAddonsHash}-p`, queries.query.preset.purchased),
+                            savePresetHtml(`${discord.statusEmbedMessageId}-${newAddonsHash}-c`, queries.query.preset.compatibility)
+                        ]);
                         newServer.information.addonsHash = queries.query.tags.loadedContentHash;
+                        logNormal(`[App|Discord] serverRefresh: DiffCheck: [HashChanged]: ${trackLog}`);
                     }
                 }
                 break;

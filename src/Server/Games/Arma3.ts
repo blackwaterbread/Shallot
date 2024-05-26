@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import fs from 'fs';
+import fsPromises from 'fs/promises';
 import { BufferList } from 'bl';
 import { HTMLElement, parse } from 'node-html-parser';
 import format from 'html-format';
@@ -570,7 +570,7 @@ export function parseArma3Rules(message: Buffer, startOffset: number = 0x00): Ar
     }
 }
 
-export function savePresetHtml(filename: string, preset?: string) {
+export async function savePresetHtml(filename: string, preset?: string) {
     if (!Config.static) {
         logNormal(`[App] Cannot generate Arma 3 preset: no static config`);
         return '';
@@ -579,7 +579,7 @@ export function savePresetHtml(filename: string, preset?: string) {
     if (preset) {
         try {
             const path = `${Config.static.path}/presets/${filename}.html`;
-            fs.writeFileSync(path, preset);
+            await fsPromises.writeFile(path, preset, { flag: 'w', encoding: 'utf-8' });
             logNormal(`[App] savePresetHtml: Arma 3 preset generated: ${path}`);
             return path;
         }
