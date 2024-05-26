@@ -51,5 +51,5 @@ export function channelTrack(channel: Channel) {
 }
 
 export function userTrack(user: User) {
-    return `[${user.id}|${user.globalName}|${user.displayName}]`;
+    return `[${user.id}|${user.username}|${user.globalName}]`;
 }
