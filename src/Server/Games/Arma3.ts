@@ -343,7 +343,7 @@ export interface Arma3ServerGametag {
 }
 
 export interface Arma3ServerMod {
-    hash: string,
+    hash: number,
     steamid: number,
     isCDLC: boolean,
     isServerside: boolean
@@ -406,10 +406,14 @@ export async function queryArma3(connection: ConnectInfo): Promise<ServerQueries
             }
         });
 
-        const tags = toEmptySafeObject(r);
+        const tags = toEmptySafeObject(r) as Arma3ServerGametag;
         const rules = parseArma3Rules(state.raw.rulesBytes);
         const presetPurchased = format(buildArma3PresetHtml(state.name, rules.mods, false), " ".repeat(4), 200);
         const presetCompatibility = format(buildArma3PresetHtml(state.name, rules.mods, true), " ".repeat(4), 200);
+
+        /* Replace with self-calculated hash due to an issue with Arma 3 dedicated server */
+        const loadedContentHash = _.isEmpty(rules.mods) ? tags.loadedContentHash : Object.values(rules.mods).map(x => x.hash).reduce((acc, cur) => acc ^ cur).toString(16);
+        tags.loadedContentHash = loadedContentHash;
 
         return {
             game: 'arma3',
