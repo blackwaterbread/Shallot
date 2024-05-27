@@ -131,7 +131,8 @@ export async function serverRefresh(target?: { guildId: string, serverId: string
                             savePresetHtml(`${discord.statusEmbedMessageId}-${newAddonsHash}-p`, queries.query.preset.purchased),
                             savePresetHtml(`${discord.statusEmbedMessageId}-${newAddonsHash}-c`, queries.query.preset.compatibility)
                         ]);
-                        newServer.information.addonsHash = queries.query.tags.loadedContentHash;
+
+                        newServer.information.addonsHash = newAddonsHash;
                         logNormal(`[App|Discord] serverRefresh: DiffCheck: [HashChanged]: ${trackLog}`);
                     }
                 }
