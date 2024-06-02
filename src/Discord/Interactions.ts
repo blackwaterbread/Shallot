@@ -26,6 +26,7 @@ export const Interactions = {
         serverDelete: 'serverDelete',
         serverModify: 'serverModify',
         serverCheckPlayers: 'serverCheckPlayers',
+        // serverConnect: 'serverConnect',
         // adminStartRcon: 'adminStartRcon',
         adminRconRegister: 'adminRconRegister',
         adminRconDelete: 'adminRconDelete',
@@ -77,7 +78,7 @@ export async function handleInteractions(interaction: Interaction) {
 
         const buttonId = interaction.customId.split('_');
         const {
-            serverRegister, serverDelete, serverModify, serverCheckPlayers,
+            serverRegister, serverDelete, serverModify, serverCheckPlayers, 
             adminRconRegister, adminRconDelete
         } = Interactions.button;
 
@@ -151,6 +152,10 @@ export async function handleInteractions(interaction: Interaction) {
             }
 
             /*
+            case serverConnect: {
+                break;
+            }
+
             case adminStartRcon: {
                 if (!isMemberAdmin) {
                     await handleRestrictedInteraction(interaction, isMemberAdmin);

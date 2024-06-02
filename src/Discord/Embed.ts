@@ -204,8 +204,14 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
         .setStyle(ButtonStyle.Primary)
         .setDisabled(!queries);
 
-    const row = new ActionRowBuilder()
-        .addComponents(playersButton);
+    const connectButton = new ButtonBuilder()
+        .setLabel(lang.embed.serverStatus.button.labelConnect)
+        .setStyle(ButtonStyle.Link)
+        .setURL(`https://files.hirua.me/connect/?107410//-connect=${queries?.connect.host}%20-port=${queries?.connect.port}`)
+        .setDisabled(!queries);
+
+    const row = new ActionRowBuilder().addComponents(playersButton);
+    if (queries?.game === 'arma3') row.addComponents(connectButton);
 
     let embed;
     const banner =  configs.static ? 
