@@ -104,27 +104,27 @@ const commands: Array<SlashCommand> = [
             const guild = await assertGuild(interaction);
             if (!guild) return;
 
-            const guildStorage = await assertGuildStorage(interaction, storage, guild);
-            if (!guildStorage) return;
-
             const interactionChannelId = (interaction.options.get('interaction_channel_id')?.value || '') as string;
             const statusChannelId = (interaction.options.get('status_channel_id')?.value || '') as string;
             const adminChannelId = (interaction.options.get('admin_channel_id')?.value || '') as string;
 
-            const { channelId } = guildStorage.channels.interaction;
-            const channel = await guild.channels.fetch(channelId) as TextChannel;
+            const [interactionChannel, statusChannel, adminChannel] = await Promise.all([
+                guild.channels.fetch(interactionChannelId),
+                guild.channels.fetch(statusChannelId),
+                guild.channels.fetch(adminChannelId)
+            ]);
 
-            if (!channel) {
+            if (!interactionChannel || !statusChannel || !adminChannel) {
                 await interaction.followUp({
-                    content: `${lang.commands.registerMessages.noChannel}: ${channelId}`,
+                    content: `${lang.commands.registerMessages.noChannel}`,
                     ephemeral: true
                 });
                 return;
             }
 
-            const noticeMessage = await channel.send(getNoticeEmbed());
-            const interactionMessage = await channel.send(getServerRegisterInteractionEmbed());
-            const deleteMessage = await channel.send(getServerDeleteInteractionEmbed());
+            const noticeMessage = await (interactionChannel as TextChannel).send(getNoticeEmbed());
+            const interactionMessage = await (interactionChannel as TextChannel).send(getServerRegisterInteractionEmbed());
+            const deleteMessage = await (interactionChannel as TextChannel).send(getServerDeleteInteractionEmbed());
 
             storage.set(guild.id, {
                 channels: {
