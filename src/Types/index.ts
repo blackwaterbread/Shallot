@@ -207,6 +207,7 @@ export interface ShallotStrings {
             },
             button: {
                 labelCheckPlayers: string;
+                labelConnect: string;
             },
             labelBlankMemo: string;
         },

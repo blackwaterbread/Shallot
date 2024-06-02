@@ -168,7 +168,8 @@ const KR_STRINGS: ShallotStrings = {
                 }
             },
             button: {
-                labelCheckPlayers: '플레이어 확인'
+                labelCheckPlayers: '플레이어 확인',
+                labelConnect: '접속하기'
             },
             labelBlankMemo: '메모가 없습니다.'
         }

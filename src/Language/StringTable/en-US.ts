@@ -168,7 +168,8 @@ const EN_STRINGS: ShallotStrings = {
                 },
             },
             button: {
-                labelCheckPlayers: 'Check Players'
+                labelCheckPlayers: 'Check Players',
+                labelConnect: 'Connect'
             },
             labelBlankMemo: 'There\'s no memo.'
         }
