@@ -1,6 +1,9 @@
 ![shallot](https://github.com/blackwaterbread/poro/assets/40688555/7193cd47-7510-4b9f-812c-b0f98d4d66a2)
+
+### [[**English**]](https://github.com/blackwaterbread/Shallot/blob/master/README.md)
+
 # Shallot
-[아르마](https://en.wikipedia.org/wiki/Arma_(series)) 시리즈의 서버 현황을 나타내주는 디스코드 봇
+[**아르마**](https://en.wikipedia.org/wiki/Arma_(series)) 시리즈의 서버 현황을 나타내주는 디스코드 봇
 
 ## 기능
 * 디스코드 채널에 서버 현황 표시
@@ -9,13 +12,13 @@
 * 오프라인인 서버는 현황 리스트에서 자동 삭제
 
 ## 지원 게임
-* [Arma 3](https://store.steampowered.com/app/107410/Arma_3/)
-* [Arma Reforger](https://store.steampowered.com/app/1874880/Arma_Reforger/)
-* [Arma: Cold War Assualt (a.k.a Operation Flashpoint: Resistance)](https://store.steampowered.com/app/65790/ARMA_Cold_War_Assault/)
+* [**Arma 3**](https://store.steampowered.com/app/107410/Arma_3/)
+* [**Arma Reforger**](https://store.steampowered.com/app/1874880/Arma_Reforger/)
+* [**Arma: Cold War Assualt (a.k.a Operation Flashpoint: Resistance)**](https://store.steampowered.com/app/65790/ARMA_Cold_War_Assault/)
 
 # 사용법
 ## 요구 사항
-* [Node.js 20.x LTS 혹은 상위 버전](https://nodejs.org)
+* [**Node.js 20.x LTS 혹은 상위 버전**](https://nodejs.org)
 
 ## 설치
 ```
@@ -78,11 +81,11 @@ node dist/shallot.js or pm2 start dist/shallot.js
 ---
 
 # Contact
-* [@dayrain](https://discord.com/users/119027576692801536)
+* [**@dayrain**](https://discord.com/users/119027576692801536)
 
 # Thanks to
-* [Ryan Grupp](https://code.clearbackblast.com/Theowningone) / [Voss](https://code.clearbackblast.com/Theowningone/voss)
+* [**Ryan Grupp**](https://code.clearbackblast.com/Theowningone) / [**Voss**](https://code.clearbackblast.com/Theowningone/voss)
 
 # Disclaimer
-* [Shallot](https://namu.wiki/w/%EC%83%AC%EB%A1%AF(%ED%8C%A5%EC%A5%90%20%EC%8B%9C%EB%A6%AC%EC%A6%88)) is the character of Korean YouTuber named [potg](https://www.youtube.com/channel/UCw4MwGSaNYbG0cKV02Kq6tw)
-* This project does not have any rights over this character.
+* [**Shallot**](https://namu.wiki/w/%EC%83%AC%EB%A1%AF(%ED%8C%A5%EC%A5%90%20%EC%8B%9C%EB%A6%AC%EC%A6%88))은 유투버 [**@potg**](https://www.youtube.com/channel/UCw4MwGSaNYbG0cKV02Kq6tw)의 고유한 캐릭터입니다.
+* 이 프로젝트는 해당 캐릭터에 대해 어떠한 권리도 가지고 있지 않습니다.
