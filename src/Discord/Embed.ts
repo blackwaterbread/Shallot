@@ -210,6 +210,7 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
         .setURL(`https://files.hirua.me/connect/?107410//-connect=${queries?.connect.host}%20-port=${queries?.connect.port}`)
         .setDisabled(!queries);
 
+    // as far as i know, there is no way to change the 2302 port using -connect parameter
     const row = new ActionRowBuilder().addComponents(playersButton);
     if (queries?.game === 'arma3') {
         row.addComponents(connectButton);
