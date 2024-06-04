@@ -211,7 +211,12 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
         .setDisabled(!queries);
 
     const row = new ActionRowBuilder().addComponents(playersButton);
-    if (queries?.game === 'arma3') row.addComponents(connectButton);
+    if (queries?.game === 'arma3') {
+        row.addComponents(connectButton);
+        if (queries?.connect.port !== 2302) {
+            connectButton.setDisabled(true);
+        }
+    }
 
     let embed;
     const banner =  configs.static ? 
