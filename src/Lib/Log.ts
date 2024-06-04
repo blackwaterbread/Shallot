@@ -1,19 +1,17 @@
-import { getAppInfo } from 'Config';
+import { getAppInfo, getConfigs } from 'Config';
 import { BIServer } from 'Storage';
 import { Channel, Message, User } from 'discord.js';
 import { DateTime } from 'luxon';
 
 const app = getAppInfo();
+const configs = getConfigs();
 
 function now() {
     return DateTime.now().toLocaleString(DateTime.DATETIME_MED_WITH_SECONDS);
 }
 
-export function logVerbose(msg: string) {
-    console.log(`${msg}`);
-}
-
-export function logNormal(msg: string) {
+export function logNormal(msg: string, verbose: boolean = false) {
+    if (!configs.verbose && verbose) return;
     console.log(`[${now()}]: ${msg}`);
 }
 

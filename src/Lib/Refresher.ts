@@ -88,7 +88,7 @@ async function serverRefreshEntire(serverId?: string) {
     }
 
     await Promise.all(tasks);
-    logNormal('[Discord] serverRefreshEntire Complete');
+    logNormal('[Discord] serverRefreshEntire Complete', true);
 }
 
 export async function serverRefresh(target?: { guildId: string, serverId: string }) {
@@ -111,7 +111,7 @@ export async function serverRefresh(target?: { guildId: string, serverId: string
         }
 
         if (currentServer.maintenance) {
-            logNormal(`[App] serverRefresh: passed: in maintenance: ${serverId}`);
+            logNormal(`[App] serverRefresh: passed: in maintenance: ${serverId}`, true);
             return;
         }
 
@@ -175,7 +175,7 @@ export async function serverRefresh(target?: { guildId: string, serverId: string
                 }
             }
 
-            logNormal(`[App] serverRefresh: Server responses: ${trackLog}`);
+            logNormal(`[App] serverRefresh: Server responses: ${trackLog}`, true);
         }
 
         else {
@@ -286,7 +286,6 @@ export async function serverRefresh(target?: { guildId: string, serverId: string
                             logNormal(`[App|Discord] serverRefresh: DiffCheck: [Refreshed:Diff]: ${trackLog}`);
                         }
 
-                        logNormal(`[App] serverRefresh: DiffCheck: Passed: ${trackLog}`);
                         break;
                     }
 
@@ -305,7 +304,6 @@ export async function serverRefresh(target?: { guildId: string, serverId: string
                             logNormal(`[App|Discord] serverRefresh: DiffCheck: [Refreshed:Diff]: ${trackLog}`);
                         }
 
-                        logNormal(`[App] serverRefresh: DiffCheck: Passed: ${trackLog}`);
                         break;
                     }
 
@@ -325,7 +323,6 @@ export async function serverRefresh(target?: { guildId: string, serverId: string
                             logNormal(`[App|Discord] serverRefresh: DiffCheck: [Refreshed:Diff]: ${trackLog}`);
                         }
 
-                        logNormal(`[App] serverRefresh: DiffCheck: Passed: ${trackLog}`);
                         break;
                     }
 
@@ -335,6 +332,8 @@ export async function serverRefresh(target?: { guildId: string, serverId: string
                     }
                     */
                 }
+
+                logNormal(`[App] serverRefresh: DiffCheck: Passed: ${trackLog}`, true);
             }
         }
 
@@ -415,7 +414,7 @@ export async function statusEmbedRefresh(guildId: string, serverId: string) {
     }
 
     if (server.maintenance) {
-        logNormal(`[App] statusEmbedRefresh: passed: in maintenance: ${serverId}`);
+        logNormal(`[App] statusEmbedRefresh: passed: in maintenance: ${serverId}`, true);
         return;
     }
 
@@ -438,7 +437,7 @@ export async function statusEmbedRefresh(guildId: string, serverId: string) {
     statusEmbed = getServerStatusEmbed(statusMessage.id, lastQueries, server, memo);
     await statusMessage.edit(statusEmbed);
 
-    logNormal(`[Discord] statusEmbedRefresh Complete: ${trackLog}`);
+    logNormal(`[Discord] statusEmbedRefresh Complete: ${trackLog}`, true);
 }
 
 export async function rconEmbedRefresh(guildId: string, serverId: string) {
@@ -483,5 +482,5 @@ export async function rconEmbedRefresh(guildId: string, serverId: string) {
     rconEmbed = getServerRconEmbed(serverId, server);
     await rconMessage.edit(rconEmbed as any);
 
-    logNormal(`[Discord] rconEmbedRefresh Complete: ${trackLog}`);
+    logNormal(`[Discord] rconEmbedRefresh Complete: ${trackLog}`, true);
 }
