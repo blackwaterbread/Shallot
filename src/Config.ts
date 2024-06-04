@@ -18,6 +18,7 @@ export interface AppConfigs {
     localRefreshInterval: number;
     embedRefreshInterval: number;
     serverAutoDeleteCount: number;
+    verbose: boolean;
 }
 
 const IS_DEVELOPMENT = process.env.NODE_ENV === 'development';

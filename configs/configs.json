@@ -5,5 +5,6 @@
     "lang": "en-US",
     "localRefreshInterval": 15,
     "embedRefreshInterval": 60,
-    "serverAutoDeleteCount": 4
+    "serverAutoDeleteCount": 4,
+    "verbose": false
 }
