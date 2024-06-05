@@ -207,17 +207,9 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
     const connectButton = new ButtonBuilder()
         .setLabel(lang.embed.serverStatus.button.labelConnect)
         .setStyle(ButtonStyle.Link)
-        .setURL(`https://files.hirua.me/connect/?107410//-connect=${queries?.connect.host}%20-port=${queries?.connect.port}`)
         .setDisabled(!queries);
 
-    // as far as i know, there is no way to change the 2302 port using -connect parameter
     const row = new ActionRowBuilder().addComponents(playersButton);
-    if (queries?.game === 'arma3') {
-        row.addComponents(connectButton);
-        if (queries?.connect.port !== 2302) {
-            connectButton.setDisabled(true);
-        }
-    }
 
     let embed;
     const banner =  configs.static ? 
@@ -267,6 +259,14 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
                     .setImage(banner)
                     // .setTimestamp(time)
                     .setFooter({ text: `Online - ${info.ping}ms, ${time}` });
+
+                connectButton.setURL(`https://files.hirua.me/connect/?107410//-connect=${queries.connect.host}%20-port=${queries.connect.port}`)
+                row.addComponents(connectButton);
+
+                if (queries.connect.port !== 2302) {
+                    // as far as i know, there is no way to change the 2302 port using -connect parameter
+                    connectButton.setDisabled(true);
+                }
 
                 break;
             }
