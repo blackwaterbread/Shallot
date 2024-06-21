@@ -134,8 +134,8 @@ export function getMaintenanceEmbed(key: string, server: BIServer) {
 
 export function getServerRconEmbed(key: string, server: BIServer) {
     const time = DateTime.now().toMillis();
-    const { type, priority, connect, discord, information, rcon, connection } = server;
-    const { adminRconRegister, adminRconDelete, serverModify, serverDelete } = Interactions.button;
+    const { type, priority, maintenance, connect, discord, information, rcon, connection } = server;
+    const { adminRconRegister, adminRconDelete, serverModify, serverDelete, adminMaintenance } = Interactions.button;
     const game = Games[type];
     const isRconAvailable = rcon ? true : !(type === 'armaresistance');
 
@@ -144,6 +144,11 @@ export function getServerRconEmbed(key: string, server: BIServer) {
         .setLabel(rcon ? lang.embed.rcon.button.labelRconDeactivate : lang.embed.rcon.button.labelRconActivate)
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(!isRconAvailable);
+
+    const maintenanceButton = new ButtonBuilder()
+        .setCustomId(`${adminMaintenance}_${key}`)
+        .setLabel(maintenance ? lang.embed.rcon.button.labelServerMaintenanceDeactivate : lang.embed.rcon.button.labelServerMaintenanceActivate)
+        .setStyle(ButtonStyle.Secondary);
 
     const modifyButton = new ButtonBuilder()
         .setCustomId(`${serverModify}_${key}`)
@@ -157,11 +162,13 @@ export function getServerRconEmbed(key: string, server: BIServer) {
 
     const onlineRow = new ActionRowBuilder()
         .addComponents(rconActiveButton)
+        .addComponents(maintenanceButton)
         .addComponents(modifyButton)
         .addComponents(delButton);
 
     const offlineRow = new ActionRowBuilder()
         .addComponents(modifyButton)
+        .addComponents(maintenanceButton)
         .addComponents(delButton);
 
     return {

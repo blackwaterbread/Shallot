@@ -125,6 +125,8 @@ const EN_STRINGS: ShallotStrings = {
                 labelRconActivate: 'RCon Activate',
                 labelRconDeactivate: 'RCon Deactivate',
                 labelServerModify: 'Modify',
+                labelServerMaintenanceActivate: 'Maintenance On',
+                labelServerMaintenanceDeactivate: 'Maintenance Off',
                 labelServerDelete: 'Delete'
             }
         },
@@ -177,6 +179,10 @@ const EN_STRINGS: ShallotStrings = {
     interaction: {
         button: {
             serverModify: {
+                noServer: ':x: Error: This server does not exist.'
+            },
+            serverMaintenance: {
+                complete: ':white_check_mark: Maintenance state changed.',
                 noServer: ':x: Error: This server does not exist.'
             },
             serverDelete: {
