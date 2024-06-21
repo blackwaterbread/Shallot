@@ -236,11 +236,11 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
                     .setColor(SERVER_STATUS_COLOR[connection.status])
                     .setTitle(info.name)
                     // .setURL(`https://files.hirua.me/presets/${messageId}.html`)
-                    .setAuthor({
-                        name: discord.owner.displayName,
-                        url: discord.owner.url,
-                        iconURL: discord.owner.avatarUrl
-                    })
+                    // .setAuthor({
+                    //     name: discord.owner.displayName,
+                    //     url: discord.owner.url,
+                    //     iconURL: discord.owner.avatarUrl
+                    // })
                     .setDescription(
                         presetLabel + "```" + `${host}:${port}` + "```"
                     )
@@ -278,11 +278,11 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
                     .setColor(SERVER_STATUS_COLOR[connection.status])
                     .setTitle(info.name)
                     // .setURL(`https://files.hirua.me/presets/${messageId}.html`)
-                    .setAuthor({
-                        name: discord.owner.displayName,
-                        url: discord.owner.url,
-                        iconURL: discord.owner.avatarUrl
-                    })
+                    // .setAuthor({
+                    //     name: discord.owner.displayName,
+                    //     url: discord.owner.url,
+                    //     iconURL: discord.owner.avatarUrl
+                    // })
                     .setDescription(
                         "```" + `${host}:${port}` + "```"
                     )
@@ -307,11 +307,11 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
                     .setColor(SERVER_STATUS_COLOR[connection.status])
                     .setTitle(queries.query.info.name)
                     .setURL('https://discord.gg/9HzjsbjDD9')
-                    .setAuthor({
-                        name: discord.owner.displayName,
-                        url: discord.owner.url,
-                        iconURL: discord.owner.avatarUrl
-                    })
+                    // .setAuthor({
+                    //     name: discord.owner.displayName,
+                    //     url: discord.owner.url,
+                    //     iconURL: discord.owner.avatarUrl
+                    // })
                     .setDescription("Operation FlashPoint: Resistance" + "```" + `${host}:${port}` + "```")
                     // .setThumbnail(thumbnail)
                     .addFields(
@@ -337,11 +337,11 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
             .setColor(SERVER_STATUS_COLOR[connection.status])
             .setTitle(lang.embed.serverStatus.offline.title)
             // .setURL(`https://files.hirua.me/presets/${message.id}.html`)
-            .setAuthor({
-                name: discord.owner.displayName,
-                url: discord.owner.url,
-                iconURL: discord.owner.avatarUrl
-            })
+            // .setAuthor({
+            //     name: discord.owner.displayName,
+            //     url: discord.owner.url,
+            //     iconURL: discord.owner.avatarUrl
+            // })
             .setDescription("```" + `${queries.connect.host}:${queries.connect.port}` + "```")
             // .setThumbnail(thumbnail)
             .addFields(
