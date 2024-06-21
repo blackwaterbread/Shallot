@@ -163,6 +163,8 @@ export interface ShallotStrings {
                 labelRconActivate: string;
                 labelRconDeactivate: string;
                 labelServerModify: string;
+                labelServerMaintenanceActivate: string;
+                labelServerMaintenanceDeactivate: string;
                 labelServerDelete: string;
             }
         },
@@ -215,6 +217,10 @@ export interface ShallotStrings {
     interaction: {
         button: {
             serverModify: {
+                noServer: string;
+            },
+            serverMaintenance: {
+                complete: string;
                 noServer: string;
             },
             serverDelete: {

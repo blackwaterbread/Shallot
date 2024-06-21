@@ -125,6 +125,8 @@ const KR_STRINGS: ShallotStrings = {
                 labelRconActivate: 'RCon 활성화',
                 labelRconDeactivate: 'RCon 비활성화',
                 labelServerModify: '수정',
+                labelServerMaintenanceActivate: '점검 상태 설정',
+                labelServerMaintenanceDeactivate: '점검 상태 해제',
                 labelServerDelete: '서버 삭제'
             }
         },
@@ -177,6 +179,10 @@ const KR_STRINGS: ShallotStrings = {
     interaction: {
         button: {
             serverModify: {
+                noServer: ':x: 오류: 존재하지 않는 서버입니다.'
+            },
+            serverMaintenance: {
+                complete: ':white_check_mark: 점검 설정 완료.',
                 noServer: ':x: 오류: 존재하지 않는 서버입니다.'
             },
             serverDelete: {

@@ -6,7 +6,7 @@ import { AvailableGame, Games } from "Types";
 import { registerStanbyMessage } from "./Message";
 import { getConfigs } from "Config";
 import { getStorage, saveStorage, BIServer } from "Storage";
-import { getServerStatusEmbed, getPlayersEmbed, getServerRconEmbed } from "./Embed";
+import { getServerStatusEmbed, getPlayersEmbed, getServerRconEmbed, getMaintenanceEmbed } from "./Embed";
 import { logError, logNormal, messageTrack, userTrack } from "Lib/Log";
 import { createRconRegisterModal, createServerModifyModal, createServerRegisterModal } from "./Modal";
 import { CommonServerQueries } from "Types";
@@ -29,6 +29,7 @@ export const Interactions = {
         // serverConnect: 'serverConnect',
         // adminStartRcon: 'adminStartRcon',
         adminRconRegister: 'adminRconRegister',
+        adminMaintenance: 'adminMaintenance',
         adminRconDelete: 'adminRconDelete',
     },
     modal: {
@@ -79,7 +80,7 @@ export async function handleInteractions(interaction: Interaction) {
         const buttonId = interaction.customId.split('_');
         const {
             serverRegister, serverDelete, serverModify, serverCheckPlayers, 
-            adminRconRegister, adminRconDelete
+            adminRconRegister, adminMaintenance, adminRconDelete
         } = Interactions.button;
 
         switch (buttonId[0]) {
@@ -242,6 +243,52 @@ export async function handleInteractions(interaction: Interaction) {
                 break;
             }
 
+            case adminMaintenance: {
+                if (!isMemberAdmin) {
+                    await handleRestrictedInteraction(interaction, isMemberAdmin);
+                    break;
+                }
+
+                const serverKey = buttonId[1];
+                const server = guildStorage.servers.get(serverKey);
+
+                let newMaintenance = false;
+                if (server) {
+                    const statusMessage = await listChannel.messages.fetch(server.discord.statusEmbedMessageId);
+                    newMaintenance = !server.maintenance;
+
+                    guildStorage.servers.set(serverKey, {
+                        ...server,
+                        maintenance: newMaintenance
+                    });
+
+                    saveStorage();
+                    await rconEmbedRefresh(guild.id, serverKey);
+
+                    if (newMaintenance === true) {
+                        await statusMessage.edit(getMaintenanceEmbed(serverKey, server));
+                    }
+                    
+                    else {
+                        await statusMessage.edit(getServerStatusEmbed(statusMessage.id, server.information.lastQueries, server));
+                    }
+
+                    await interaction.reply({
+                        content: lang.interaction.button.serverMaintenance.complete,
+                        ephemeral: true
+                    });
+                }
+
+                else {
+                    await interaction.reply({
+                        content: lang.interaction.button.serverMaintenance.noServer,
+                        ephemeral: true
+                    });
+                }
+
+                break;
+            }
+
             case adminRconDelete: {
                 if (!isMemberAdmin) {
                     await handleRestrictedInteraction(interaction, isMemberAdmin);
@@ -249,11 +296,11 @@ export async function handleInteractions(interaction: Interaction) {
                 }
 
                 const serverKey = buttonId[1];
-                const curServer = guildStorage.servers.get(serverKey);
+                const server = guildStorage.servers.get(serverKey);
 
-                if (curServer) {
+                if (server) {
                     const newServer: BIServer = { 
-                        ...curServer,
+                        ...server,
                         rcon: null
                     }
 
