@@ -221,8 +221,8 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
     let embed;
     const banner =  configs.static ? 
         (queries.query ?
-            `${configs.static.url}/images/games/${queries.game}_banner_online.png` :
-            `${configs.static.url}/images/games/${queries.game}_banner_offline.png`
+            `${configs.static.url}/images/banner/${queries.game}_banner_online.png` :
+            `${configs.static.url}/images/banner/${queries.game}_banner_offline.png`
         ) : null;
 
     if (queries.query) {
