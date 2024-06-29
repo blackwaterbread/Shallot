@@ -21,7 +21,8 @@ export function getNoticeEmbed() {
             lang.embed.notice.description
         )
         // .setImage('https://files.hirua.me/images/width.png');
-        .setImage(configs.static ? `${configs.static?.url}/images/width.png` : null);
+        // .setImage(configs.static ? `${configs.static?.url}/images/width.png` : null);
+        .setImage(configs.imagesUrl.blank);
 
     return {
         embeds: [embed]
@@ -37,7 +38,8 @@ export function getServerRegisterInteractionEmbed() {
         .setTitle(lang.embed.serverRegister.title)
         .setDescription(lang.embed.serverRegister.description)
         // .setImage('https://files.hirua.me/images/width.png')
-        .setImage(configs.static ? `${configs.static.url}/images/width.png` : null)
+        // .setImage(configs.static ? `${configs.static.url}/images/width.png` : null)
+        .setImage(configs.imagesUrl.blank)
         .setFooter({ text: 
             lang.embed.serverRegister.footer
         });
@@ -73,7 +75,8 @@ export function getServerDeleteInteractionEmbed() {
         .setColor(0xFF0000)
         .setTitle(lang.embed.serverDelete.title)
         .setDescription(lang.embed.serverDelete.description)
-        .setImage(configs.static ? `${configs.static.url}/images/width.png` : null)
+        // .setImage(configs.static ? `${configs.static.url}/images/width.png` : null)
+        .setImage(configs.imagesUrl.blank)
         .setFooter({ text: lang.embed.serverDelete.footer });
 
     const del = new ButtonBuilder()
@@ -102,7 +105,8 @@ export function getPlayersEmbed(serverId: string, instanceId: string) {
         .setColor(SERVER_STATUS_COLOR['discord'])
         .setTitle(lang.embed.players.title)
         .setDescription(`${hostname}\n\n\`\`\`\n${p}\n\`\`\``)
-        .setImage(configs.static ? `${configs.static.url}/images/width.png` : null)
+        // .setImage(configs.static ? `${configs.static.url}/images/width.png` : null)
+        .setImage(configs.imagesUrl.blank)
         .setTimestamp(time)
         .setFooter({ text: lang.embed.players.footer });
 
@@ -125,7 +129,8 @@ export function getMaintenanceEmbed(key: string, server: BIServer) {
                     "```\n" + `${key}` + "\n```\n" +
                     lang.embed.maintenance.description
                 )
-                .setImage(configs.static ? `${configs.static.url}/images/maintenance.png` : null)
+                // .setImage(configs.static ? `${configs.static.url}/images/maintenance.png` : null)
+                .setImage(configs.imagesUrl.maintenance)
                 .setTimestamp(time)
         ],
         components: []
@@ -191,7 +196,8 @@ export function getServerRconEmbed(key: string, server: BIServer) {
                     { name: lang.embed.rcon.field.namePriority, value: `${priority}`, inline: true },
                     { name: lang.embed.rcon.field.nameAddonsHash, value: `${information.addonsHash ? information.addonsHash : 'None'}`, inline: true },
                 )
-                .setImage(configs.static ? `${configs.static.url}/images/width.png` : null)
+                // .setImage(configs.static ? `${configs.static.url}/images/width.png` : null)
+                .setImage(configs.imagesUrl.blank)
                 .setTimestamp(time)
                 .setFooter({ text: 'Updated: ' })
         ],
@@ -219,11 +225,17 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
     const row = new ActionRowBuilder().addComponents(playersButton);
 
     let embed;
+
+    /*
     const banner =  configs.static ? 
         (queries.query ?
             `${configs.static.url}/images/banner/${queries.game}_banner_online.png` :
             `${configs.static.url}/images/banner/${queries.game}_banner_offline.png`
         ) : null;
+    */
+
+    const bannerType = configs.imagesUrl.game[queries.game];
+    const bannerUrl = queries.query ? bannerType.online : bannerType.offline;
 
     if (queries.query) {
         const { host, port } = server.connect;
@@ -263,7 +275,7 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
                         // { name: '배틀아이', value: queries.tags.battleEye ? '적용' : '미적용', inline: true },
                         { name: lang.embed.serverStatus.arma3.field.labelMemo, value: `> ${memo ? memo : lang.embed.serverStatus.labelBlankMemo}`, inline: false },
                     )
-                    .setImage(banner)
+                    .setImage(bannerUrl)
                     // .setTimestamp(time)
                     .setFooter({ text: `Online - ${info.ping}ms, ${time}` });
 
@@ -300,7 +312,7 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
                         { name: lang.embed.serverStatus.armareforger.field.labelPlayers, value: `${info.numplayers} / ${info.maxplayers}`, inline: true },
                         { name: lang.embed.serverStatus.armareforger.field.labelMemo, value: `> ${memo ? memo : lang.embed.serverStatus.labelBlankMemo}`, inline: false },
                     )
-                    .setImage(banner)
+                    .setImage(bannerUrl)
                     // .setTimestamp(time)
                     .setFooter({ text: `Online - ${info.ping}ms, ${time}` });
 
@@ -330,7 +342,7 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
                         { name: lang.embed.serverStatus.armaresistance.field.labelPlayers, value: `${info.numplayers} / ${info.maxplayers}`, inline: true },
                         { name: lang.embed.serverStatus.armaresistance.field.labelMemo, value: `> ${memo ? memo : lang.embed.serverStatus.labelBlankMemo}`, inline: false },
                     )
-                    .setImage(banner)
+                    .setImage(bannerUrl)
                     // .setTimestamp(time)
                     .setFooter({ text: `Online - ${info.ping}ms, ${time}` });
 
@@ -354,7 +366,7 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
             .addFields(
                 { name: lang.embed.serverStatus.offline.field.labelMemo, value: `> ${memo ? memo : lang.embed.serverStatus.labelBlankMemo}`, inline: false },
             )
-            .setImage(banner)
+            .setImage(bannerUrl)
             //.setTimestamp(time)
             .setFooter({ text: `Offline, ${time}` });
     }

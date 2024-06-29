@@ -5,6 +5,7 @@ import path from 'path';
 import { advStringify } from 'Lib/Utils';
 import appJson from 'Root/package.json';
 import { StringTable } from 'Language';
+import { AvailableGame } from 'Types';
 dotenv.config();
 
 export interface AppConfigs {
@@ -14,6 +15,11 @@ export interface AppConfigs {
         path: string;
         url: string;
     } | null;
+    imagesUrl: {
+        blank: string;
+        maintenance: string;
+        game: { [key in AvailableGame]: { online: string, offline: string } }
+    };
     lang: keyof typeof StringTable;
     localRefreshInterval: number;
     embedRefreshInterval: number;

@@ -2,6 +2,28 @@
     "token": "",
     "appId": "",
     "static": null,
+    "imagesUrl": {
+        "blank": "",
+        "maintenance": "",
+        "game": {
+            "arma3": {
+                "online": "",
+                "offline": ""
+            },
+            "armareforger": {
+                "online": "",
+                "offline": ""
+            },
+            "armaresistance": {
+                "online": "",
+                "offline": ""
+            },
+            "unknown": {
+                "online": "",
+                "offline": ""
+            }
+        }
+    },
     "lang": "en-US",
     "localRefreshInterval": 15,
     "embedRefreshInterval": 60,
