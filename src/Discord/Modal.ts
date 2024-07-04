@@ -75,6 +75,7 @@ export function createServerModifyModal(instanceId: string, instance: BIServer) 
     return modal;
 }
 
+/*
 export function createRconRegisterModal(instanceId: string) {
     const { rconRegister } = Interactions.modal;
     const { rconPort, rconPassword } = Interactions.modalComponents;
@@ -103,3 +104,4 @@ export function createRconRegisterModal(instanceId: string) {
 
     return modal;
 }
+*/

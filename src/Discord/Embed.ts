@@ -140,15 +140,17 @@ export function getMaintenanceEmbed(key: string, server: BIServer) {
 export function getServerRconEmbed(key: string, server: BIServer) {
     const time = DateTime.now().toMillis();
     const { type, priority, maintenance, connect, discord, information, rcon, connection } = server;
-    const { adminRconRegister, adminRconDelete, serverModify, serverDelete, adminMaintenance } = Interactions.button;
+    const { serverModify, serverDelete, adminMaintenance } = Interactions.button;
     const game = Games[type];
     const isRconAvailable = rcon ? true : !(type === 'armaresistance');
 
+    /*
     const rconActiveButton = new ButtonBuilder()
         .setCustomId(rcon ? `${adminRconDelete}_${key}` : `${adminRconRegister}_${key}`)
         .setLabel(rcon ? lang.embed.rcon.button.labelRconDeactivate : lang.embed.rcon.button.labelRconActivate)
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(!isRconAvailable);
+    */
 
     const maintenanceButton = new ButtonBuilder()
         .setCustomId(`${adminMaintenance}_${key}`)
@@ -166,7 +168,7 @@ export function getServerRconEmbed(key: string, server: BIServer) {
         .setStyle(ButtonStyle.Danger);
 
     const onlineRow = new ActionRowBuilder()
-        .addComponents(rconActiveButton)
+        // .addComponents(rconActiveButton)
         .addComponents(maintenanceButton)
         .addComponents(modifyButton)
         .addComponents(delButton);
@@ -192,7 +194,7 @@ export function getServerRconEmbed(key: string, server: BIServer) {
                     iconURL: discord.owner.avatarUrl
                 })
                 .addFields(
-                    { name: lang.embed.rcon.field.nameRconActivated, value: `${rcon ? true : false}`, inline: true },
+                    // { name: lang.embed.rcon.field.nameRconActivated, value: `${rcon ? true : false}`, inline: true },
                     { name: lang.embed.rcon.field.namePriority, value: `${priority}`, inline: true },
                     { name: lang.embed.rcon.field.nameAddonsHash, value: `${information.addonsHash ? information.addonsHash : 'None'}`, inline: true },
                 )
