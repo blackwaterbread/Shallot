@@ -8,7 +8,7 @@ import { getConfigs } from "Config";
 import { getStorage, saveStorage, BIServer } from "Storage";
 import { getServerStatusEmbed, getPlayersEmbed, getServerRconEmbed, getMaintenanceEmbed } from "./Embed";
 import { logError, logNormal, messageTrack, userTrack } from "Lib/Log";
-import { createRconRegisterModal, createServerModifyModal, createServerRegisterModal } from "./Modal";
+import { createServerModifyModal, createServerRegisterModal } from "./Modal";
 import { CommonServerQueries } from "Types";
 import { queryArma3, savePresetHtml } from "Server/Games/Arma3";
 import { queryArmaResistance } from "Server/Games/ArmaResistance";
@@ -26,23 +26,27 @@ export const Interactions = {
         serverDelete: 'serverDelete',
         serverModify: 'serverModify',
         serverCheckPlayers: 'serverCheckPlayers',
-        // serverConnect: 'serverConnect',
-        // adminStartRcon: 'adminStartRcon',
+        /*
+        serverConnect: 'serverConnect',
+        adminStartRcon: 'adminStartRcon',
         adminRconRegister: 'adminRconRegister',
-        adminMaintenance: 'adminMaintenance',
         adminRconDelete: 'adminRconDelete',
+        */
+        adminMaintenance: 'adminMaintenance',
     },
     modal: {
         serverRegister: 'serverRegisterSubmit',
         serverModify: 'serverModifySubmit',
-        rconRegister: 'rconRegister'
+        // rconRegister: 'rconRegister'
     },
     modalComponents: {
         serverAddress: 'serverAddress',
         serverMemo: 'serverMemo',
         serverPriority: 'serverPriority',
+        /*
         rconPort: 'rconPort',
         rconPassword: 'rconPassword'
+        */
     }
 } as const;
 
@@ -79,8 +83,7 @@ export async function handleInteractions(interaction: Interaction) {
 
         const buttonId = interaction.customId.split('_');
         const {
-            serverRegister, serverDelete, serverModify, serverCheckPlayers, 
-            adminRconRegister, adminMaintenance, adminRconDelete
+            serverRegister, serverDelete, serverModify, serverCheckPlayers, adminMaintenance
         } = Interactions.button;
 
         switch (buttonId[0]) {
@@ -217,7 +220,6 @@ export async function handleInteractions(interaction: Interaction) {
 
                 break;
             }
-            */
 
             case adminRconRegister: {
                 if (!isMemberAdmin) {
@@ -236,52 +238,6 @@ export async function handleInteractions(interaction: Interaction) {
                 else {
                     await interaction.reply({
                         content: lang.interaction.button.adminRconRegister.noServer,
-                        ephemeral: true
-                    });
-                }
-
-                break;
-            }
-
-            case adminMaintenance: {
-                if (!isMemberAdmin) {
-                    await handleRestrictedInteraction(interaction, isMemberAdmin);
-                    break;
-                }
-
-                const serverKey = buttonId[1];
-                const server = guildStorage.servers.get(serverKey);
-
-                let newMaintenance = false;
-                if (server) {
-                    const statusMessage = await listChannel.messages.fetch(server.discord.statusEmbedMessageId);
-                    newMaintenance = !server.maintenance;
-
-                    guildStorage.servers.set(serverKey, {
-                        ...server,
-                        maintenance: newMaintenance
-                    });
-
-                    saveStorage();
-                    await rconEmbedRefresh(guild.id, serverKey);
-
-                    if (newMaintenance === true) {
-                        await statusMessage.edit(getMaintenanceEmbed(serverKey, server));
-                    }
-                    
-                    else {
-                        await statusMessage.edit(getServerStatusEmbed(statusMessage.id, server.information.lastQueries, server));
-                    }
-
-                    await interaction.reply({
-                        content: lang.interaction.button.serverMaintenance.complete,
-                        ephemeral: true
-                    });
-                }
-
-                else {
-                    await interaction.reply({
-                        content: lang.interaction.button.serverMaintenance.noServer,
                         ephemeral: true
                     });
                 }
@@ -328,6 +284,53 @@ export async function handleInteractions(interaction: Interaction) {
                 logError(`[App] Unregistered button interaction: ${buttonId}`);
                 break;
             }
+            */
+
+            case adminMaintenance: {
+                if (!isMemberAdmin) {
+                    await handleRestrictedInteraction(interaction, isMemberAdmin);
+                    break;
+                }
+
+                const serverKey = buttonId[1];
+                const server = guildStorage.servers.get(serverKey);
+
+                let newMaintenance = false;
+                if (server) {
+                    const statusMessage = await listChannel.messages.fetch(server.discord.statusEmbedMessageId);
+                    newMaintenance = !server.maintenance;
+
+                    guildStorage.servers.set(serverKey, {
+                        ...server,
+                        maintenance: newMaintenance
+                    });
+
+                    saveStorage();
+                    await rconEmbedRefresh(guild.id, serverKey);
+
+                    if (newMaintenance === true) {
+                        await statusMessage.edit(getMaintenanceEmbed(serverKey, server));
+                    }
+                    
+                    else {
+                        await statusMessage.edit(getServerStatusEmbed(statusMessage.id, server.information.lastQueries, server));
+                    }
+
+                    await interaction.reply({
+                        content: lang.interaction.button.serverMaintenance.complete,
+                        ephemeral: true
+                    });
+                }
+
+                else {
+                    await interaction.reply({
+                        content: lang.interaction.button.serverMaintenance.noServer,
+                        ephemeral: true
+                    });
+                }
+
+                break;
+            }
         }
     }
 
@@ -336,7 +339,7 @@ export async function handleInteractions(interaction: Interaction) {
         logNormal(`[Discord] Interaction: ${interaction.customId}: ${userTrack(interaction.user)}`);
 
         const modalId = interaction.customId.split('_');
-        const { serverRegister, serverModify, rconRegister } = Interactions.modal;
+        const { serverRegister, serverModify } = Interactions.modal;
         const { serverAddress, serverPriority, serverMemo } = Interactions.modalComponents;
         const { arma3, armareforger, armaresistance } = Games;
 
@@ -550,6 +553,7 @@ export async function handleInteractions(interaction: Interaction) {
                 break;
             }
 
+            /*
             case rconRegister: {
                 const ephemeralReplyMessage = await interaction.reply({
                     content: lang.interaction.modalSubmit.rconRegister.checkingValidation,
@@ -595,6 +599,7 @@ export async function handleInteractions(interaction: Interaction) {
                 await ephemeralReplyMessage.edit({ content: lang.interaction.modalSubmit.rconRegister.success });
                 break;
             }
+            */
 
             default: {
                 // invalid Submit
