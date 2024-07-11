@@ -219,10 +219,12 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
         .setStyle(ButtonStyle.Primary)
         .setDisabled(!queries);
 
+    /*
     const connectButton = new ButtonBuilder()
         .setLabel(lang.embed.serverStatus.button.labelConnect)
         .setStyle(ButtonStyle.Link)
         .setDisabled(!queries);
+    */        
 
     const row = new ActionRowBuilder().addComponents(playersButton);
 
@@ -281,6 +283,7 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
                     // .setTimestamp(time)
                     .setFooter({ text: `Online - ${info.ping}ms, ${time}` });
 
+                /*
                 connectButton.setURL(`https://files.hirua.me/connect/?107410//-connect=${queries.connect.host}%20-port=${queries.connect.port}`)
                 row.addComponents(connectButton);
 
@@ -288,6 +291,7 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
                     // as far as i know, there is no way to change the 2302 port using -connect parameter
                     connectButton.setDisabled(true);
                 }
+                */
 
                 break;
             }
