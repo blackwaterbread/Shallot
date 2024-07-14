@@ -13,6 +13,7 @@ import { channelTrack, instanceTrack, logError, logNormal, guildTrack } from './
 let client: Client<true>;
 
 const scheduler = new ToadScheduler();
+const storage = getStorage();
 
 const localTaskName = 'localTask';
 const embedTaskName = 'embedTask';
@@ -63,7 +64,6 @@ export function startRefresherEntire() {
 }
 
 async function serverRefreshEntire(serverId?: string) {
-    const storage = getStorage();
     let guildStorages: [string, AppStorage][];
 
     if (serverId) {
@@ -93,7 +93,6 @@ async function serverRefreshEntire(serverId?: string) {
 
 export async function serverRefresh(target?: { guildId: string, serverId: string }) {
     if (target) {
-        const storage = getStorage();
         const { guildId, serverId } = target;
         const guild = storage.get(guildId);
 
@@ -351,7 +350,6 @@ export async function serverRefresh(target?: { guildId: string, serverId: string
 }
 
 async function embedRefreshEntire() {
-    const storage = getStorage();
     const tasks = Array.from(storage).map(async ([guildId, guildStorage]) => {
         const { servers } = guildStorage;
         const listChannelId = guildStorage.channels.status.channelId;
@@ -390,7 +388,6 @@ async function embedRefreshEntire() {
 }
 
 export async function statusEmbedRefresh(guildId: string, serverId: string) {
-    const storage = getStorage();
     const guild = storage.get(guildId);
 
     if (!guild) {
@@ -441,7 +438,6 @@ export async function statusEmbedRefresh(guildId: string, serverId: string) {
 }
 
 export async function rconEmbedRefresh(guildId: string, serverId: string) {
-    const storage = getStorage();
     const guild = storage.get(guildId);
 
     if (!guild) {

@@ -12,6 +12,7 @@ import { Interactions } from "./Interactions";
 import { getStringTable } from "Language";
 
 const configs = getConfigs();
+const storage = getStorage();
 const lang = getStringTable();
 
 export function getNoticeEmbed() {
@@ -94,7 +95,6 @@ export function getServerDeleteInteractionEmbed() {
 }
 
 export function getPlayersEmbed(serverId: string, instanceId: string) {
-    const storage = getStorage();
     const instance = storage.get(serverId)!.servers.get(instanceId);
     if (!instance) return;
 

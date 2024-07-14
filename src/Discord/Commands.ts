@@ -17,6 +17,7 @@ import { uid2guid } from "Lib/Utils";
 import { startRconSession } from "Server/Rcon";
 import { getStringTable } from "Language";
 
+const storage = getStorage();
 const lang = getStringTable();
 
 type SlashCommand = ChatInputApplicationCommandData & {
@@ -100,7 +101,6 @@ const commands: Array<SlashCommand> = [
         ],
         defaultMemberPermissions: PermissionFlagsBits.Administrator,
         execute: async interaction => {
-            const storage = getStorage();
             const guild = await assertGuild(interaction);
             if (!guild) return;
 
@@ -178,7 +178,6 @@ const commands: Array<SlashCommand> = [
         ],
         defaultMemberPermissions: PermissionFlagsBits.Administrator,
         execute: async interaction => {
-            const storage = getStorage();
             const guild = await assertGuild(interaction);
             if (!guild) return;
 
@@ -222,7 +221,6 @@ const commands: Array<SlashCommand> = [
         description: lang.commands.registerMessages.description,
         defaultMemberPermissions: PermissionFlagsBits.Administrator,
         execute: async interaction => {
-            const storage = getStorage();
             const guild = await assertGuild(interaction);
             if (!guild) return;
 
@@ -265,8 +263,6 @@ const commands: Array<SlashCommand> = [
         description: lang.commands.servers.description,
         defaultMemberPermissions: PermissionFlagsBits.Administrator,
         execute: async interaction => {
-            const storage = getStorage();
-
             const guild = await assertGuild(interaction);
             if (!guild) return;
 
@@ -290,8 +286,6 @@ const commands: Array<SlashCommand> = [
         description: lang.commands.cleanServers.description,
         defaultMemberPermissions: PermissionFlagsBits.Administrator,
         execute: async interaction => {
-            const storage = getStorage();
-
             const guild = await assertGuild(interaction);
             if (!guild) return;
 
@@ -391,8 +385,6 @@ const commands: Array<SlashCommand> = [
         ],
         defaultMemberPermissions: PermissionFlagsBits.Administrator,
         execute: async interaction => {
-            const storage = getStorage();
-
             const guild = await assertGuild(interaction);
             if (!guild) return;
 
@@ -445,8 +437,6 @@ const commands: Array<SlashCommand> = [
         ],
         defaultMemberPermissions: PermissionFlagsBits.Administrator,
         execute: async interaction => {
-            const storage = getStorage();
-
             const guild = await assertGuild(interaction);
             if (!guild) return;
 
