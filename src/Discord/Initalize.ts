@@ -5,6 +5,8 @@ import { getAppInfo } from "Config";
 import { getStorage } from "Storage";
 import revision from 'child_process';
 
+const storage = getStorage();
+
 export async function initBotPresence(client: Client<true>) {
     const app = getAppInfo();
     const commitHash = revision
@@ -22,7 +24,6 @@ export async function initBotPresence(client: Client<true>) {
 }
 
 export function checkUnregisteredServer(guild: Guild) {
-    const storage = getStorage();
     if (!storage.get(guild.id)) {
         logWarning(`[App] There's unregistered guild: [${guild.id}|${guild.name}]`);
     }

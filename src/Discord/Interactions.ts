@@ -17,6 +17,7 @@ import { rconEmbedRefresh, startRefresherEntire, statusEmbedRefresh, stopRefresh
 import { getBoolean } from "Lib/Utils";
 import { getStringTable } from "Language";
 
+const storage = getStorage();
 const configs = getConfigs();
 const lang = getStringTable();
 
@@ -53,7 +54,7 @@ export const Interactions = {
 export async function handleInteractions(interaction: Interaction) {
     if (!interaction.guild) return;
 
-    const storage = getStorage();
+    // const storage = getStorage();
     const guild = interaction.guild;
     const guildStorage = storage.get(guild.id);
 
