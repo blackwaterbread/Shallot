@@ -44,6 +44,8 @@ export const Interactions = {
         serverAddress: 'serverAddress',
         serverMemo: 'serverMemo',
         serverPriority: 'serverPriority',
+        serverImageOnline: 'serverImageOnline',
+        serverImageOffline: 'serverImageOffline'
         /*
         rconPort: 'rconPort',
         rconPassword: 'rconPassword'
@@ -467,7 +469,8 @@ export async function handleInteractions(interaction: Interaction) {
                                 addonsHash: tags?.loadedContentHash ?? '',
                                 lastQueries: serverQueries
                             },
-                            rcon: null,
+                            customImage: null,
+                            // rcon: null,
                             connection: {
                                 status: 'connected',
                                 count: configs.serverAutoDeleteCount

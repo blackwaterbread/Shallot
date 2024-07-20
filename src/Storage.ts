@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import fs from 'fs';
 import dotenv from "dotenv";
-import { AvailableGame, CommonServerQueries, SERVER_STATUS_COLOR } from 'Types';
+import { AvailableGame, CommonServerQueries, EmbedStatusImage, SERVER_STATUS_COLOR } from 'Types';
 import { advStringify } from 'Lib/Utils';
 import path from 'path';
 dotenv.config();
@@ -43,10 +43,13 @@ export interface BIServer {
         addonsHash: string;
         lastQueries: CommonServerQueries;
     },
+    /*
     rcon: {
         port: number;
         password: string;
     } | null,
+    */
+    customImage: EmbedStatusImage | null,
     connection: {
         status: keyof typeof SERVER_STATUS_COLOR;
         count: number;

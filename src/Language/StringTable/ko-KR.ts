@@ -250,6 +250,15 @@ const KR_STRINGS: ShallotStrings = {
             },
             inputMemo: {
                 label: '메모'
+            },
+            inputImage: {
+                placeholder: '주의: 유효한 이미지 URL이어야 제대로 로딩이 됩니다.',
+                online: {
+                    label: '온라인 이미지 URL (380 * 120 추천)'
+                },
+                offline: {
+                    label: '오프라인 이미지 URL (380 * 120 추천)'
+                }
             }
         },
         rconRegister: {

@@ -38,7 +38,7 @@ export function createServerRegisterModal(type: AvailableGame) {
 
 export function createServerModifyModal(instanceId: string, instance: BIServer) {
     const { serverModify } = Interactions.modal;
-    const { serverAddress, serverPriority, serverMemo } = Interactions.modalComponents;
+    const { serverAddress, serverPriority, serverMemo, serverImageOnline, serverImageOffline } = Interactions.modalComponents;
     const modal = new ModalBuilder()
         .setCustomId(`${serverModify}_${instanceId}`)
         .setTitle(lang.modal.serverModify.title)
@@ -66,10 +66,26 @@ export function createServerModifyModal(instanceId: string, instance: BIServer) 
         .setRequired(false)
         .setStyle(TextInputStyle.Short);
 
+    const inputImageOnline = new TextInputBuilder()
+        .setCustomId(serverImageOnline)
+        .setLabel(lang.modal.serverModify.inputImage.online.label)
+        .setPlaceholder(lang.modal.serverModify.inputImage.placeholder)
+        .setRequired(false)
+        .setStyle(TextInputStyle.Short)
+
+    const inputImageOffline = new TextInputBuilder()
+        .setCustomId(serverImageOffline)
+        .setLabel(lang.modal.serverModify.inputImage.offline.label)
+        .setPlaceholder(lang.modal.serverModify.inputImage.placeholder)
+        .setRequired(false)
+        .setStyle(TextInputStyle.Short)
+
     modal.addComponents(
         new ActionRowBuilder().addComponents(inputAddress), 
         new ActionRowBuilder().addComponents(inputPriority),
-        new ActionRowBuilder().addComponents(inputMemo) as any
+        new ActionRowBuilder().addComponents(inputMemo),
+        new ActionRowBuilder().addComponents(inputImageOnline),
+        new ActionRowBuilder().addComponents(inputImageOffline) as any
     );
 
     return modal;
