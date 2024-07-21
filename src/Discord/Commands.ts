@@ -63,6 +63,7 @@ async function assertServer(interaction: CommandInteraction, guildStorage: AppSt
         return;
     }
 
+    /*
     if (!server.rcon) {
         await interaction.followUp({
             content: lang.commands.assertServer.noRcon,
@@ -70,6 +71,7 @@ async function assertServer(interaction: CommandInteraction, guildStorage: AppSt
         });
         return;
     }
+    */
 
     return server;
 }
@@ -270,8 +272,8 @@ const commands: Array<SlashCommand> = [
             if (!guildStorage) return;
 
             const lists = Array.from(guildStorage.servers).map(([key, server]) => {
-                const { type, rcon, priority, information } = server;
-                return `${key} | [${type},rcon:${rcon ? 'enabled' : 'disabled'},priority:${priority},${information.hostname},${information.memo}]`;
+                const { type, priority, information } = server;
+                return `${key} | [${type},priority:${priority},${information.hostname},${information.memo}]`;
             });
 
             await interaction.followUp({
@@ -365,6 +367,7 @@ const commands: Array<SlashCommand> = [
             }
         }
     },
+    /*
     {
         type: ApplicationCommandType.ChatInput,
         name: 'rcon',
@@ -417,6 +420,7 @@ const commands: Array<SlashCommand> = [
             }
         }
     },
+    */
     {
         type: ApplicationCommandType.ChatInput,
         name: 'set_maintenance',

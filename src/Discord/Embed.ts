@@ -139,10 +139,10 @@ export function getMaintenanceEmbed(key: string, server: BIServer) {
 
 export function getServerRconEmbed(key: string, server: BIServer) {
     const time = DateTime.now().toMillis();
-    const { type, priority, maintenance, connect, discord, information, rcon, connection } = server;
+    const { type, priority, maintenance, connect, discord, information, connection } = server;
     const { serverModify, serverDelete, adminMaintenance } = Interactions.button;
     const game = Games[type];
-    const isRconAvailable = rcon ? true : !(type === 'armaresistance');
+    // const isRconAvailable = rcon ? true : !(type === 'armaresistance');
 
     /*
     const rconActiveButton = new ButtonBuilder()
@@ -224,10 +224,9 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
         .setLabel(lang.embed.serverStatus.button.labelConnect)
         .setStyle(ButtonStyle.Link)
         .setDisabled(!queries);
-    */        
+    */
 
     const row = new ActionRowBuilder().addComponents(playersButton);
-
     let embed;
 
     /*
@@ -236,9 +235,12 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
             `${configs.static.url}/images/banner/${queries.game}_banner_online.png` :
             `${configs.static.url}/images/banner/${queries.game}_banner_offline.png`
         ) : null;
-    */
 
     const bannerType = configs.imagesUrl.game[queries.game];
+    const bannerUrl = queries.query ? bannerType.online : bannerType.offline;
+    */
+
+    const bannerType = server.customImage ? server.customImage : configs.imagesUrl.game[queries.game];
     const bannerUrl = queries.query ? bannerType.online : bannerType.offline;
 
     if (queries.query) {

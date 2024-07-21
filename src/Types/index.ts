@@ -33,6 +33,11 @@ export interface ConnectInfo {
     port: number;
 }
 
+export interface EmbedStatusImage {
+    online: string;
+    offline: string;
+}
+
 export type AvailableGame = keyof typeof Games;
 
 export interface ServerQueries<ServerRawQueries> {
@@ -288,6 +293,15 @@ export interface ShallotStrings {
             },
             inputMemo: {
                 label: string;
+            },
+            inputImage: {
+                placeholder: string;
+                online: {
+                    label: string;
+                },
+                offline: {
+                    label: string;
+                }
             }
         },
         rconRegister: {

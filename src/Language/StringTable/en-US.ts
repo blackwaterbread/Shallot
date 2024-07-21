@@ -250,6 +250,15 @@ const EN_STRINGS: ShallotStrings = {
             },
             inputMemo: {
                 label: 'Memo'
+            },
+            inputImage: {
+                placeholder: 'Caution: The image URL must be valid to load',
+                online: {
+                    label: 'Online Image URL'
+                },
+                offline: {
+                    label: 'Offline Image URL'
+                }
             }
         },
         rconRegister: {
