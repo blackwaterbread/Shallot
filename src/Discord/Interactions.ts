@@ -343,7 +343,7 @@ export async function handleInteractions(interaction: Interaction) {
 
         const modalId = interaction.customId.split('_');
         const { serverRegister, serverModify } = Interactions.modal;
-        const { serverAddress, serverPriority, serverMemo } = Interactions.modalComponents;
+        const { serverAddress, serverPriority, serverMemo, serverImageOnline, serverImageOffline } = Interactions.modalComponents;
         const { arma3, armareforger, armaresistance } = Games;
 
         switch (modalId[0]) {
@@ -513,7 +513,10 @@ export async function handleInteractions(interaction: Interaction) {
                 const inputAddress = interaction.fields.getTextInputValue(serverAddress);
                 const inputPriority = interaction.fields.getTextInputValue(serverPriority);
                 const inputMemo = interaction.fields.getTextInputValue(serverMemo);
+                const inputCustomImageOnlineUrl = interaction.fields.getTextInputValue(serverImageOnline);
+                const inputCustomImageOfflineUrl = interaction.fields.getTextInputValue(serverImageOffline);
                 let validatedAddress;
+                let customImage = null;
 
                 try {
                     validatedAddress = validationAddress(inputAddress);
@@ -532,6 +535,13 @@ export async function handleInteractions(interaction: Interaction) {
                     break;
                 }
 
+                if (!_.isEmpty(inputCustomImageOnlineUrl) && !_.isEmpty(inputCustomImageOfflineUrl)) {
+                    customImage = {
+                        online: inputCustomImageOnlineUrl,
+                        offline: inputCustomImageOfflineUrl
+                    };
+                }
+
                 const newServer: BIServer = {
                     ...curServer,
                     priority: getBoolean(inputPriority),
@@ -539,7 +549,8 @@ export async function handleInteractions(interaction: Interaction) {
                     information: {
                         ...curServer.information,
                         memo: inputMemo
-                    }
+                    },
+                    customImage: customImage
                 }
 
                 if (curServerKey !== newServerKey) {
