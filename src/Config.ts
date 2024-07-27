@@ -23,6 +23,7 @@ export interface AppConfigs {
     lang: keyof typeof StringTable;
     localRefreshInterval: number;
     embedRefreshInterval: number;
+    rankingRefreshInterval: number;
     serverAutoDeleteCount: number;
     verbose: boolean;
 }

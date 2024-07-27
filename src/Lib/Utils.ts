@@ -2,6 +2,7 @@ import _ from "lodash";
 import { pipe, split, toArray } from "iter-ops";
 import { createHash } from 'crypto';
 import { DateTime } from "luxon";
+import { markdownTable } from "markdown-table";
 
 export function byteSplit(buffer: Buffer, seperator: number) {
     return pipe(
@@ -67,6 +68,15 @@ export function uid2guid(uid: string) {
 
     return guid;
 };
+
+const TABLE = ['#', 'Player', 'Time'];
+export function getRankingTable(data: { name: string, playtime: number }[]) {
+    const p = data
+        .sort((x, y) => y.playtime - x.playtime)
+        .map((v, i) => [(i + 1).toString(), v.name, v.playtime.toString() ]);
+
+    return markdownTable([ TABLE, ...p ]);
+}
 
 /*
 export function getRconOwnedString(rconSession?: RconSession) {

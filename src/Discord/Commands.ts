@@ -12,13 +12,12 @@ import {
 } from "discord.js";
 import { AppStorage, BIServer, getStorage, saveStorage } from "Storage";
 import { logError, logNormal, guildTrack, userTrack } from "Lib/Log";
-import { getServerDeleteInteractionEmbed, getNoticeEmbed, getServerRegisterInteractionEmbed, getMaintenanceEmbed, getServerStatusEmbed } from "./Embed";
+import { getServerDeleteInteractionEmbed, getNoticeEmbed, getServerRegisterInteractionEmbed, getMaintenanceEmbed, getServerStatusEmbed, getRankingEmbed } from "./Embed";
 import { uid2guid } from "Lib/Utils";
-import { startRconSession } from "Server/Rcon";
 import { getStringTable } from "Language";
 
-const storage = getStorage();
-const lang = getStringTable();
+const Storage = getStorage();
+const StringTable = getStringTable();
 
 type SlashCommand = ChatInputApplicationCommandData & {
     execute: (interaction: CommandInteraction) => void;
@@ -28,7 +27,7 @@ async function assertGuild(interaction: CommandInteraction) {
     const { guild } = interaction;
     if (!guild) {
         await interaction.followUp({
-            content: lang.commands.assertGuild.noGuild,
+            content: StringTable.commands.assertGuild.noGuild,
             ephemeral: true
         });
         return;
@@ -43,7 +42,7 @@ async function assertGuildStorage(interaction: CommandInteraction, storage: Map<
 
     if (!serverStorage) {
         await interaction.followUp({
-            content: lang.commands.assertGuildStorage.noGuild,
+            content: StringTable.commands.assertGuildStorage.noGuild,
             ephemeral: true
         });
         return;
@@ -57,7 +56,7 @@ async function assertServer(interaction: CommandInteraction, guildStorage: AppSt
 
     if (!server) {
         await interaction.followUp({
-            content: lang.commands.assertServer.noServer,
+            content: StringTable.commands.assertServer.noServer,
             ephemeral: true
         });
         return;
@@ -80,23 +79,29 @@ const commands: Array<SlashCommand> = [
     {
         type: ApplicationCommandType.ChatInput,
         name: 'initalize',
-        description: lang.commands.setChannels.description,
+        description: StringTable.commands.initalize.description,
         options: [
             {
                 name: 'interaction_channel_id',
-                description: lang.commands.initalize.options.descriptionInteractionChannelId,
+                description: StringTable.commands.initalize.options.descriptionInteractionChannelId,
                 type: ApplicationCommandOptionType.String,
                 required: true
             },
             {
                 name: 'status_channel_id',
-                description: lang.commands.initalize.options.descriptionStatusChannelId,
+                description: StringTable.commands.initalize.options.descriptionStatusChannelId,
                 type: ApplicationCommandOptionType.String,
                 required: true
             },
             {
                 name: 'admin_channel_id',
-                description: lang.commands.initalize.options.descriptionAdminChannelId,
+                description: StringTable.commands.initalize.options.descriptionAdminChannelId,
+                type: ApplicationCommandOptionType.String,
+                required: true
+            },
+            {
+                name: 'ranking_channel_id',
+                description: StringTable.commands.initalize.options.descriptionRankingChannelId,
                 type: ApplicationCommandOptionType.String,
                 required: true
             }
@@ -109,16 +114,18 @@ const commands: Array<SlashCommand> = [
             const interactionChannelId = (interaction.options.get('interaction_channel_id')?.value || '') as string;
             const statusChannelId = (interaction.options.get('status_channel_id')?.value || '') as string;
             const adminChannelId = (interaction.options.get('admin_channel_id')?.value || '') as string;
+            const rankingChannelId = (interaction.options.get('ranking_channel_id')?.value || '') as string;
 
-            const [interactionChannel, statusChannel, adminChannel] = await Promise.all([
+            const [interactionChannel, statusChannel, adminChannel, rankingChannel] = await Promise.all([
                 guild.channels.fetch(interactionChannelId),
                 guild.channels.fetch(statusChannelId),
-                guild.channels.fetch(adminChannelId)
+                guild.channels.fetch(adminChannelId),
+                guild.channels.fetch(rankingChannelId)
             ]);
 
-            if (!interactionChannel || !statusChannel || !adminChannel) {
+            if (!interactionChannel || !statusChannel || !adminChannel || rankingChannel) {
                 await interaction.followUp({
-                    content: `${lang.commands.registerMessages.noChannel}`,
+                    content: `${StringTable.commands.registerMessages.noChannel}`,
                     ephemeral: true
                 });
                 return;
@@ -127,8 +134,10 @@ const commands: Array<SlashCommand> = [
             const noticeMessage = await (interactionChannel as TextChannel).send(getNoticeEmbed());
             const interactionMessage = await (interactionChannel as TextChannel).send(getServerRegisterInteractionEmbed());
             const deleteMessage = await (interactionChannel as TextChannel).send(getServerDeleteInteractionEmbed());
+            // const statusMessage = await (interactionChannel as TextChannel).send(getServerStatusEmbed());
+            const rankingMessage = await (interactionChannel as TextChannel).send(getRankingEmbed());
 
-            storage.set(guild.id, {
+            Storage.set(guild.id, {
                 channels: {
                     interaction: {
                         channelId: interactionChannelId,
@@ -137,10 +146,14 @@ const commands: Array<SlashCommand> = [
                         deleteMessageId: deleteMessage.id
                     },
                     status: {
-                        channelId: statusChannelId
+                        channelId: statusChannelId,
                     },
                     admin: {
                         channelId: adminChannelId
+                    },
+                    ranking: {
+                        channelId: rankingChannelId,
+                        rankingMessageId: rankingMessage.id,
                     }
                 },
                 servers: new Map()
@@ -149,31 +162,38 @@ const commands: Array<SlashCommand> = [
             saveStorage();
 
             await interaction.followUp({
-                content: lang.commands.initalize.success,
+                content: StringTable.commands.initalize.success,
                 ephemeral: true
             });
         }
     },
+    /*
     {
         type: ApplicationCommandType.ChatInput,
         name: 'set_channels',
-        description: lang.commands.setChannels.description,
+        description: StringTable.commands.setChannels.description,
         options: [
             {
                 name: 'interaction_channel_id',
-                description: lang.commands.setChannels.options.descriptionInteractionChannelId,
+                description: StringTable.commands.setChannels.options.descriptionInteractionChannelId,
                 type: ApplicationCommandOptionType.String,
                 required: true
             },
             {
                 name: 'status_channel_id',
-                description: lang.commands.setChannels.options.descriptionStatusChannelId,
+                description: StringTable.commands.setChannels.options.descriptionStatusChannelId,
                 type: ApplicationCommandOptionType.String,
                 required: true
             },
             {
                 name: 'admin_channel_id',
-                description: lang.commands.setChannels.options.descriptionAdminChannelId,
+                description: StringTable.commands.setChannels.options.descriptionAdminChannelId,
+                type: ApplicationCommandOptionType.String,
+                required: true
+            },
+            {
+                name: 'ranking_channel_id',
+                description: StringTable.commands.setChannels.options.descriptionRankingChannelId,
                 type: ApplicationCommandOptionType.String,
                 required: true
             }
@@ -183,14 +203,15 @@ const commands: Array<SlashCommand> = [
             const guild = await assertGuild(interaction);
             if (!guild) return;
 
-            const guildStorage = await assertGuildStorage(interaction, storage, guild);
+            const guildStorage = await assertGuildStorage(interaction, Storage, guild);
             if (!guildStorage) return;
 
             const interactionChannelId = (interaction.options.get('interaction_channel_id')?.value || '') as string;
             const statusChannelId = (interaction.options.get('status_channel_id')?.value || '') as string;
             const adminChannelId = (interaction.options.get('admin_channel_id')?.value || '') as string;
+            const rankingChannelId = (interaction.options.get('ranking_channel_id')?.value || '') as string;
 
-            storage.set(guild.id, {
+            Storage.set(guild.id, {
                 ...guildStorage,
                 channels: {
                     interaction: {
@@ -204,6 +225,10 @@ const commands: Array<SlashCommand> = [
                     },
                     admin: {
                         channelId: adminChannelId
+                    },
+                    ranking: {
+                        channelId: rankingChannelId,
+                        rankingMessageId: rankingMessageId,
                     }
                 },
                 servers: new Map()
@@ -212,21 +237,22 @@ const commands: Array<SlashCommand> = [
             saveStorage();
 
             await interaction.followUp({
-                content: lang.commands.setChannels.success,
+                content: StringTable.commands.setChannels.success,
                 ephemeral: true
             });
         }
     },
+    */
     {
         type: ApplicationCommandType.ChatInput,
         name: 'register_interaction_messages',
-        description: lang.commands.registerMessages.description,
+        description: StringTable.commands.registerMessages.description,
         defaultMemberPermissions: PermissionFlagsBits.Administrator,
         execute: async interaction => {
             const guild = await assertGuild(interaction);
             if (!guild) return;
 
-            const guildStorage = await assertGuildStorage(interaction, storage, guild);
+            const guildStorage = await assertGuildStorage(interaction, Storage, guild);
             if (!guildStorage) return;
 
             const { channelId } = guildStorage.channels.interaction;
@@ -234,7 +260,7 @@ const commands: Array<SlashCommand> = [
 
             if (!channel) {
                 await interaction.followUp({
-                    content: `${lang.commands.registerMessages.noChannel}: ${channelId}`,
+                    content: `${StringTable.commands.registerMessages.noChannel}: ${channelId}`,
                     ephemeral: true
                 });
                 return;
@@ -250,11 +276,11 @@ const commands: Array<SlashCommand> = [
             newStorage.channels.interaction.registerMessageId = interactionMessage.id;
             newStorage.channels.interaction.deleteMessageId = deleteMessage.id;
 
-            storage.set(guild.id, newStorage);
+            Storage.set(guild.id, newStorage);
             saveStorage();
 
             await interaction.followUp({
-                content: lang.commands.registerMessages.success,
+                content: StringTable.commands.registerMessages.success,
                 ephemeral: true
             });
         }
@@ -262,13 +288,13 @@ const commands: Array<SlashCommand> = [
     {
         type: ApplicationCommandType.ChatInput,
         name: 'servers',
-        description: lang.commands.servers.description,
+        description: StringTable.commands.servers.description,
         defaultMemberPermissions: PermissionFlagsBits.Administrator,
         execute: async interaction => {
             const guild = await assertGuild(interaction);
             if (!guild) return;
 
-            const guildStorage = await assertGuildStorage(interaction, storage, guild);
+            const guildStorage = await assertGuildStorage(interaction, Storage, guild);
             if (!guildStorage) return;
 
             const lists = Array.from(guildStorage.servers).map(([key, server]) => {
@@ -285,33 +311,33 @@ const commands: Array<SlashCommand> = [
     {
         type: ApplicationCommandType.ChatInput,
         name: 'clear_servers',
-        description: lang.commands.cleanServers.description,
+        description: StringTable.commands.cleanServers.description,
         defaultMemberPermissions: PermissionFlagsBits.Administrator,
         execute: async interaction => {
             const guild = await assertGuild(interaction);
             if (!guild) return;
 
-            const guildStorage = await assertGuildStorage(interaction, storage, guild);
+            const guildStorage = await assertGuildStorage(interaction, Storage, guild);
             if (!guildStorage) return;
 
             const { status, admin } = guildStorage.channels;
             const tasks = Array.from(guildStorage.servers).map(async ([instanceId, instance]) => {
                 try {
                     const listChannel = await guild.channels.cache.get(status.channelId)?.fetch() as TextChannel;
-                    const rconChannel = await guild.channels.cache.get(admin.channelId)?.fetch() as TextChannel;
+                    const adminChannel = await guild.channels.cache.get(admin.channelId)?.fetch() as TextChannel;
 
-                    if (!listChannel || !rconChannel) {
+                    if (!listChannel || !adminChannel) {
                         return;
                     }
 
-                    const [statusMessage, rconMessage] = await Promise.all([
+                    const [statusMessage, adminMessage] = await Promise.all([
                         listChannel.messages.fetch(instance.discord.statusEmbedMessageId),
-                        rconChannel.messages.fetch(instance.discord.rconEmbedMessageId)
+                        adminChannel.messages.fetch(instance.discord.adminEmbedMessageId)
                     ]);
 
                     await Promise.all([
                         statusMessage.delete(),
-                        rconMessage.delete()
+                        adminMessage.delete()
                     ]);
                 }
 
@@ -322,7 +348,7 @@ const commands: Array<SlashCommand> = [
 
             await Promise.all(tasks);
 
-            storage.set(guild.id, {
+            Storage.set(guild.id, {
                 ...guildStorage,
                 servers: new Map()
             });
@@ -330,7 +356,7 @@ const commands: Array<SlashCommand> = [
             saveStorage();
 
             await interaction.followUp({
-                content: lang.commands.cleanServers.success,
+                content: StringTable.commands.cleanServers.success,
                 ephemeral: true
             });
         }
@@ -338,11 +364,11 @@ const commands: Array<SlashCommand> = [
     {
         type: ApplicationCommandType.ChatInput,
         name: 'uid2guid',
-        description: lang.commands.uid2guid.description,
+        description: StringTable.commands.uid2guid.description,
         options: [
             {
                 name: 'steamid',
-                description: lang.commands.uid2guid.options.descriptionSteamID,
+                description: StringTable.commands.uid2guid.options.descriptionSteamID,
                 type: ApplicationCommandOptionType.String,
                 required: true
             }
@@ -361,7 +387,7 @@ const commands: Array<SlashCommand> = [
 
             catch {
                 await interaction.followUp({
-                    content: lang.commands.uid2guid.uncatchedError,
+                    content: StringTable.commands.uid2guid.uncatchedError,
                     ephemeral: true
                 });
             }
@@ -424,17 +450,17 @@ const commands: Array<SlashCommand> = [
     {
         type: ApplicationCommandType.ChatInput,
         name: 'set_maintenance',
-        description: lang.commands.maintenance.description,
+        description: StringTable.commands.maintenance.description,
         options: [
             {
                 name: 'server_id',
-                description: lang.commands.maintenance.options.descriptionServerID, // id or 'all'
+                description: StringTable.commands.maintenance.options.descriptionServerID, // id or 'all'
                 type: ApplicationCommandOptionType.String,
                 required: true
             },
             {
                 name: 'set',
-                description: lang.commands.maintenance.options.descriptionActivation,
+                description: StringTable.commands.maintenance.options.descriptionActivation,
                 type: ApplicationCommandOptionType.Boolean,
                 required: true
             }
@@ -444,7 +470,7 @@ const commands: Array<SlashCommand> = [
             const guild = await assertGuild(interaction);
             if (!guild) return;
 
-            const guildStorage = await assertGuildStorage(interaction, storage, guild);
+            const guildStorage = await assertGuildStorage(interaction, Storage, guild);
             if (!guildStorage) return;
 
             let target: [string, BIServer][];
@@ -463,7 +489,7 @@ const commands: Array<SlashCommand> = [
 
                 else {
                     await interaction.followUp({
-                        content: lang.commands.maintenance.noServer,
+                        content: StringTable.commands.maintenance.noServer,
                         ephemeral: true
                     });
                     return;
@@ -487,7 +513,7 @@ const commands: Array<SlashCommand> = [
                     });
 
                     if (set) return statusMessage.edit(getMaintenanceEmbed(key, server));
-                    else return statusMessage.edit(getServerStatusEmbed(statusMessage.id, server.information.lastQueries, server));
+                    else return statusMessage.edit(getServerStatusEmbed(server.information.lastQueries, server));
                 }
 
                 catch (e) {
@@ -499,7 +525,7 @@ const commands: Array<SlashCommand> = [
             saveStorage();
 
             await interaction.followUp({
-                content: lang.commands.maintenance.success,
+                content: StringTable.commands.maintenance.success,
                 ephemeral: true
             });
         }

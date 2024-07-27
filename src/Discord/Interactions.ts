@@ -5,21 +5,22 @@ import { Interaction, PermissionsBitField, TextChannel } from "discord.js";
 import { AvailableGame, Games } from "Types";
 import { registerStanbyMessage } from "./Message";
 import { getConfigs } from "Config";
-import { getStorage, saveStorage, BIServer } from "Storage";
-import { getServerStatusEmbed, getPlayersEmbed, getServerRconEmbed, getMaintenanceEmbed } from "./Embed";
+import { getStorage, saveStorage, BIServer, getRanking, saveRanking } from "Storage";
+import { getServerStatusEmbed, getPlayersEmbed, getServerAdminEmbed, getMaintenanceEmbed } from "./Embed";
 import { logError, logNormal, messageTrack, userTrack } from "Lib/Log";
-import { createServerModifyModal, createServerRegisterModal } from "./Modal";
+import { createRconRegisterModal, createServerModifyModal, createServerRegisterModal } from "./Modal";
 import { CommonServerQueries } from "Types";
 import { queryArma3, savePresetHtml } from "Server/Games/Arma3";
 import { queryArmaResistance } from "Server/Games/ArmaResistance";
 import { queryArmaReforger } from "Server/Games/ArmaReforger";
-import { rconEmbedRefresh, startRefresherEntire, statusEmbedRefresh, stopRefresherEntire } from "Lib/Refresher";
+import { refreshAdminEmbed, startRefresherEntire, refreshStatusEmbed, stopRefresherEntire, addRankingConnection } from "Lib/Schedulers";
 import { getBoolean } from "Lib/Utils";
 import { getStringTable } from "Language";
 
-const storage = getStorage();
-const configs = getConfigs();
-const lang = getStringTable();
+const Storage = getStorage();
+const Ranking = getRanking();
+const Configs = getConfigs();
+const StringTable = getStringTable();
 
 export const Interactions = {
     button: {
@@ -30,26 +31,24 @@ export const Interactions = {
         /*
         serverConnect: 'serverConnect',
         adminStartRcon: 'adminStartRcon',
+        */
         adminRconRegister: 'adminRconRegister',
         adminRconDelete: 'adminRconDelete',
-        */
         adminMaintenance: 'adminMaintenance',
     },
-    modal: {
-        serverRegister: 'serverRegisterSubmit',
-        serverModify: 'serverModifySubmit',
-        // rconRegister: 'rconRegister'
+    modalSubmit: {
+        serverRegisterSubmit: 'serverRegisterSubmit',
+        serverModifySubmit: 'serverModifySubmit',
+        rconRegisterSubmit: 'rconRegisterSubmit'
     },
     modalComponents: {
         serverAddress: 'serverAddress',
         serverMemo: 'serverMemo',
         serverPriority: 'serverPriority',
         serverImageOnline: 'serverImageOnline',
-        serverImageOffline: 'serverImageOffline'
-        /*
+        serverImageOffline: 'serverImageOffline',
         rconPort: 'rconPort',
         rconPassword: 'rconPassword'
-        */
     }
 } as const;
 
@@ -58,7 +57,7 @@ export async function handleInteractions(interaction: Interaction) {
 
     // const storage = getStorage();
     const guild = interaction.guild;
-    const guildStorage = storage.get(guild.id);
+    const guildStorage = Storage.get(guild.id);
 
     if (!guildStorage) return;
 
@@ -86,7 +85,8 @@ export async function handleInteractions(interaction: Interaction) {
 
         const buttonId = interaction.customId.split('_');
         const {
-            serverRegister, serverDelete, serverModify, serverCheckPlayers, adminMaintenance
+            serverRegister, serverDelete, serverModify, serverCheckPlayers, 
+            adminMaintenance, adminRconRegister, adminRconDelete
         } = Interactions.button;
 
         switch (buttonId[0]) {
@@ -107,7 +107,7 @@ export async function handleInteractions(interaction: Interaction) {
 
                 else {
                     await interaction.reply({
-                        content: lang.interaction.button.serverModify.noServer,
+                        content: StringTable.interaction.button.serverModify.noServer,
                         ephemeral: true
                     });
                 }
@@ -128,7 +128,7 @@ export async function handleInteractions(interaction: Interaction) {
                     const server = guildStorage.servers.get(serverKey)!;
                     const [statusMessage, rconMessage] = await Promise.all([
                         listChannel.messages.fetch(server.discord.statusEmbedMessageId),
-                        rconChannel.messages.fetch(server.discord.rconEmbedMessageId)
+                        rconChannel.messages.fetch(server.discord.adminEmbedMessageId)
                     ]);
 
                     await Promise.all([
@@ -137,7 +137,7 @@ export async function handleInteractions(interaction: Interaction) {
                     ]);
 
                     await interaction.reply({
-                        content: lang.interaction.button.serverDelete.deletedServer,
+                        content: StringTable.interaction.button.serverDelete.deletedServer,
                         ephemeral: true
                     });
 
@@ -223,7 +223,7 @@ export async function handleInteractions(interaction: Interaction) {
 
                 break;
             }
-
+            */
             case adminRconRegister: {
                 if (!isMemberAdmin) {
                     await handleRestrictedInteraction(interaction, isMemberAdmin);
@@ -240,7 +240,7 @@ export async function handleInteractions(interaction: Interaction) {
 
                 else {
                     await interaction.reply({
-                        content: lang.interaction.button.adminRconRegister.noServer,
+                        content: StringTable.interaction.button.adminRconRegister.noServer,
                         ephemeral: true
                     });
                 }
@@ -268,14 +268,14 @@ export async function handleInteractions(interaction: Interaction) {
 
                     // await forcedEmbedRefresh(newInstance.discord.rconEmbedMessageId);
                     await interaction.reply({
-                        content: lang.interaction.button.adminRconDelete.rconDeactivated,
+                        content: StringTable.interaction.button.adminRconDelete.rconDeactivated,
                         ephemeral: true
                     });
                 }
 
                 else {
                     await interaction.reply({
-                        content: lang.interaction.button.adminRconDelete.noServer,
+                        content: StringTable.interaction.button.adminRconDelete.noServer,
                         ephemeral: true
                     });
                 }
@@ -287,7 +287,6 @@ export async function handleInteractions(interaction: Interaction) {
                 logError(`[App] Unregistered button interaction: ${buttonId}`);
                 break;
             }
-            */
 
             case adminMaintenance: {
                 if (!isMemberAdmin) {
@@ -309,25 +308,25 @@ export async function handleInteractions(interaction: Interaction) {
                     });
 
                     saveStorage();
-                    await rconEmbedRefresh(guild.id, serverKey);
+                    await refreshAdminEmbed(guild.id, serverKey);
 
                     if (newMaintenance === true) {
                         await statusMessage.edit(getMaintenanceEmbed(serverKey, server));
                     }
                     
                     else {
-                        await statusMessage.edit(getServerStatusEmbed(statusMessage.id, server.information.lastQueries, server));
+                        await statusMessage.edit(getServerStatusEmbed(server.information.lastQueries, server));
                     }
 
                     await interaction.reply({
-                        content: lang.interaction.button.serverMaintenance.complete,
+                        content: StringTable.interaction.button.serverMaintenance.complete,
                         ephemeral: true
                     });
                 }
 
                 else {
                     await interaction.reply({
-                        content: lang.interaction.button.serverMaintenance.noServer,
+                        content: StringTable.interaction.button.serverMaintenance.noServer,
                         ephemeral: true
                     });
                 }
@@ -342,14 +341,14 @@ export async function handleInteractions(interaction: Interaction) {
         logNormal(`[Discord] Interaction: ${interaction.customId}: ${userTrack(interaction.user)}`);
 
         const modalId = interaction.customId.split('_');
-        const { serverRegister, serverModify } = Interactions.modal;
+        const { serverRegisterSubmit, serverModifySubmit, rconRegisterSubmit } = Interactions.modalSubmit;
         const { serverAddress, serverPriority, serverMemo, serverImageOnline, serverImageOffline } = Interactions.modalComponents;
         const { arma3, armareforger, armaresistance } = Games;
 
         switch (modalId[0]) {
-            case serverRegister: {
+            case serverRegisterSubmit: {
                 const ephemeralReplyMessage = await interaction.reply({
-                    content: lang.interaction.modalSubmit.serverRegister.checkingValidation,
+                    content: StringTable.interaction.modalSubmit.serverRegister.checkingValidation,
                     ephemeral: true
                 });
 
@@ -366,14 +365,14 @@ export async function handleInteractions(interaction: Interaction) {
                     break;
                 }
 
-                await ephemeralReplyMessage.edit({ content: lang.interaction.modalSubmit.serverRegister.connectingServer });
+                await ephemeralReplyMessage.edit({ content: StringTable.interaction.modalSubmit.serverRegister.connectingServer });
 
                 const newServerKey = `${validatedAddress[0]}:${validatedAddress[1]}`;
                 const isAlreadyExist = guildStorage.servers.has(newServerKey);
                 // const isUserAlreadyRegistered = Array.from(serverInstance.servers).find(([k, v]) => v.discord.owner.id === user.id);
 
                 if (isAlreadyExist) {
-                    await ephemeralReplyMessage.edit({ content: lang.interaction.modalSubmit.serverRegister.duplicatedServer });
+                    await ephemeralReplyMessage.edit({ content: StringTable.interaction.modalSubmit.serverRegister.duplicatedServer });
                     return;
                 }
 
@@ -416,7 +415,7 @@ export async function handleInteractions(interaction: Interaction) {
                     }
 
                     default: {
-                        await ephemeralReplyMessage.edit({ content: lang.interaction.modalSubmit.serverRegister.unsupportedSerrverType });
+                        await ephemeralReplyMessage.edit({ content: StringTable.interaction.modalSubmit.serverRegister.unsupportedSerrverType });
                         return;
                     }
                 }
@@ -425,7 +424,7 @@ export async function handleInteractions(interaction: Interaction) {
                     if (!serverQueries.query) {
                         await statusMessage.delete();
                         await rconMessage.delete();
-                        await ephemeralReplyMessage.edit({ content: lang.interaction.modalSubmit.serverRegister.failedConnectServer });
+                        await ephemeralReplyMessage.edit({ content: StringTable.interaction.modalSubmit.serverRegister.failedConnectServer });
                         return;
                     }
 
@@ -433,11 +432,12 @@ export async function handleInteractions(interaction: Interaction) {
                         /* registering new server */
                         let presets: string[] = [];
                         const { info, tags, rules, preset } = serverQueries.query;
+                        const nonce = crypto.randomBytes(4).toString('hex');
 
                         if (preset) {
                             const [presetPurchasedPath, presetCompatibilityPath] = await Promise.all([
-                                savePresetHtml(`${statusMessage.id}-${tags?.loadedContentHash}-p`, preset!.purchased),
-                                savePresetHtml(`${statusMessage.id}-${tags?.loadedContentHash}-c`, preset!.compatibility)
+                                savePresetHtml(`${nonce}-${tags?.loadedContentHash}-p`, preset!.purchased),
+                                savePresetHtml(`${nonce}-${tags?.loadedContentHash}-c`, preset!.compatibility)
                             ]);
 
                             presets = [
@@ -448,14 +448,14 @@ export async function handleInteractions(interaction: Interaction) {
 
                         const newServer: BIServer = {
                             type: serverQueries.game,
-                            nonce: crypto.randomBytes(4).toString('hex'),
+                            nonce: nonce,
                             priority: isMemberAdmin,
                             maintenance: false,
                             connect: { host: validatedAddress[0], port: validatedAddress[1] },
                             presetPath: presets,
                             discord: {
                                 statusEmbedMessageId: statusMessage.id,
-                                rconEmbedMessageId: rconMessage.id,
+                                adminEmbedMessageId: rconMessage.id,
                                 owner: instanceUser
                             },
                             information: {
@@ -470,22 +470,22 @@ export async function handleInteractions(interaction: Interaction) {
                                 lastQueries: serverQueries
                             },
                             customImage: null,
-                            // rcon: null,
+                            rcon: null,
                             connection: {
                                 status: 'connected',
-                                count: configs.serverAutoDeleteCount
+                                count: Configs.serverAutoDeleteCount
                             }
                         };
 
-                        statusEmbed = getServerStatusEmbed(statusMessage.id, serverQueries, newServer, inputMemo);
-                        rconEmbed = getServerRconEmbed(newServerKey, newServer);
+                        statusEmbed = getServerStatusEmbed(serverQueries, newServer, inputMemo);
+                        rconEmbed = getServerAdminEmbed(newServerKey, newServer);
 
                         guildStorage.servers.set(newServerKey, newServer);
                         saveStorage();
 
                         await statusMessage.edit(statusEmbed);
                         await rconMessage.edit(rconEmbed);
-                        await ephemeralReplyMessage.edit({ content: lang.interaction.modalSubmit.serverRegister.success });
+                        await ephemeralReplyMessage.edit({ content: StringTable.interaction.modalSubmit.serverRegister.success });
 
                         logNormal(`[App|Discord] Server registered: [${serverQueries.game},${info.connect}]${userTrack(user)}`);
                     }
@@ -494,7 +494,7 @@ export async function handleInteractions(interaction: Interaction) {
                 catch (e) {
                     await statusMessage?.delete();
                     await rconMessage?.delete();
-                    await ephemeralReplyMessage.edit({ content: lang.interaction.modalSubmit.serverRegister.uncatchedError });
+                    await ephemeralReplyMessage.edit({ content: StringTable.interaction.modalSubmit.serverRegister.uncatchedError });
 
                     logError(`[App|Discord] Error while registering server: ${e}`);
                     return;
@@ -503,10 +503,10 @@ export async function handleInteractions(interaction: Interaction) {
                 break;
             }
 
-            case serverModify: {
+            case serverModifySubmit: {
                 const curServerKey = modalId[1];
                 const ephemeralReplyMessage = await interaction.reply({
-                    content: lang.interaction.modalSubmit.serverModify.checkingValidation,
+                    content: StringTable.interaction.modalSubmit.serverModify.checkingValidation,
                     ephemeral: true
                 });
 
@@ -531,7 +531,7 @@ export async function handleInteractions(interaction: Interaction) {
                 const curServer = guildStorage.servers.get(curServerKey);
 
                 if (!curServer) {
-                    await ephemeralReplyMessage.edit({ content: lang.interaction.modalSubmit.serverModify.noServer });
+                    await ephemeralReplyMessage.edit({ content: StringTable.interaction.modalSubmit.serverModify.noServer });
                     break;
                 }
 
@@ -555,23 +555,35 @@ export async function handleInteractions(interaction: Interaction) {
 
                 if (curServerKey !== newServerKey) {
                     guildStorage.servers.delete(curServerKey);
+                    if (newServer.rcon && newServer.priority) Ranking.delete(curServerKey);
                 }
 
                 guildStorage.servers.set(newServerKey, newServer);
                 saveStorage();
 
+                if (newServer.rcon && newServer.priority) {
+                    addRankingConnection({
+                        id: newServerKey, 
+                        host: newServer.connect.host,
+                        rconPort: newServer.rcon.port, 
+                        rconPassword: newServer.rcon.password
+                    });
+
+                    Ranking.set(newServerKey, new Map());
+                    saveRanking();
+                }
+
                 await Promise.all([ 
-                    statusEmbedRefresh(guild.id, newServerKey), 
-                    rconEmbedRefresh(guild.id, newServerKey) 
+                    refreshStatusEmbed(guild.id, newServerKey), 
+                    refreshAdminEmbed(guild.id, newServerKey) 
                 ]);
-                await ephemeralReplyMessage.edit({ content: lang.interaction.modalSubmit.serverModify.success });
+                await ephemeralReplyMessage.edit({ content: StringTable.interaction.modalSubmit.serverModify.success });
                 break;
             }
 
-            /*
-            case rconRegister: {
+            case rconRegisterSubmit: {
                 const ephemeralReplyMessage = await interaction.reply({
-                    content: lang.interaction.modalSubmit.rconRegister.checkingValidation,
+                    content: StringTable.interaction.modalSubmit.rconRegister.checkingValidation,
                     ephemeral: true
                 });
                 
@@ -595,7 +607,7 @@ export async function handleInteractions(interaction: Interaction) {
                 const curServer = guildStorage.servers.get(serverId);
                 
                 if (!curServer) {
-                    await ephemeralReplyMessage.edit({ content: lang.interaction.modalSubmit.rconRegister.noServer });
+                    await ephemeralReplyMessage.edit({ content: StringTable.interaction.modalSubmit.rconRegister.noServer });
                     break;
                 }
 
@@ -610,11 +622,22 @@ export async function handleInteractions(interaction: Interaction) {
                 guildStorage.servers.set(serverId, newServer);
                 saveStorage();
 
-                await rconEmbedRefresh(guild.id, serverId);
-                await ephemeralReplyMessage.edit({ content: lang.interaction.modalSubmit.rconRegister.success });
+                if (newServer.priority) {
+                    addRankingConnection({
+                        id: serverId, 
+                        host: newServer.connect.host,
+                        rconPort: port, 
+                        rconPassword: inputRconPassword
+                    });
+
+                    Ranking.set(serverId, new Map());
+                    saveRanking();
+                }
+
+                await refreshAdminEmbed(guild.id, serverId);
+                await ephemeralReplyMessage.edit({ content: StringTable.interaction.modalSubmit.rconRegister.success });
                 break;
             }
-            */
 
             default: {
                 // invalid Submit
@@ -628,7 +651,7 @@ async function handleRestrictedInteraction(interaction: Interaction, isMemberAdm
     if (!isMemberAdmin) {
         if (interaction.isRepliable()) {
             await interaction.reply({
-                content: lang.interaction.misc.noPermission,
+                content: StringTable.interaction.misc.noPermission,
                 ephemeral: true
             });
         }
@@ -640,13 +663,13 @@ function validationAddress(address: string): [string, number] {
     let port = inputAddress.length === 2 ? Number(inputAddress[1]) : 2302;
 
     if (0 > port || 65535 < port) {
-        throw new Error(lang.interaction.misc.wrongPort);
+        throw new Error(StringTable.interaction.misc.wrongPort);
     }
 
     const sepIP = inputAddress[0].split('.');
 
     if (sepIP.length !== 4 || sepIP.map(x => Number(x)).find(v => v < 0 || v > 255)) {
-        throw new Error(lang.interaction.misc.wrongIP);
+        throw new Error(StringTable.interaction.misc.wrongIP);
     }
 
     return [inputAddress[0], port]

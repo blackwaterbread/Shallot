@@ -14,7 +14,7 @@ import { getStringTable } from "Language";
 import appJson from 'Root/package.json';
 
 const Config = getConfigs();
-const lang = getStringTable();
+const StringTable = getStringTable();
 
 const ARMA_3_SERVER_STATE = new Map([
     ['0', "NONE"],                /* no server */
@@ -431,7 +431,7 @@ export async function queryArma3(connection: ConnectInfo): Promise<ServerQueries
     }
 
     catch (e) {
-        logError(`[App] Failed query Arma3 Server: ${e}: [${host}:${port}]`);
+        logNormal(`[App] Failed query Arma3 Server: ${e}: [${host}:${port}]`, true);
         return { 
             game: 'arma3',
             connect: connection
@@ -783,7 +783,7 @@ export function buildArma3PresetHtml(presetName: string, mods: { [name: string]:
         <body>
             <h1><strong>${presetName}</strong></h1>
             <p class="before-list">
-                <em>${lang.preset.arma3.generated}</em>
+                <em>${StringTable.preset.arma3.generated}</em>
             </p>
             ${createContainers(mods, compatibility)}
             <div class="footer">

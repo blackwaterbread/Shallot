@@ -31,9 +31,11 @@ const EN_STRINGS: ShallotStrings = {
                 descriptionInteractionChannelId: 'Server Registration/Deletion Channel ID',
                 descriptionStatusChannelId: 'Server Status Channel ID',
                 descriptionAdminChannelId: 'Server Management Channel ID',
+                descriptionRankingChannelId: 'Server Ranking Channel ID'
             },
             success: ':white_check_mark: Discord server registration complete.',
         },
+        /*
         setChannels: {
             description: 'Required Channel Settings',
             options: {
@@ -43,6 +45,7 @@ const EN_STRINGS: ShallotStrings = {
             },
             success: ':white_check_mark: Channel registered.',
         },
+        */
         registerMessages: {
             description: 'Register interaction messages.',
             noChannel: ':x: Channel does not appear to exist.',
@@ -173,7 +176,17 @@ const EN_STRINGS: ShallotStrings = {
                 labelCheckPlayers: 'Check Players',
                 labelConnect: 'Connect'
             },
+            titleNoServer: ':zzz: There is no currently active server.',
             labelBlankMemo: 'There\'s no memo.'
+        },
+        ranking: {
+            title: ':trophy: Server Playtime Ranking',
+            field: {
+                entireRankingTitle: ':first_place: Entire',
+                weeklyRankingTitle: ':second_place: Monthly',
+                monthlyRankingTitle: ':third_place: Weekly'
+            },
+            labelNoRanking: ':man_gesturing_no: There is no ranking data.'
         }
     },
     interaction: {

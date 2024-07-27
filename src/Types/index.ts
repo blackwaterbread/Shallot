@@ -77,18 +77,22 @@ export interface ShallotStrings {
                 descriptionInteractionChannelId: string;
                 descriptionStatusChannelId: string;
                 descriptionAdminChannelId: string;
+                descriptionRankingChannelId: string;
             },
             success: string;
         },
+        /*
         setChannels: {
             description: string;
             options: {
                 descriptionInteractionChannelId: string;
                 descriptionStatusChannelId: string;
                 descriptionAdminChannelId: string;
+                descriptionRankingChannelId: string;
             },
             success: string;
         },
+        */
         registerMessages: {
             description: string;
             noChannel: string;
@@ -217,7 +221,17 @@ export interface ShallotStrings {
                 labelConnect: string;
             },
             labelBlankMemo: string;
+            titleNoServer: string;
         },
+        ranking: {
+            title: string;
+            field: {
+                entireRankingTitle: string;
+                weeklyRankingTitle: string;
+                monthlyRankingTitle: string;
+            },
+            labelNoRanking: string;
+        }
     },
     interaction: {
         button: {

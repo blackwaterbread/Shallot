@@ -4,7 +4,7 @@ import { checkUnregisteredServer, initBotPresence } from "Discord/Initalize";
 import { handleInteractions } from "Discord/Interactions";
 import { getConfigs } from 'Config';
 import { handleCommands, initCommands } from "Discord/Commands";
-import { initRefresher } from "Lib/Refresher";
+import { initDiscordClient, initRankingRefresher, initServerRefresher } from "Lib/Schedulers";
 
 /* permissions=76800 */
 async function app() {
@@ -22,7 +22,9 @@ async function app() {
         logNormal(`[Discord] Successfully Logged In: [${readyClient.user.id}, ${readyClient.user.tag}]`);
         await initCommands(readyClient);
         await initBotPresence(readyClient);
-        initRefresher(readyClient);
+        initDiscordClient(readyClient);
+        initServerRefresher();
+        initRankingRefresher();
     });
 
     client.on(Events.GuildAvailable, async (guild) => {

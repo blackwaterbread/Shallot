@@ -6,9 +6,7 @@
   "main": "dist/shallot.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "cross-env NODE_ENV=development ts-node -r tsconfig-paths/register src/app.ts",
-    "debug": "cross-env NODE_ENV=development ts-node -r tsconfig-paths/register src/Debug.ts",
-    "ops": "cross-env NODE_ENV=development ts-node -r tsconfig-paths/register src/Ops.ts",
+    "start": "cross-env NODE_ENV=development tsx src/App.ts",
     "build": "tsc && node build.js",
     "pm2-development": "pm2 start ecosystem.config.js --env development",
     "pm2-production": "pm2 start ecosystem.config.js --env production"
@@ -26,6 +24,7 @@
     "cross-env": "^7.0.3",
     "rimraf": "^5.0.5",
     "tsconfig-paths": "^4.2.0",
+    "tsx": "^4.16.2",
     "typescript": "^5.3.3"
   },
   "dependencies": {
@@ -38,6 +37,7 @@
     "iter-ops": "^3.1.1",
     "lodash": "^4.17.21",
     "luxon": "^3.4.4",
+    "markdown-table": "^3.0.3",
     "node-html-parser": "^6.1.12",
     "toad-scheduler": "^3.0.1"
   }

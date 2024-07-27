@@ -4,27 +4,27 @@ import { BIServer } from "Storage";
 import { Interactions } from "./Interactions";
 import { getStringTable } from "Language";
 
-const lang = getStringTable();
+const StringTable = getStringTable();
 
 export function createServerRegisterModal(type: AvailableGame) {
-    const { serverRegister } = Interactions.modal;
+    const { serverRegisterSubmit } = Interactions.modalSubmit;
     const { serverAddress, serverMemo } = Interactions.modalComponents;
     const modal = new ModalBuilder()
-        .setCustomId(`${serverRegister}_${type}`)
-        .setTitle(lang.modal.serverRegister.title)
+        .setCustomId(`${serverRegisterSubmit}_${type}`)
+        .setTitle(StringTable.modal.serverRegister.title)
 
     const inputAddress = new TextInputBuilder()
         .setCustomId(serverAddress)
-        .setLabel(lang.modal.serverRegister.inputIpAddr.label)
-        .setPlaceholder(lang.modal.serverRegister.inputIpAddr.placeholder)
+        .setLabel(StringTable.modal.serverRegister.inputIpAddr.label)
+        .setPlaceholder(StringTable.modal.serverRegister.inputIpAddr.placeholder)
         .setRequired(true)
         .setMaxLength(120)
         .setStyle(TextInputStyle.Short);
 
     const inputMemo = new TextInputBuilder()
         .setCustomId(serverMemo)
-        .setLabel(lang.modal.serverRegister.inputMemo.label)
-        .setPlaceholder(lang.modal.serverRegister.inputMemo.placeholder)
+        .setLabel(StringTable.modal.serverRegister.inputMemo.label)
+        .setPlaceholder(StringTable.modal.serverRegister.inputMemo.placeholder)
         .setRequired(false)
         .setStyle(TextInputStyle.Short);
 
@@ -37,15 +37,15 @@ export function createServerRegisterModal(type: AvailableGame) {
 }
 
 export function createServerModifyModal(instanceId: string, instance: BIServer) {
-    const { serverModify } = Interactions.modal;
+    const { serverModifySubmit } = Interactions.modalSubmit;
     const { serverAddress, serverPriority, serverMemo, serverImageOnline, serverImageOffline } = Interactions.modalComponents;
     const modal = new ModalBuilder()
-        .setCustomId(`${serverModify}_${instanceId}`)
-        .setTitle(lang.modal.serverModify.title)
+        .setCustomId(`${serverModifySubmit}_${instanceId}`)
+        .setTitle(StringTable.modal.serverModify.title)
 
     const inputAddress = new TextInputBuilder()
         .setCustomId(serverAddress)
-        .setLabel(lang.modal.serverModify.inputIpAddr.label)
+        .setLabel(StringTable.modal.serverModify.inputIpAddr.label)
         .setValue(instanceId)
         .setRequired(true)
         .setMaxLength(120)
@@ -53,7 +53,7 @@ export function createServerModifyModal(instanceId: string, instance: BIServer) 
 
     const inputPriority = new TextInputBuilder()
         .setCustomId(serverPriority)
-        .setLabel(lang.modal.serverModify.inputPriority.label)
+        .setLabel(StringTable.modal.serverModify.inputPriority.label)
         .setValue(instance.priority.toString())
         .setRequired(true)
         .setMaxLength(5)
@@ -61,24 +61,24 @@ export function createServerModifyModal(instanceId: string, instance: BIServer) 
 
     const inputMemo = new TextInputBuilder()
         .setCustomId(serverMemo)
-        .setLabel(lang.modal.serverModify.inputMemo.label)
+        .setLabel(StringTable.modal.serverModify.inputMemo.label)
         .setValue(instance.information.memo)
         .setRequired(false)
         .setStyle(TextInputStyle.Short);
 
     const inputImageOnline = new TextInputBuilder()
         .setCustomId(serverImageOnline)
-        .setLabel(lang.modal.serverModify.inputImage.online.label)
+        .setLabel(StringTable.modal.serverModify.inputImage.online.label)
         .setValue(instance.customImage?.online ?? '')
-        .setPlaceholder(lang.modal.serverModify.inputImage.placeholder)
+        .setPlaceholder(StringTable.modal.serverModify.inputImage.placeholder)
         .setRequired(false)
         .setStyle(TextInputStyle.Short)
 
     const inputImageOffline = new TextInputBuilder()
         .setCustomId(serverImageOffline)
-        .setLabel(lang.modal.serverModify.inputImage.offline.label)
+        .setLabel(StringTable.modal.serverModify.inputImage.offline.label)
         .setValue(instance.customImage?.offline ?? '')
-        .setPlaceholder(lang.modal.serverModify.inputImage.placeholder)
+        .setPlaceholder(StringTable.modal.serverModify.inputImage.placeholder)
         .setRequired(false)
         .setStyle(TextInputStyle.Short)
 
@@ -93,24 +93,23 @@ export function createServerModifyModal(instanceId: string, instance: BIServer) 
     return modal;
 }
 
-/*
 export function createRconRegisterModal(instanceId: string) {
-    const { rconRegister } = Interactions.modal;
+    const { rconRegisterSubmit } = Interactions.modalSubmit;
     const { rconPort, rconPassword } = Interactions.modalComponents;
     const modal = new ModalBuilder()
-        .setCustomId(`${rconRegister}_${instanceId}`)
-        .setTitle(lang.modal.rconRegister.title)
+        .setCustomId(`${rconRegisterSubmit}_${instanceId}`)
+        .setTitle(StringTable.modal.rconRegister.title)
 
     const inputRconPort = new TextInputBuilder()
         .setCustomId(rconPort)
-        .setLabel(lang.modal.rconRegister.inputRconPort.label)
+        .setLabel(StringTable.modal.rconRegister.inputRconPort.label)
         .setRequired(true)
         .setMaxLength(5)
         .setStyle(TextInputStyle.Short);
 
     const inputRconPassword = new TextInputBuilder()
         .setCustomId(rconPassword)
-        .setLabel(lang.modal.rconRegister.inputRconPassword.label)
+        .setLabel(StringTable.modal.rconRegister.inputRconPassword.label)
         .setRequired(true)
         .setMaxLength(64)
         .setStyle(TextInputStyle.Short);
@@ -122,4 +121,3 @@ export function createRconRegisterModal(instanceId: string) {
 
     return modal;
 }
-*/

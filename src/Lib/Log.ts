@@ -3,20 +3,20 @@ import { BIServer } from 'Storage';
 import { Channel, Message, User } from 'discord.js';
 import { DateTime } from 'luxon';
 
-const app = getAppInfo();
-const configs = getConfigs();
+const AppInfo = getAppInfo();
+const Configs = getConfigs();
 
 function now() {
     return DateTime.now().toLocaleString(DateTime.DATETIME_MED_WITH_SECONDS);
 }
 
 export function logNormal(msg: string, verbose: boolean = false) {
-    if (!configs.verbose && verbose) return;
+    if (!Configs.verbose && verbose) return;
     console.log(`[${now()}]: ${msg}`);
 }
 
 export function logDevelopment(message?: any, ...optionalParams: any[]) {
-    if (app.isDevelopment) console.log(message, ...optionalParams);
+    if (AppInfo.isDevelopment) console.log(message, ...optionalParams);
 }
 
 export function logError(msg: any) {

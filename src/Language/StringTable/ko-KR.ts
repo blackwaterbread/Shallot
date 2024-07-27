@@ -31,9 +31,11 @@ const KR_STRINGS: ShallotStrings = {
                 descriptionInteractionChannelId: '서버 등록/삭제 채널 ID',
                 descriptionStatusChannelId: '서버 현황 채널 ID',
                 descriptionAdminChannelId: '서버 관리 채널 ID',
+                descriptionRankingChannelId: '서버 랭킹 채널 ID'
             },
             success: ':white_check_mark: 디스코드 서버 등록이 완료되었습니다.',
         },
+        /*
         setChannels: {
             description: '필수 채널 설정',
             options: {
@@ -43,6 +45,7 @@ const KR_STRINGS: ShallotStrings = {
             },
             success: ':white_check_mark: 채널이 등록되었습니다.',
         },
+        */
         registerMessages: {
             description: '상호작용 메세지들을 등록합니다.',
             noChannel: ':x: 채널이 존재하지 않는 것 같습니다.',
@@ -173,7 +176,17 @@ const KR_STRINGS: ShallotStrings = {
                 labelCheckPlayers: '플레이어 확인',
                 labelConnect: '접속하기'
             },
+            titleNoServer: ':zzz: 현재 가동중인 서버가 없습니다.',
             labelBlankMemo: '메모가 없습니다.'
+        },
+        ranking: {
+            title: ':trophy: 서버 플레이타임 랭킹',
+            field: {
+                entireRankingTitle: ':first_place: 전체',
+                weeklyRankingTitle: ':second_place: 이번 달',
+                monthlyRankingTitle: ':third_place: 이번 주'
+            },
+            labelNoRanking: ':man_gesturing_no: 랭킹 데이터가 존재하지 않습니다.'
         }
     },
     interaction: {

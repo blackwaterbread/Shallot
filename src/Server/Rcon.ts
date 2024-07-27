@@ -15,6 +15,7 @@ export function getRconSessions() {
 }
 */
 
+/*
 export function startRconSession(ipAddr: string, port: number, password: string) {
     return new Promise<Connection>((resolve, reject) => {
         const socket = new Socket()
@@ -43,3 +44,4 @@ export function startRconSession(ipAddr: string, port: number, password: string)
         });
     });
 }
+*/

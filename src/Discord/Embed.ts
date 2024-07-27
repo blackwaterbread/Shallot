@@ -10,20 +10,22 @@ import { ArmaResistanceServerQueries } from "Server/Games/ArmaResistance";
 import { ArmaReforgerServerQueries } from "Server/Games/ArmaReforger";
 import { Interactions } from "./Interactions";
 import { getStringTable } from "Language";
+import { logError } from "Lib/Log";
+import { getRankingTable } from "Lib/Utils";
 
-const configs = getConfigs();
-const storage = getStorage();
-const lang = getStringTable();
+const Configs = getConfigs();
+const Storage = getStorage();
+const StringTable = getStringTable();
 
 export function getNoticeEmbed() {
     const embed = new EmbedBuilder()
-        .setTitle(lang.embed.notice.title)
+        .setTitle(StringTable.embed.notice.title)
         .setDescription(
-            lang.embed.notice.description
+            StringTable.embed.notice.description
         )
         // .setImage('https://files.hirua.me/images/width.png');
         // .setImage(configs.static ? `${configs.static?.url}/images/width.png` : null);
-        .setImage(configs.imagesUrl.blank);
+        .setImage(Configs.imagesUrl.blank);
 
     return {
         embeds: [embed]
@@ -36,28 +38,29 @@ export function getServerRegisterInteractionEmbed() {
 
     const embed = new EmbedBuilder()
         .setColor(0x41F097)
-        .setTitle(lang.embed.serverRegister.title)
-        .setDescription(lang.embed.serverRegister.description)
+        .setTitle(StringTable.embed.serverRegister.title)
+        .setDescription(StringTable.embed.serverRegister.description)
         // .setImage('https://files.hirua.me/images/width.png')
         // .setImage(configs.static ? `${configs.static.url}/images/width.png` : null)
-        .setImage(configs.imagesUrl.blank)
-        .setFooter({ text: 
-            lang.embed.serverRegister.footer
+        .setImage(Configs.imagesUrl.blank)
+        .setFooter({
+            text:
+                StringTable.embed.serverRegister.footer
         });
 
     const arma3Button = new ButtonBuilder()
         .setCustomId(`${serverRegister}_${arma3.type}`)
-        .setLabel(lang.embed.serverRegister.button.labelArma3)
+        .setLabel(StringTable.embed.serverRegister.button.labelArma3)
         .setStyle(ButtonStyle.Primary)
 
     const reforgerButton = new ButtonBuilder()
         .setCustomId(`${serverRegister}_${armareforger.type}`)
-        .setLabel(lang.embed.serverRegister.button.labelReforger)
+        .setLabel(StringTable.embed.serverRegister.button.labelReforger)
         .setStyle(ButtonStyle.Primary)
 
     const ofpButton = new ButtonBuilder()
         .setCustomId(`${serverRegister}_${armaresistance.type}`)
-        .setLabel(lang.embed.serverRegister.button.labelOfp)
+        .setLabel(StringTable.embed.serverRegister.button.labelOfp)
         .setStyle(ButtonStyle.Primary)
 
     const row = new ActionRowBuilder()
@@ -74,15 +77,15 @@ export function getServerDeleteInteractionEmbed() {
 
     const embed = new EmbedBuilder()
         .setColor(0xFF0000)
-        .setTitle(lang.embed.serverDelete.title)
-        .setDescription(lang.embed.serverDelete.description)
+        .setTitle(StringTable.embed.serverDelete.title)
+        .setDescription(StringTable.embed.serverDelete.description)
         // .setImage(configs.static ? `${configs.static.url}/images/width.png` : null)
-        .setImage(configs.imagesUrl.blank)
-        .setFooter({ text: lang.embed.serverDelete.footer });
+        .setImage(Configs.imagesUrl.blank)
+        .setFooter({ text: StringTable.embed.serverDelete.footer });
 
     const del = new ButtonBuilder()
         .setCustomId(`${serverDelete}_user`)
-        .setLabel(lang.embed.serverDelete.button.labelDetele)
+        .setLabel(StringTable.embed.serverDelete.button.labelDetele)
         .setStyle(ButtonStyle.Secondary)
 
     const row = new ActionRowBuilder()
@@ -95,7 +98,7 @@ export function getServerDeleteInteractionEmbed() {
 }
 
 export function getPlayersEmbed(serverId: string, instanceId: string) {
-    const instance = storage.get(serverId)!.servers.get(instanceId);
+    const instance = Storage.get(serverId)!.servers.get(instanceId);
     if (!instance) return;
 
     const { hostname, players } = instance.information;
@@ -103,12 +106,12 @@ export function getPlayersEmbed(serverId: string, instanceId: string) {
     const time = DateTime.now().toMillis();
     const embed = new EmbedBuilder()
         .setColor(SERVER_STATUS_COLOR['discord'])
-        .setTitle(lang.embed.players.title)
+        .setTitle(StringTable.embed.players.title)
         .setDescription(`${hostname}\n\n\`\`\`\n${p}\n\`\`\``)
         // .setImage(configs.static ? `${configs.static.url}/images/width.png` : null)
-        .setImage(configs.imagesUrl.blank)
+        .setImage(Configs.imagesUrl.blank)
         .setTimestamp(time)
-        .setFooter({ text: lang.embed.players.footer });
+        .setFooter({ text: StringTable.embed.players.footer });
 
     return { content: '', embeds: [embed], ephemeral: true };
 }
@@ -123,52 +126,50 @@ export function getMaintenanceEmbed(key: string, server: BIServer) {
         embeds: [
             new EmbedBuilder()
                 .setColor(SERVER_STATUS_COLOR['discord'])
-                .setTitle(lang.embed.maintenance.title)
+                .setTitle(StringTable.embed.maintenance.title)
                 .setDescription(
                     `${game.name}` +
                     "```\n" + `${key}` + "\n```\n" +
-                    lang.embed.maintenance.description
+                    StringTable.embed.maintenance.description
                 )
                 // .setImage(configs.static ? `${configs.static.url}/images/maintenance.png` : null)
-                .setImage(configs.imagesUrl.maintenance)
+                .setImage(Configs.imagesUrl.maintenance)
                 .setTimestamp(time)
         ],
         components: []
     }
 }
 
-export function getServerRconEmbed(key: string, server: BIServer) {
+export function getServerAdminEmbed(key: string, server: BIServer) {
     const time = DateTime.now().toMillis();
-    const { type, priority, maintenance, connect, discord, information, connection } = server;
-    const { serverModify, serverDelete, adminMaintenance } = Interactions.button;
+    const { type, priority, maintenance, connect, discord, information, rcon, connection } = server;
+    const { serverModify, serverDelete, adminMaintenance, adminRconRegister, adminRconDelete } = Interactions.button;
     const game = Games[type];
-    // const isRconAvailable = rcon ? true : !(type === 'armaresistance');
+    const isRconAvailable = rcon ? true : !(type === 'armaresistance');
 
-    /*
     const rconActiveButton = new ButtonBuilder()
         .setCustomId(rcon ? `${adminRconDelete}_${key}` : `${adminRconRegister}_${key}`)
-        .setLabel(rcon ? lang.embed.rcon.button.labelRconDeactivate : lang.embed.rcon.button.labelRconActivate)
+        .setLabel(rcon ? StringTable.embed.rcon.button.labelRconDeactivate : StringTable.embed.rcon.button.labelRconActivate)
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(!isRconAvailable);
-    */
 
     const maintenanceButton = new ButtonBuilder()
         .setCustomId(`${adminMaintenance}_${key}`)
-        .setLabel(maintenance ? lang.embed.rcon.button.labelServerMaintenanceDeactivate : lang.embed.rcon.button.labelServerMaintenanceActivate)
+        .setLabel(maintenance ? StringTable.embed.rcon.button.labelServerMaintenanceDeactivate : StringTable.embed.rcon.button.labelServerMaintenanceActivate)
         .setStyle(ButtonStyle.Secondary);
 
     const modifyButton = new ButtonBuilder()
         .setCustomId(`${serverModify}_${key}`)
-        .setLabel(lang.embed.rcon.button.labelServerModify)
+        .setLabel(StringTable.embed.rcon.button.labelServerModify)
         .setStyle(ButtonStyle.Secondary);
 
     const delButton = new ButtonBuilder()
         .setCustomId(`${serverDelete}_${connect.host}:${connect.port}`)
-        .setLabel(lang.embed.rcon.button.labelServerDelete)
+        .setLabel(StringTable.embed.rcon.button.labelServerDelete)
         .setStyle(ButtonStyle.Danger);
 
     const onlineRow = new ActionRowBuilder()
-        // .addComponents(rconActiveButton)
+        .addComponents(rconActiveButton)
         .addComponents(maintenanceButton)
         .addComponents(modifyButton)
         .addComponents(delButton);
@@ -194,12 +195,12 @@ export function getServerRconEmbed(key: string, server: BIServer) {
                     iconURL: discord.owner.avatarUrl
                 })
                 .addFields(
-                    // { name: lang.embed.rcon.field.nameRconActivated, value: `${rcon ? true : false}`, inline: true },
-                    { name: lang.embed.rcon.field.namePriority, value: `${priority}`, inline: true },
-                    { name: lang.embed.rcon.field.nameAddonsHash, value: `${information.addonsHash ? information.addonsHash : 'None'}`, inline: true },
+                    { name: StringTable.embed.rcon.field.nameRconActivated, value: `${rcon ? true : false}`, inline: true },
+                    { name: StringTable.embed.rcon.field.namePriority, value: `${priority}`, inline: true },
+                    { name: StringTable.embed.rcon.field.nameAddonsHash, value: `${information.addonsHash ? information.addonsHash : 'None'}`, inline: true },
                 )
                 // .setImage(configs.static ? `${configs.static.url}/images/width.png` : null)
-                .setImage(configs.imagesUrl.blank)
+                .setImage(Configs.imagesUrl.blank)
                 .setTimestamp(time)
                 .setFooter({ text: 'Updated: ' })
         ],
@@ -207,15 +208,15 @@ export function getServerRconEmbed(key: string, server: BIServer) {
     }
 }
 
-export function getServerStatusEmbed(messageId: string, queries: CommonServerQueries, server: BIServer, memo?: string) {
-    const { discord, connection, information } = server;
-    const time = DateTime.now().toLocaleString(DateTime.TIME_WITH_SECONDS);
+export function getServerStatusEmbed(queries: CommonServerQueries, server: BIServer, memo?: string) {
+    const { connection, information } = server;
     const key = `${queries.connect.host}:${queries.connect.port}`;
+    const time = DateTime.now().toLocaleString(DateTime.TIME_WITH_SECONDS);
     const { serverCheckPlayers } = Interactions.button;
 
     const playersButton = new ButtonBuilder()
         .setCustomId(`${serverCheckPlayers}_${key}`)
-        .setLabel(lang.embed.serverStatus.button.labelCheckPlayers)
+        .setLabel(StringTable.embed.serverStatus.button.labelCheckPlayers)
         .setStyle(ButtonStyle.Primary)
         .setDisabled(!queries);
 
@@ -235,12 +236,12 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
             `${configs.static.url}/images/banner/${queries.game}_banner_online.png` :
             `${configs.static.url}/images/banner/${queries.game}_banner_offline.png`
         ) : null;
-
+ 
     const bannerType = configs.imagesUrl.game[queries.game];
     const bannerUrl = queries.query ? bannerType.online : bannerType.offline;
     */
 
-    const bannerType = server.customImage ? server.customImage : configs.imagesUrl.game[queries.game];
+    const bannerType = server.customImage ? server.customImage : Configs.imagesUrl.game[queries.game];
     const bannerUrl = queries.query ? bannerType.online : bannerType.offline;
 
     if (queries.query) {
@@ -255,7 +256,7 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
                     .filter(([k, v]) => v.isCDLC === true)
                     .map(([k, v]) => `[${k}](https://store.steampowered.com/app/${v.steamid})`);
 
-                const presetLabel = generatePresetLabel(configs.static, messageId, information.addonsHash, !_.isEmpty(CDLCs));
+                const presetLabel = generatePresetLabel(Configs.static, server.nonce, information.addonsHash, !_.isEmpty(CDLCs));
 
                 embed = new EmbedBuilder()
                     .setColor(SERVER_STATUS_COLOR[connection.status])
@@ -271,15 +272,15 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
                     )
                     // .setThumbnail(thumbnail)
                     .addFields(
-                        { name: lang.embed.serverStatus.arma3.field.labelMod, value: info.raw.game, inline: false },
+                        { name: StringTable.embed.serverStatus.arma3.field.labelMod, value: info.raw.game, inline: false },
                         // { name: '\u200B', value: '\u200B' },
-                        { name: lang.embed.serverStatus.arma3.field.labelStatus, value: tags.serverState, inline: false },
-                        { name: lang.embed.serverStatus.arma3.field.labelMap, value: info.map, inline: true },
-                        { name: lang.embed.serverStatus.arma3.field.labelVersion, value: info.version, inline: true },
-                        { name: lang.embed.serverStatus.arma3.field.labelPlayers, value: `${info.numplayers} / ${info.maxplayers}`, inline: true },
-                        { name: lang.embed.serverStatus.arma3.field.labelCDLC, value: `${CDLCs.length < 1 ? lang.none : `${CDLCs.join('\n')}`}`, inline: false },
+                        { name: StringTable.embed.serverStatus.arma3.field.labelStatus, value: tags.serverState, inline: false },
+                        { name: StringTable.embed.serverStatus.arma3.field.labelMap, value: info.map, inline: true },
+                        { name: StringTable.embed.serverStatus.arma3.field.labelVersion, value: info.version, inline: true },
+                        { name: StringTable.embed.serverStatus.arma3.field.labelPlayers, value: `${info.numplayers} / ${info.maxplayers}`, inline: true },
+                        { name: StringTable.embed.serverStatus.arma3.field.labelCDLC, value: `${CDLCs.length < 1 ? StringTable.none : `${CDLCs.join('\n')}`}`, inline: false },
                         // { name: '배틀아이', value: queries.tags.battleEye ? '적용' : '미적용', inline: true },
-                        { name: lang.embed.serverStatus.arma3.field.labelMemo, value: `> ${memo ? memo : lang.embed.serverStatus.labelBlankMemo}`, inline: false },
+                        { name: StringTable.embed.serverStatus.arma3.field.labelMemo, value: `> ${memo ? memo : StringTable.embed.serverStatus.labelBlankMemo}`, inline: false },
                     )
                     .setImage(bannerUrl)
                     // .setTimestamp(time)
@@ -288,7 +289,7 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
                 /*
                 connectButton.setURL(`https://files.hirua.me/connect/?107410//-connect=${queries.connect.host}%20-port=${queries.connect.port}`)
                 row.addComponents(connectButton);
-
+ 
                 if (queries.connect.port !== 2302) {
                     // as far as i know, there is no way to change the 2302 port using -connect parameter
                     connectButton.setDisabled(true);
@@ -315,10 +316,10 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
                     )
                     // .setThumbnail(thumbnail)
                     .addFields(
-                        { name: lang.embed.serverStatus.armareforger.field.labelMap, value: info.map, inline: false },
-                        { name: lang.embed.serverStatus.armareforger.field.labelVersion, value: info.version, inline: true },
-                        { name: lang.embed.serverStatus.armareforger.field.labelPlayers, value: `${info.numplayers} / ${info.maxplayers}`, inline: true },
-                        { name: lang.embed.serverStatus.armareforger.field.labelMemo, value: `> ${memo ? memo : lang.embed.serverStatus.labelBlankMemo}`, inline: false },
+                        { name: StringTable.embed.serverStatus.armareforger.field.labelMap, value: info.map, inline: false },
+                        { name: StringTable.embed.serverStatus.armareforger.field.labelVersion, value: info.version, inline: true },
+                        { name: StringTable.embed.serverStatus.armareforger.field.labelPlayers, value: `${info.numplayers} / ${info.maxplayers}`, inline: true },
+                        { name: StringTable.embed.serverStatus.armareforger.field.labelMemo, value: `> ${memo ? memo : StringTable.embed.serverStatus.labelBlankMemo}`, inline: false },
                     )
                     .setImage(bannerUrl)
                     // .setTimestamp(time)
@@ -342,13 +343,13 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
                     .setDescription("Operation FlashPoint: Resistance" + "```" + `${host}:${port}` + "```")
                     // .setThumbnail(thumbnail)
                     .addFields(
-                        { name: lang.embed.serverStatus.armaresistance.field.labelMods, value: _.isEmpty(info.raw.mod) ? '--' : info.raw.mod, inline: false },
+                        { name: StringTable.embed.serverStatus.armaresistance.field.labelMods, value: _.isEmpty(info.raw.mod) ? '--' : info.raw.mod, inline: false },
                         // { name: '\u200B', value: '\u200B' },
-                        { name: lang.embed.serverStatus.armaresistance.field.labelStatus, value: info.raw.gamemode, inline: false },
-                        { name: lang.embed.serverStatus.armaresistance.field.labelMap, value: _.isEmpty(info.map) ? lang.none : info.map, inline: true },
-                        { name: lang.embed.serverStatus.armaresistance.field.labelVersion, value: info.raw.gamever.toString(), inline: true },
-                        { name: lang.embed.serverStatus.armaresistance.field.labelPlayers, value: `${info.numplayers} / ${info.maxplayers}`, inline: true },
-                        { name: lang.embed.serverStatus.armaresistance.field.labelMemo, value: `> ${memo ? memo : lang.embed.serverStatus.labelBlankMemo}`, inline: false },
+                        { name: StringTable.embed.serverStatus.armaresistance.field.labelStatus, value: info.raw.gamemode, inline: false },
+                        { name: StringTable.embed.serverStatus.armaresistance.field.labelMap, value: _.isEmpty(info.map) ? StringTable.none : info.map, inline: true },
+                        { name: StringTable.embed.serverStatus.armaresistance.field.labelVersion, value: info.raw.gamever.toString(), inline: true },
+                        { name: StringTable.embed.serverStatus.armaresistance.field.labelPlayers, value: `${info.numplayers} / ${info.maxplayers}`, inline: true },
+                        { name: StringTable.embed.serverStatus.armaresistance.field.labelMemo, value: `> ${memo ? memo : StringTable.embed.serverStatus.labelBlankMemo}`, inline: false },
                     )
                     .setImage(bannerUrl)
                     // .setTimestamp(time)
@@ -362,7 +363,7 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
     else {
         embed = new EmbedBuilder()
             .setColor(SERVER_STATUS_COLOR[connection.status])
-            .setTitle(lang.embed.serverStatus.offline.title)
+            .setTitle(StringTable.embed.serverStatus.offline.title)
             // .setURL(`https://files.hirua.me/presets/${message.id}.html`)
             // .setAuthor({
             //     name: discord.owner.displayName,
@@ -372,7 +373,7 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
             .setDescription("```" + `${queries.connect.host}:${queries.connect.port}` + "```")
             // .setThumbnail(thumbnail)
             .addFields(
-                { name: lang.embed.serverStatus.offline.field.labelMemo, value: `> ${memo ? memo : lang.embed.serverStatus.labelBlankMemo}`, inline: false },
+                { name: StringTable.embed.serverStatus.offline.field.labelMemo, value: `> ${memo ? memo : StringTable.embed.serverStatus.labelBlankMemo}`, inline: false },
             )
             .setImage(bannerUrl)
             //.setTimestamp(time)
@@ -380,14 +381,54 @@ export function getServerStatusEmbed(messageId: string, queries: CommonServerQue
     }
 
     return { content: '', embeds: [embed as EmbedBuilder], components: [row as any] };
+
+    /*
+    else {
+        const embed = new EmbedBuilder()
+            .setTitle(StringTable.embed.serverStatus.titleNoServer)
+
+        return { content: '', embeds: [embed as EmbedBuilder] };
+    }
+    */
 }
 
-function generatePresetLabel(appStatic: typeof configs.static, messageId: string, loadedContentsHash: string, compatibility: boolean = false) {
+export function getRankingEmbed(data?: { server: BIServer, ranking: { name: string, playtime: number }[] }) {
+    let embed;
+
+    if (data) {
+        const { server, ranking } = data;
+        const time = DateTime.now().toLocaleString(DateTime.TIME_WITH_SECONDS);
+        const entireRankingTable = getRankingTable(ranking);
+
+        embed = new EmbedBuilder()
+            // 🏆 서버 플레이타임 랭킹
+            // :trophy:
+            .setTitle(StringTable.embed.ranking.title)
+            .setDescription(
+                `**${server.information.hostname}**\n\n` +
+                '```' + `${server.connect.host}:${server.connect.port}` + '```' +
+                '**' + StringTable.embed.ranking.field.entireRankingTitle + '**\n```' + entireRankingTable + '```\n' + 
+                '**' + StringTable.embed.ranking.field.entireRankingTitle + '**\n```준비중' + '```\n' + 
+                '**' + StringTable.embed.ranking.field.entireRankingTitle + '**\n```준비중' + '```'
+            )
+            .setFooter({ text: time });
+    }
+
+    else {
+        embed = new EmbedBuilder()
+            .setTitle(StringTable.embed.ranking.title)
+            .setDescription(StringTable.embed.ranking.labelNoRanking);
+    }
+
+    return { content: '', embeds: [embed as EmbedBuilder] };
+}
+
+function generatePresetLabel(appStatic: typeof Configs.static, nonce: string, loadedContentsHash: string, compatibility: boolean = false) {
     if (!appStatic) return '';
 
-    const presetLink = `${appStatic.url}/presets/${messageId}-${loadedContentsHash}`;
-    const presetPurchasedLabel = `[**[${lang.embed.serverStatus.arma3.presetPurchasedDownload}]**](${presetLink}-p.html)`;
-    const presetCompatibilityLabel = `[**[${lang.embed.serverStatus.arma3.presetCompatibilityDownload}]**](${presetLink}-c.html)`;
+    const presetLink = `${appStatic.url}/presets/${nonce}-${loadedContentsHash}`;
+    const presetPurchasedLabel = `[**[${StringTable.embed.serverStatus.arma3.presetPurchasedDownload}]**](${presetLink}-p.html)`;
+    const presetCompatibilityLabel = `[**[${StringTable.embed.serverStatus.arma3.presetCompatibilityDownload}]**](${presetLink}-c.html)`;
 
     return compatibility ? `${presetPurchasedLabel}\n${presetCompatibilityLabel}` : `${presetPurchasedLabel}`;
 }
