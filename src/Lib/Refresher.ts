@@ -241,8 +241,10 @@ export async function serverRefresh(target?: { guildId: string, serverId: string
             }
         }
 
-        serverStorage.set(serverId, newServer);
-        saveStorage();
+        if (serverStorage.has(serverId)) {
+            serverStorage.set(serverId, newServer);
+            saveStorage();
+        }
 
         let flagRefresh = false;
         const curQueries = information.lastQueries.query;
