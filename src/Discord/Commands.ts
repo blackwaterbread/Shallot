@@ -123,7 +123,7 @@ const commands: Array<SlashCommand> = [
                 guild.channels.fetch(rankingChannelId)
             ]);
 
-            if (!interactionChannel || !statusChannel || !adminChannel || rankingChannel) {
+            if (!interactionChannel || !statusChannel || !adminChannel || !rankingChannel) {
                 await interaction.followUp({
                     content: `${StringTable.commands.registerMessages.noChannel}`,
                     ephemeral: true
@@ -135,7 +135,7 @@ const commands: Array<SlashCommand> = [
             const interactionMessage = await (interactionChannel as TextChannel).send(getServerRegisterInteractionEmbed());
             const deleteMessage = await (interactionChannel as TextChannel).send(getServerDeleteInteractionEmbed());
             // const statusMessage = await (interactionChannel as TextChannel).send(getServerStatusEmbed());
-            const rankingMessage = await (interactionChannel as TextChannel).send(getRankingEmbed());
+            const rankingMessage = await (rankingChannel as TextChannel).send(getRankingEmbed());
 
             Storage.set(guild.id, {
                 channels: {
