@@ -172,17 +172,17 @@ export async function refreshRanking() {
                          * [1] - IP:Port
                          * [2] - Ping
                          * [3] - GUID(OK)
-                         * [4] - Name
-                         * [5]? - (Lobby)
+                         * [4 ~ (N-1)] - Name
+                         * [N]? - (Lobby)
                          */
                         const rows = players[i].split(' ').filter(x => !_.isEmpty(x));
                         const guid = rows[3].replace('(OK)', '').replace('(?)', '');
 
-                        if (rows[rows.length] === '(Lobby)') continue;
+                        if (rows[rows.length - 1] === '(Lobby)') continue;
                         if (guid.length !== 32) continue;
                         if (rows[1].split(':')[0] === '127.0.0.1' && rows[4] === 'headlessclient') continue;
 
-                        const name = rows.slice(4).join().replace('(Lobby)', '');
+                        const name = rows.slice(4).join(' ');
                         const serverRanking = Ranking.get(serverId)!;
                         const currentPlaytime = serverRanking.get(guid)?.playtime ?? 0;
 
