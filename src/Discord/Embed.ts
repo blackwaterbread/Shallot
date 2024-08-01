@@ -401,8 +401,6 @@ export function getRankingEmbed(data?: { server: BIServer, ranking: { name: stri
         const entireRankingTable = getRankingTable(ranking);
 
         embed = new EmbedBuilder()
-            // 🏆 서버 플레이타임 랭킹
-            // :trophy:
             .setTitle(StringTable.embed.ranking.title)
             .setDescription(
                 `**${server.information.hostname}**\n` +
@@ -411,7 +409,7 @@ export function getRankingEmbed(data?: { server: BIServer, ranking: { name: stri
                 '**' + StringTable.embed.ranking.field.monthlyRankingTitle + '**\n```준비중' + '```\n' + 
                 '**' + StringTable.embed.ranking.field.weeklyRankingTitle + '**\n```준비중' + '```'
             )
-            .setFooter({ text: time });
+            .setFooter({ text: `Updated at ${time}` });
     }
 
     else {

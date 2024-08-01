@@ -183,8 +183,8 @@ const EN_STRINGS: ShallotStrings = {
             title: ':trophy: Server Playtime Ranking',
             field: {
                 entireRankingTitle: ':first_place: Entire',
-                weeklyRankingTitle: ':second_place: Monthly',
-                monthlyRankingTitle: ':third_place: Weekly'
+                monthlyRankingTitle: ':second_place: Monthly',
+                weeklyRankingTitle: ':third_place: Weekly'
             },
             labelNoRanking: ':man_gesturing_no: There is no ranking data.'
         }

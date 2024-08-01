@@ -183,8 +183,8 @@ const KR_STRINGS: ShallotStrings = {
             title: ':trophy: 서버 플레이타임 랭킹',
             field: {
                 entireRankingTitle: ':first_place: 전체',
-                weeklyRankingTitle: ':second_place: 이번 달',
-                monthlyRankingTitle: ':third_place: 이번 주'
+                monthlyRankingTitle: ':second_place: 이번 달',
+                weeklyRankingTitle: ':third_place: 이번 주'
             },
             labelNoRanking: ':man_gesturing_no: 랭킹 데이터가 존재하지 않습니다.'
         }
