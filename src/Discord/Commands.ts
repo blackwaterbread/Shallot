@@ -135,7 +135,7 @@ const commands: Array<SlashCommand> = [
             const interactionMessage = await (interactionChannel as TextChannel).send(getServerRegisterInteractionEmbed());
             const deleteMessage = await (interactionChannel as TextChannel).send(getServerDeleteInteractionEmbed());
             // const statusMessage = await (interactionChannel as TextChannel).send(getServerStatusEmbed());
-            const rankingMessage = await (rankingChannel as TextChannel).send(getRankingEmbed());
+            const rankingMessage = await (rankingChannel as TextChannel).send({ content:'', embeds: [ getRankingEmbed() ] });
 
             Storage.set(guild.id, {
                 channels: {
