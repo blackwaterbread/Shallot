@@ -10,6 +10,7 @@
 * 현재 서버에 있는 플레이어 이름 표시
 * 디스코드 서버의 아무나 자신의 서버를 추가할 수 있음
 * 오프라인인 서버는 현황 리스트에서 자동 삭제
+* 플레이타임 랭킹
 
 ## 지원 게임
 * [**Arma 3**](https://store.steampowered.com/app/107410/Arma_3/)
@@ -23,6 +24,7 @@
 ## 설치
 ```
 git clone https://github.com/blackwaterbread/Shallot
+~/Shallot> yarn install
 ```
 
 ## 설정
@@ -36,10 +38,11 @@ git clone https://github.com/blackwaterbread/Shallot
 }
 ```
 
+### 선택
 ### 정적 파일 서버
 * 이 설정은 필수는 아닙니다. 하지만 설정되지 않으면 아르마 3 프리셋 자동 생성 기능이 동작하지 않습니다.
-* 정적 파일 저장 경로와 연결된 정적 파일 서버가 존재해야 합니다.
-* 정적 파일 서버 HTTP 헤더는 attachment를 권장합니다.
+* 정적 파일 서버는 정적 파일 저장 경로와 연결되어 있어야 합니다.
+* 정적 파일 서버 HTTP 헤더로 attachment를 사용할 것을 매우 권장합니다. (아르마 3 프리셋 HTML 로드가 제대로 동작하지 않을 수 있습니다)
 ```
 {
     ...
@@ -47,6 +50,36 @@ git clone https://github.com/blackwaterbread/Shallot
         path: "Path-where-static-files-will-be-stored",
         url: "Your-static-file-server-url"
     }
+}
+```
+
+### 임베드 이미지 설정
+```
+{
+    ...,
+    "imagesUrl": {
+        "blank": "Your-Blank-Image-URL",
+        "maintenance": "Your-Maintenance-Image-URL",
+        "game": {
+            "arma3": {
+                "online": "Your-Arma3-Online-Image-URL",
+                "offline": "Your-Arma3-Offline-Image-URL"
+            },
+            "armareforger": {
+                "online": "Your-Reforger-Online-Image-URL",
+                "offline": "Your-Reforger-Offline-Image-URL"
+            },
+            "armaresistance": {
+                "online": "Your-OFP-Online-Image-URL",
+                "offline": "Your-OFP-Offline-Image-URL"
+            },
+            "unknown": {
+                "online": "Dummy",
+                "offline": "Dummy"
+            }
+        }
+    },
+    ...
 }
 ```
 
@@ -59,20 +92,19 @@ git clone https://github.com/blackwaterbread/Shallot
 }
 ```
 
-### storage.json
+## 실행
 ```
-일반적으로 수정할 필요 없습니다.
+yarn start
 ```
 
-## 시작
+## PM2로 실행
 ```
-yarn install
 yarn build
 node dist/shallot.js or pm2 start dist/shallot.js
 ```
 
 ## Discord 서버에서 초기 설정
-1. 채널 3개가 필요합니다. **상호작용, 현황, 관리** (이름은 마음대로 바꾸실 수 있습니다.)
+1. 채널 4개가 필요합니다. **상호작용, 현황, 관리, 랭킹** (이름은 마음대로 바꾸실 수 있습니다.)
 2. **/initalize** 명령어로 각 채널 ID를 등록하면 Shallot 봇을 사용할 수 있습니다.
 
 ## 라이센스

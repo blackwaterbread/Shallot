@@ -10,6 +10,7 @@ Server information display discord bot for [**ArmA Series**](https://en.wikipedi
 * Display players name
 * Any users can add their own server
 * Automatically delete disconnected servers from the list
+* Playtime ranking
 
 ## Supported Games
 * [**Arma 3**](https://store.steampowered.com/app/107410/Arma_3/)
@@ -22,7 +23,8 @@ Server information display discord bot for [**ArmA Series**](https://en.wikipedi
 
 ## Installation
 ```
-git clone https://github.com/blackwaterbread/Shallot
+> git clone https://github.com/blackwaterbread/Shallot
+~/Shallot> yarn install
 ```
 
 ## Configuration
@@ -40,7 +42,7 @@ git clone https://github.com/blackwaterbread/Shallot
 ### Static File Server
 * This setting is non-essential; however, if not set this, the preset auto-creation feature will not work.
 * You must have a static file server that works with a static path.
-* Recommend 'attachment' for static file server HTTP headers.
+* Strongly recommend 'attachment' for static file server HTTP headers (You might encounter issue loading preset HTML)
 ```
 {
     ...
@@ -48,6 +50,36 @@ git clone https://github.com/blackwaterbread/Shallot
         path: "Path-where-static-files-will-be-stored",
         url: "Your-static-file-server-url"
     }
+}
+```
+
+### Set Embed Images
+```
+{
+    ...,
+    "imagesUrl": {
+        "blank": "Your-Blank-Image-URL",
+        "maintenance": "Your-Maintenance-Image-URL",
+        "game": {
+            "arma3": {
+                "online": "Your-Arma3-Online-Image-URL",
+                "offline": "Your-Arma3-Offline-Image-URL"
+            },
+            "armareforger": {
+                "online": "Your-Reforger-Online-Image-URL",
+                "offline": "Your-Reforger-Offline-Image-URL"
+            },
+            "armaresistance": {
+                "online": "Your-OFP-Online-Image-URL",
+                "offline": "Your-OFP-Offline-Image-URL"
+            },
+            "unknown": {
+                "online": "Dummy",
+                "offline": "Dummy"
+            }
+        }
+    },
+    ...
 }
 ```
 
@@ -60,20 +92,19 @@ git clone https://github.com/blackwaterbread/Shallot
 }
 ```
 
-### storage.json
-```
-Basically, do not need to modify this.
-```
-
 ## Start
 ```
-yarn install
+yarn start
+```
+
+## Start with PM2
+```
 yarn build
 node dist/shallot.js or pm2 start dist/shallot.js
 ```
 
 ## Initalize on Discord
-1. 3 channels must be created. **interaction, status, admin** (can change the channel name what you want)
+1. 4 channels must be created. **interaction, status, admin, ranking** (can change the channel name what you want)
 2. Specifies the channel ID to use with the **/initalize** command
 
 ## License
