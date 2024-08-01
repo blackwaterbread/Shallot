@@ -178,11 +178,11 @@ export async function refreshRanking() {
                         const rows = players[i].split(' ').filter(x => !_.isEmpty(x));
                         const guid = rows[3].replace('(OK)', '').replace('(?)', '');
 
-                        if (rows.length === 6 && rows[rows.length] === '(Lobby)') continue;
+                        if (rows[rows.length] === '(Lobby)') continue;
                         if (guid.length !== 32) continue;
                         if (rows[1].split(':')[0] === '127.0.0.1' && rows[4] === 'headlessclient') continue;
 
-                        const name = rows.slice(4).join();
+                        const name = rows.slice(4).join().replace('(Lobby)', '');
                         const serverRanking = Ranking.get(serverId)!;
                         const currentPlaytime = serverRanking.get(guid)?.playtime ?? 0;
 
