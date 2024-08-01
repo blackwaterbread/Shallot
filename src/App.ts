@@ -24,7 +24,7 @@ async function app() {
         await initBotPresence(readyClient);
         initDiscordClient(readyClient);
         initServerRefresher();
-        initRankingRefresher();
+        await initRankingRefresher();
     });
 
     client.on(Events.GuildAvailable, async (guild) => {

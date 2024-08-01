@@ -396,20 +396,34 @@ export function getRankingEmbed(data?: { server: BIServer, ranking: { name: stri
     let embed;
 
     if (data) {
-        const { server, ranking } = data;
-        const time = DateTime.now().toLocaleString(DateTime.TIME_WITH_SECONDS);
-        const entireRankingTable = getRankingTable(ranking);
+        if (data.ranking) {
+            const { server, ranking } = data;
+            const time = DateTime.now().toLocaleString(DateTime.TIME_WITH_SECONDS);
+            const entireRankingTable = getRankingTable(ranking);
+    
+            embed = new EmbedBuilder()
+                .setTitle(StringTable.embed.ranking.title)
+                .setDescription(
+                    `**${server.information.hostname}**\n` +
+                    '```' + `${server.connect.host}:${server.connect.port}` + '```\n' +
+                    '**' + StringTable.embed.ranking.field.entireRankingTitle + '**\n```' + entireRankingTable + '```\n' + 
+                    '**' + StringTable.embed.ranking.field.monthlyRankingTitle + '**\n```준비중' + '```\n' + 
+                    '**' + StringTable.embed.ranking.field.weeklyRankingTitle + '**\n```준비중' + '```'
+                )
+                .setFooter({ text: `Updated at ${time}` });
+        }
 
-        embed = new EmbedBuilder()
-            .setTitle(StringTable.embed.ranking.title)
-            .setDescription(
-                `**${server.information.hostname}**\n` +
-                '```' + `${server.connect.host}:${server.connect.port}` + '```\n' +
-                '**' + StringTable.embed.ranking.field.entireRankingTitle + '**\n```' + entireRankingTable + '```\n' + 
-                '**' + StringTable.embed.ranking.field.monthlyRankingTitle + '**\n```준비중' + '```\n' + 
-                '**' + StringTable.embed.ranking.field.weeklyRankingTitle + '**\n```준비중' + '```'
-            )
-            .setFooter({ text: `Updated at ${time}` });
+        else {
+            const { server } = data;
+
+            embed = new EmbedBuilder()
+                .setTitle(StringTable.embed.ranking.title)
+                .setDescription(
+                    `**${server.information.hostname}**\n` +
+                    '```' + `${server.connect.host}:${server.connect.port}` + '```\n' +
+                    StringTable.embed.ranking.labelNoRanking
+                );
+        }
     }
 
     else {
@@ -418,7 +432,10 @@ export function getRankingEmbed(data?: { server: BIServer, ranking: { name: stri
             .setDescription(StringTable.embed.ranking.labelNoRanking);
     }
 
-    return { content: '', embeds: [embed as EmbedBuilder] };
+    embed.setImage(Configs.imagesUrl.blank);
+
+    // return { content: '', embeds: [embed as EmbedBuilder] };
+    return embed;
 }
 
 function generatePresetLabel(appStatic: typeof Configs.static, nonce: string, loadedContentsHash: string, compatibility: boolean = false) {

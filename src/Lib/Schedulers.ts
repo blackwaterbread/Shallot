@@ -90,7 +90,7 @@ export function startRefresherEntire() {
     refreshRankingJob?.start();
 }
 
-export function initRankingRefresher() {
+export async function initRankingRefresher() {
     for (const guildId of Storage.keys()) {
         for (const serverId of Storage.get(guildId)!.servers.keys()) {
             const server = Storage.get(guildId)!.servers.get(serverId)!;
@@ -102,6 +102,9 @@ export function initRankingRefresher() {
                         rconPort: server.rcon.port, 
                         rconPassword: server.rcon.password 
                     });
+
+                    // at least once run at app starting
+                    await refreshRankingEmbed(guildId)
                 }
 
                 catch (e) {
@@ -191,7 +194,7 @@ export async function refreshRanking() {
                             playtime: currentPlaytime + 15
                         });
 
-                        await refreshRankingEmbed(guildId, serverId);
+                        await refreshRankingEmbed(guildId);
                     }
 
                     saveRanking();
@@ -627,7 +630,7 @@ export async function refreshAdminEmbed(guildId: string, serverId: string) {
     logNormal(`[Discord] refreshAdminEmbed Complete: ${trackLog}`, true);
 }
 
-export async function refreshRankingEmbed(guildId: string, serverId: string) {
+export async function refreshRankingEmbed(guildId: string) {
     const guild = Storage.get(guildId);
 
     if (!guild) {
@@ -644,17 +647,19 @@ export async function refreshRankingEmbed(guildId: string, serverId: string) {
         return;
     }
 
-    const server = guild.servers.get(serverId);
-    const ranks = Ranking.get(serverId);
+    let embeds = [];
+    for (const serverId of guild.servers.keys()) {
+        const server = guild.servers.get(serverId);
+        const ranks = Ranking.get(serverId);
 
-    if (!ranks || !server) {
-        logError(`[App] refreshRankingEmbed: Cannot get ranking or server: ${serverId}`);
-        return;
+        if (!ranks || !server) {
+            logError(`[App] refreshRankingEmbed: Cannot get ranking or server: ${serverId}`);
+            return;
+        }
+    
+        embeds.push(getRankingEmbed({ server: server, ranking: Array.from(ranks.values()) }));
     }
 
-    const trackLog = `${channelTrack(rankingChannel)}`;
-
-    let rankingEmbed;
     let rankingMessage: Message<true> | null = null;
 
     try {
@@ -666,8 +671,8 @@ export async function refreshRankingEmbed(guildId: string, serverId: string) {
         throw new Error();
     }
 
-    rankingEmbed = getRankingEmbed({ server: server, ranking: Array.from(ranks.values()) });
-    await rankingMessage.edit(rankingEmbed as any);
+    const content = { content: '', embeds: embeds };
+    await rankingMessage.edit(content);
 
-    logNormal(`[Discord] refreshAdminEmbed Complete: ${trackLog}`, true);
+    logNormal(`[Discord] refreshRankingEmbed Complete: ${channelTrack(rankingChannel)}`, true);
 }
