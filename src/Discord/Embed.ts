@@ -405,11 +405,11 @@ export function getRankingEmbed(data?: { server: BIServer, ranking: { name: stri
             // :trophy:
             .setTitle(StringTable.embed.ranking.title)
             .setDescription(
-                `**${server.information.hostname}**\n\n` +
-                '```' + `${server.connect.host}:${server.connect.port}` + '```' +
+                `**${server.information.hostname}**\n` +
+                '```' + `${server.connect.host}:${server.connect.port}` + '```\n' +
                 '**' + StringTable.embed.ranking.field.entireRankingTitle + '**\n```' + entireRankingTable + '```\n' + 
-                '**' + StringTable.embed.ranking.field.entireRankingTitle + '**\n```준비중' + '```\n' + 
-                '**' + StringTable.embed.ranking.field.entireRankingTitle + '**\n```준비중' + '```'
+                '**' + StringTable.embed.ranking.field.monthlyRankingTitle + '**\n```준비중' + '```\n' + 
+                '**' + StringTable.embed.ranking.field.weeklyRankingTitle + '**\n```준비중' + '```'
             )
             .setFooter({ text: time });
     }

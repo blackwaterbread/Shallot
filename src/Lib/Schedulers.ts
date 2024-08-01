@@ -78,6 +78,18 @@ export function initServerRefresher() {
     Scheduler.addSimpleIntervalJob(refreshRankingJob);
 }
 
+export function stopRefresherEntire() {
+    refreshServerJob?.stop();
+    refreshEmbedJob?.stop();
+    refreshRankingJob?.stop();
+}
+
+export function startRefresherEntire() {
+    refreshServerJob?.start();
+    refreshEmbedJob?.start();
+    refreshRankingJob?.start();
+}
+
 export function initRankingRefresher() {
     for (const guildId of Storage.keys()) {
         for (const serverId of Storage.get(guildId)!.servers.keys()) {
@@ -178,6 +190,8 @@ export async function refreshRanking() {
                             name: name,
                             playtime: currentPlaytime + 15
                         });
+
+                        await refreshRankingEmbed(guildId, serverId);
                     }
 
                     saveRanking();
@@ -191,18 +205,6 @@ export async function refreshRanking() {
             }
         }
     }
-}
-
-export function stopRefresherEntire() {
-    refreshServerJob?.stop();
-    refreshEmbedJob?.stop();
-    refreshRankingJob?.stop();
-}
-
-export function startRefresherEntire() {
-    refreshServerJob?.start();
-    refreshEmbedJob?.start();
-    refreshRankingJob?.start();
 }
 
 async function refreshServerEntire(serverId?: string) {

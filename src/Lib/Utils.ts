@@ -73,7 +73,7 @@ const TABLE = ['#', 'Player', 'Time'];
 export function getRankingTable(data: { name: string, playtime: number }[]) {
     const p = data
         .sort((x, y) => y.playtime - x.playtime)
-        .map((v, i) => [(i + 1).toString(), v.name, v.playtime.toString() ]);
+        .map((v, i) => [(i + 1).toString(), v.name, `${(v.playtime / 3600).toFixed(2).toString()} h` ]);
 
     return markdownTable([ TABLE, ...p ]);
 }
