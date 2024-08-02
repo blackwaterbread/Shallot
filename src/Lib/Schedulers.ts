@@ -657,7 +657,7 @@ export async function refreshRankingEmbed(guildId: string) {
             return;
         }
     
-        embeds.push(getRankingEmbed({ server: server, ranking: Array.from(ranks.values()) }));
+        embeds.push(getRankingEmbed({ server: server, ranking: Array.from(ranks.values()).slice(0, 10) }));
     }
 
     let rankingMessage: Message<true> | null = null;
