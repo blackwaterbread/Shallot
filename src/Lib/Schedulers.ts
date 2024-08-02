@@ -16,6 +16,7 @@ let client: Client<true>;
 let connections: Map<string, RconConnection> = new Map();
 
 const Scheduler = new ToadScheduler();
+const Configs = getConfigs();
 const Storage = getStorage();
 const Ranking = getRanking();
 
@@ -191,7 +192,7 @@ export async function refreshRanking() {
 
                         serverRanking.set(guid, {
                             name: name,
-                            playtime: currentPlaytime + 15
+                            playtime: currentPlaytime + Configs.rankingRefreshInterval
                         });
 
                         await refreshRankingEmbed(guildId);
