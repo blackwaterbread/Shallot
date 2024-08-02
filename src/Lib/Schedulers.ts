@@ -202,7 +202,7 @@ export async function refreshRanking() {
                 }
 
                 catch (e) {
-                    logError(`[App|Rcon] refreshRanking: Error: ${e}`);
+                    logError(`[App|Rcon] refreshRanking: Error: ${conn.ip}:${conn.port}|${e}`);
                     return;
                 }
             }
@@ -649,15 +649,17 @@ export async function refreshRankingEmbed(guildId: string) {
 
     let embeds = [];
     for (const serverId of guild.servers.keys()) {
+        const conn = connections.get(serverId);
         const server = guild.servers.get(serverId);
         const ranks = Ranking.get(serverId);
 
+        if (!conn) continue;
         if (!ranks || !server) {
             logError(`[App] refreshRankingEmbed: Cannot get ranking or server: ${serverId}`);
             return;
         }
     
-        embeds.push(getRankingEmbed({ server: server, ranking: Array.from(ranks.values()).slice(0, 10) }));
+        embeds.push(getRankingEmbed({ server: server, isConnected: conn.connected, ranking: Array.from(ranks.values()).slice(0, 10) }));
     }
 
     let rankingMessage: Message<true> | null = null;

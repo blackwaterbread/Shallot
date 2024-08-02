@@ -392,19 +392,19 @@ export function getServerStatusEmbed(queries: CommonServerQueries, server: BISer
     */
 }
 
-export function getRankingEmbed(data?: { server: BIServer, ranking: { name: string, playtime: number }[] }) {
+export function getRankingEmbed(data?: { server: BIServer, isConnected: boolean, ranking: { name: string, playtime: number }[] }) {
     let embed;
 
     if (data) {
         if (data.ranking) {
-            const { server, ranking } = data;
+            const { server, isConnected, ranking } = data;
             const time = DateTime.now().toLocaleString(DateTime.TIME_WITH_SECONDS);
             const entireRankingTable = getRankingTable(ranking);
-    
+
             embed = new EmbedBuilder()
                 .setTitle(StringTable.embed.ranking.title)
                 .setDescription(
-                    `**${server.information.hostname}**\n` +
+                    `**${isConnected ? ':green_circle:' : ':red_circle:'} ${server.information.hostname}**\n` +
                     '```' + `${server.connect.host}:${server.connect.port}` + '```\n' +
                     '**' + StringTable.embed.ranking.field.entireRankingTitle + '**\n```' + entireRankingTable + '```\n' + 
                     '**' + StringTable.embed.ranking.field.monthlyRankingTitle + '**\n```준비중' + '```\n' + 
