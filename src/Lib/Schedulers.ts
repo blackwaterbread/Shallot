@@ -659,7 +659,8 @@ export async function refreshRankingEmbed(guildId: string) {
             return;
         }
     
-        embeds.push(getRankingEmbed({ server: server, isConnected: conn.connected, ranking: Array.from(ranks.values()).slice(0, 10) }));
+        const sortedRanks = Array.from(ranks.values()).sort((x, y) => y.playtime - x.playtime).slice(0, 10);
+        embeds.push(getRankingEmbed({ server: server, isConnected: conn.connected, ranking: sortedRanks }));
     }
 
     let rankingMessage: Message<true> | null = null;
