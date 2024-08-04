@@ -400,9 +400,11 @@ export function getRankingEmbed(data?: { server: BIServer, isConnected: boolean,
             const { server, isConnected, ranking } = data;
             const time = DateTime.now().toLocaleString(DateTime.TIME_WITH_SECONDS);
             const entireRankingTable = getRankingTable(ranking);
+            const color = isConnected ? 0x41F097 : 0xFF0000;
 
             embed = new EmbedBuilder()
                 .setTitle(StringTable.embed.ranking.title)
+                .setColor(color)
                 .setDescription(
                     `**${isConnected ? ':green_circle:' : ':red_circle:'} ${server.information.hostname}**\n` +
                     '```' + `${server.connect.host}:${server.connect.port}` + '```\n' +
@@ -418,6 +420,7 @@ export function getRankingEmbed(data?: { server: BIServer, isConnected: boolean,
 
             embed = new EmbedBuilder()
                 .setTitle(StringTable.embed.ranking.title)
+                .setColor(0xFF0000)
                 .setDescription(
                     `**${server.information.hostname}**\n` +
                     '```' + `${server.connect.host}:${server.connect.port}` + '```\n' +
