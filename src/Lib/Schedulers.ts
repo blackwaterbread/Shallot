@@ -164,7 +164,7 @@ export async function refreshRanking() {
             const conn = connections.get(serverId);
             const hasRanking = Ranking.has(serverId);
 
-            if (conn && conn.connected && hasRanking) {
+            if (conn?.connected && hasRanking) {
                 try {
                     const command = await conn.command('Players');
                     if (!command.data) return;
@@ -194,8 +194,6 @@ export async function refreshRanking() {
                             name: name,
                             playtime: currentPlaytime + Configs.rankingRefreshInterval
                         });
-
-                        await refreshRankingEmbed(guildId);
                     }
 
                     saveRanking();
@@ -207,6 +205,8 @@ export async function refreshRanking() {
                     return;
                 }
             }
+
+            await refreshRankingEmbed(guildId);
         }
     }
 }
