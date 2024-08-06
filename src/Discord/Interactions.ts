@@ -13,7 +13,7 @@ import { CommonServerQueries } from "Types";
 import { queryArma3, savePresetHtml } from "Server/Games/Arma3";
 import { queryArmaResistance } from "Server/Games/ArmaResistance";
 import { queryArmaReforger } from "Server/Games/ArmaReforger";
-import { refreshAdminEmbed, startRefresherEntire, refreshStatusEmbed, stopRefresherEntire, addRankingConnection } from "Lib/Schedulers";
+import { refreshAdminEmbed, startRefresherEntire, refreshStatusEmbed, stopRefresherEntire, addRankingConnection, deleteRankingConnection } from "Lib/Schedulers";
 import { getBoolean } from "Lib/Utils";
 import { getStringTable } from "Language";
 
@@ -553,31 +553,29 @@ export async function handleInteractions(interaction: Interaction) {
                     customImage: customImage
                 }
 
-                if (curServerKey !== newServerKey) {
-                    guildStorage.servers.delete(curServerKey);
-                    if (newServer.rcon && newServer.priority) Ranking.delete(curServerKey);
-                }
-
-                guildStorage.servers.set(newServerKey, newServer);
-                saveStorage();
-
                 if (newServer.rcon && newServer.priority) {
+                    if (curServerKey !== newServerKey) {
+                        deleteRankingConnection(curServerKey)
+                        guildStorage.servers.delete(curServerKey);
+                        Ranking.set(newServerKey, Ranking.get(newServerKey) ?? new Map());
+                        Ranking.delete(curServerKey);
+                    }
+
                     addRankingConnection({
                         id: newServerKey, 
                         host: newServer.connect.host,
                         rconPort: newServer.rcon.port, 
                         rconPassword: newServer.rcon.password
                     });
-
-                    Ranking.set(newServerKey, new Map());
-                    saveRanking();
                 }
 
-                await Promise.all([ 
-                    refreshStatusEmbed(guild.id, newServerKey), 
-                    refreshAdminEmbed(guild.id, newServerKey) 
-                ]);
+                guildStorage.servers.set(newServerKey, newServer);
+                saveStorage();
+                saveRanking();
+
+                await Promise.all([ refreshStatusEmbed(guild.id, newServerKey), refreshAdminEmbed(guild.id, newServerKey) ]);
                 await ephemeralReplyMessage.edit({ content: StringTable.interaction.modalSubmit.serverModify.success });
+
                 break;
             }
 

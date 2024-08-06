@@ -158,6 +158,10 @@ export function addRankingConnection(server: { id: string, host: string, rconPor
     }
 }
 
+export function deleteRankingConnection(key: string) {
+    connections.delete(key);
+}
+
 export async function refreshRanking() {
     for (const guildId of Storage.keys()) {
         for (const serverId of Storage.get(guildId)!.servers.keys()) {
@@ -659,7 +663,7 @@ export async function refreshRankingEmbed(guildId: string) {
             logError(`[App] refreshRankingEmbed: Cannot get ranking or server: ${serverId}`);
             return;
         }
-    
+
         const sortedRanks = Array.from(ranks.values()).sort((x, y) => y.playtime - x.playtime).slice(0, 10);
         embeds.push(getRankingEmbed({ server: server, isConnected: conn.connected, ranking: sortedRanks }));
     }
