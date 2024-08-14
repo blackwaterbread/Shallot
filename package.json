@@ -16,7 +16,7 @@
   "homepage": "https://github.com/blackwaterbread/Shallot",
   "license": "MIT",
   "devDependencies": {
-    "@types/gamedig": "^5.0.0",
+    "@types/gamedig": "^5.0.3",
     "@types/lodash": "^4.14.202",
     "@types/luxon": "^3.4.2",
     "@types/node": "^20.11.16",
@@ -32,7 +32,7 @@
     "bl": "^6.0.11",
     "discord.js": "^14.15.3",
     "dotenv": "^16.4.1",
-    "gamedig": "https://github.com/blackwaterbread/node-gamedig",
+    "gamedig": "^5.1.1",
     "html-format": "^1.1.6",
     "iter-ops": "^3.1.1",
     "lodash": "^4.17.21",
